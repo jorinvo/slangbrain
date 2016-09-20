@@ -3,6 +3,7 @@ package main
 // Thanks for help with unicode http://apps.timwhitlock.info/emoji/tables/unicode
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"strconv"
@@ -15,14 +16,18 @@ import (
 	tg "gopkg.in/telegram-bot-api.v4"
 )
 
+var verboseFlag = flag.Bool("verbose", false, "print progress information")
+
 var (
 	startCmd = "/start"
 	helpCmd  = "/help"
 	addCmd   = "/add"
+)
 
-	// Emoji :pencil2:
-	addButton = addCmd + " \xE2\x9C\x8F"
+// Emoji :pencil2:
+var addButton = addCmd + " \xE2\x9C\x8F"
 
+var (
 	// Markdown formatted
 	helpReply = `Hello %s!
 I help you study your own way.
@@ -49,6 +54,8 @@ After you added some facts type  _@slngbot ..._ to search them.`
 )
 
 func main() {
+	flag.Parse()
+
 	store, err := brain.CreateStore("sqlite3", "./slangbrain.db")
 	if err != nil {
 		log.Panic(err)
@@ -65,7 +72,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	verbose("Authorized on account", bot.Self.UserName)
 
 	u := tg.NewUpdate(0)
 	u.Timeout = 60
@@ -86,7 +93,7 @@ func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
 	userID := msg.From.ID
 	chatID := msg.Chat.ID
 
-	log.Printf("  msg: [%s] %s", msg.From.UserName, msg.Text)
+	verbose("[m]", msg.From.UserName, "-", msg.Text)
 
 	var reply tg.MessageConfig
 
@@ -132,7 +139,7 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 		return
 	}
 
-	log.Printf("query: [%s] %s", q.From.UserName, q.Query)
+	verbose("[q]", q.From.UserName, "-", q.Query)
 
 	userID := q.From.ID
 	var results []interface{}
@@ -178,4 +185,10 @@ func firstChars(i int, s string) string {
 		return s[0:len(s)]
 	}
 	return s[0:i] + "..."
+}
+
+func verbose(info ...interface{}) {
+	if *verboseFlag {
+		log.Println(info...)
+	}
 }
