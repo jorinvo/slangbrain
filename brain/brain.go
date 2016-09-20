@@ -15,20 +15,23 @@ var (
 		);
 		CREATE TABLE IF NOT EXISTS chats (
 			id INTEGER PRIMARY KEY,
+			userid INTEGER,
 			chatid BIGINT,
-			userid INTEGER
+			chatname TEXT
 		);
 		CREATE UNIQUE INDEX IF NOT EXISTS uniqidcombi ON chats(chatid, userid);
 	`
 
-	addChatStmt = "REPLACE INTO chats (userid, chatid) VALUES ($1, $2)"
+	addChatStmt = "REPLACE INTO chats (userid, chatid, chatname) VALUES ($1, $2, $3)"
 
 	addFactStmt = "INSERT INTO facts (chatid, content) VALUES ($1, $2)"
 
 	findFactsStmt = `
-		SELECT id, chatid, content FROM facts
-		WHERE chatid IN (SELECT chatid FROM chats WHERE userid = $1)
-		AND content LIKE '%' || $2 || '%'
+		SELECT id, facts.chatid, content, chatname
+		FROM facts
+		JOIN (SELECT chatid, chatname FROM chats WHERE userid = $1) c
+		ON facts.chatid = c.chatid
+		WHERE content LIKE '%' || $2 || '%'
 	`
 )
 
@@ -42,15 +45,16 @@ var (
 // This way users can share knowledge using a group chat
 // or a single user can create multiple groups as "studying groups" to separate different kinds of facts.
 type Fact struct {
-	ID      int
-	ChatID  int
-	Content string
+	ID        int
+	ChatID    int
+	Content   string
+	ChatTitle string
 }
 
 // Store is the interface to an underlying database.
 // Keeping it separated allows to switch the database implementation.
 type Store interface {
-	AddChat(int, int64) error
+	AddChat(int, int64, string) error
 	AddFact(int64, string) error
 	FindFacts(int, string) ([]Fact, error)
 }
@@ -82,8 +86,8 @@ func CreateStore(driverName, dataSourceName string) (SQLStore, error) {
 
 // AddChat saves a relation between a userID and chatID.
 // Relations are stored unique - even after repeated calling of AddChat.
-func (store SQLStore) AddChat(userID int, chatID int64) error {
-	_, err := store.db.Exec(addChatStmt, userID, chatID)
+func (store SQLStore) AddChat(userID int, chatID int64, chatTitle string) error {
+	_, err := store.db.Exec(addChatStmt, userID, chatID, chatTitle)
 	return errors.Wrapf(err, "failed to add chat for userID %d and chatID %d", userID, chatID)
 }
 
@@ -109,7 +113,7 @@ func (store SQLStore) FindFacts(userID int, query string) (facts []Fact, err err
 	}()
 	for rows.Next() {
 		var f Fact
-		err = rows.Scan(&f.ID, &f.ChatID, &f.Content)
+		err = rows.Scan(&f.ID, &f.ChatID, &f.Content, &f.ChatTitle)
 		if err != nil {
 			return facts, errors.Wrap(err, "failed to scan row")
 		}

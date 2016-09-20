@@ -48,7 +48,7 @@ After you added some facts type  _@slngbot ..._ to search them.`
 	addDoneReply = "Fact added \xF0\x9F\x91\x8D"
 
 	// Markdown formatted
-	inlineQueryReply = `_%s_
+	inlineQueryReply = `_%s_ (%s)
 
 %s`
 )
@@ -92,12 +92,16 @@ func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
 
 	userID := msg.From.ID
 	chatID := msg.Chat.ID
+	chatTitle := msg.Chat.Title
+	if chatTitle == "" {
+		chatTitle = msg.Chat.UserName
+	}
 
 	verbose("[m]", msg.From.UserName, "-", msg.Text)
 
 	var reply tg.MessageConfig
 
-	err := store.AddChat(userID, chatID)
+	err := store.AddChat(userID, chatID, chatTitle)
 	if err != nil {
 		log.Println(errors.Wrap(err, "failed to save chat"))
 		reply = addKeyboard(tg.NewMessage(chatID, errReply))
@@ -150,8 +154,8 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 
 	// search in all brains of user
 	for i, fact := range facts {
-		title := fmt.Sprintf("%v %s", i+1, firstChars(10, fact.Content))
-		msg := fmt.Sprintf(inlineQueryReply, q.Query, fact.Content)
+		title := fmt.Sprintf("%v (%s) %s", i+1, fact.ChatTitle, firstChars(10, fact.Content))
+		msg := fmt.Sprintf(inlineQueryReply, q.Query, fact.ChatTitle, fact.Content)
 		result := tg.NewInlineQueryResultArticleMarkdown(strconv.Itoa(fact.ID), title, msg)
 		result.Description = fact.Content
 		results = append(results, result)
