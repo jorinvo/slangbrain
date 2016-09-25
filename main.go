@@ -37,7 +37,7 @@ I help you to remember them.
 
 Start by adding a new fact using the __/add__ button below.
 
-After you added some facts type  _@slngbot ..._ to search them.`
+After you added some facts type  _@slangbrainbot ..._ to search them.`
 
 	// Emoji :memo:
 	addReply = "Send me a new fact \xF0\x9F\x93\x9D"
