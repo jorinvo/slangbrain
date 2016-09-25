@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -48,27 +49,25 @@ After you added some facts type  _@slngbot ..._ to search them.`
 	addDoneReply = "Fact added \xF0\x9F\x91\x8D"
 
 	// Markdown formatted
-	inlineQueryReply = `_%s_ (%s)
+	inlineQueryReply = `_%s_
 
 %s`
 )
 
 func main() {
 	flag.Parse()
+	token := os.Getenv("BOT_TOKEN")
+	if len(token) < 1 {
+		log.Panic("env var BOT_TOKEN not set")
+	}
+
+	bot, err := tg.NewBotAPI(token)
+	if err != nil {
+		log.Panic(errors.Wrap(err, "failed to connect to Telegram bot API"))
+	}
 
 	store, err := brain.CreateStore("sqlite3", "./slangbrain.db")
 	if err != nil {
-		log.Panic(err)
-	}
-
-	bot, err := tg.NewBotAPI("241302379:AAH6qAM-bnqp81zR2pl_PQePHec-FpYwRBI")
-	if err != nil {
-		defer func() {
-			err := store.Close()
-			if err != nil {
-				log.Println(err)
-			}
-		}()
 		log.Panic(err)
 	}
 
@@ -105,25 +104,27 @@ func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
 	if err != nil {
 		log.Println(errors.Wrap(err, "failed to save chat"))
 		reply = addKeyboard(tg.NewMessage(chatID, errReply))
-	} else {
-		switch {
-		// `/start` or `/help`
-		case strings.HasPrefix(msg.Text, startCmd) || strings.HasPrefix(msg.Text, helpCmd):
-			reply = addKeyboard(tg.NewMessage(chatID, fmt.Sprintf(helpReply, msg.From.FirstName)))
-			reply.ParseMode = "Markdown"
-		// `/add`
-		case strings.HasPrefix(msg.Text, addCmd):
-			reply = forceReply(tg.NewMessage(chatID, addReply))
-		// `/add` reply
-		case msg.ReplyToMessage != nil && msg.ReplyToMessage.Text == addReply:
-			err := store.AddFact(chatID, msg.Text)
-			if err != nil {
-				log.Println(err)
-				reply = addKeyboard(tg.NewMessage(chatID, errReply))
-			} else {
-				reply = addKeyboard(tg.NewMessage(chatID, addDoneReply))
-				reply.ReplyToMessageID = msg.MessageID
-			}
+		send(bot, reply)
+		return
+	}
+
+	switch {
+	// `/start` or `/help`
+	case strings.HasPrefix(msg.Text, startCmd) || strings.HasPrefix(msg.Text, helpCmd):
+		reply = addKeyboard(tg.NewMessage(chatID, fmt.Sprintf(helpReply, msg.From.FirstName)))
+		reply.ParseMode = "Markdown"
+	// `/add`
+	case strings.HasPrefix(msg.Text, addCmd):
+		reply = forceReply(tg.NewMessage(chatID, addReply))
+	// `/add` reply
+	case msg.ReplyToMessage != nil && msg.ReplyToMessage.Text == addReply:
+		err := store.AddFact(chatID, msg.Text)
+		if err != nil {
+			log.Println(err)
+			reply = addKeyboard(tg.NewMessage(chatID, errReply))
+		} else {
+			reply = addKeyboard(tg.NewMessage(chatID, addDoneReply))
+			reply.ReplyToMessageID = msg.MessageID
 		}
 	}
 
@@ -132,10 +133,8 @@ func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
 		return
 	}
 
-	_, err = bot.Send(reply)
-	if err != nil {
-		log.Println(errors.Wrap(err, "failed sending reply"))
-	}
+	send(bot, reply)
+
 }
 
 func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
@@ -172,6 +171,13 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 	}
 }
 
+func send(bot *tg.BotAPI, reply tg.MessageConfig) {
+	_, err := bot.Send(reply)
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed sending reply"))
+	}
+}
+
 func addKeyboard(msg tg.MessageConfig) tg.MessageConfig {
 	keyboard := tg.NewReplyKeyboard(tg.NewKeyboardButtonRow(tg.NewKeyboardButton(addButton)))
 	keyboard.OneTimeKeyboard = true
@@ -184,6 +190,7 @@ func forceReply(msg tg.MessageConfig) tg.MessageConfig {
 	return msg
 }
 
+// TODO: don't break runes
 func firstChars(i int, s string) string {
 	if i > len(s) {
 		return s[0:len(s)]
