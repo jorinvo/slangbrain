@@ -58,7 +58,11 @@ func main() {
 	flag.Parse()
 	token := os.Getenv("BOT_TOKEN")
 	if len(token) < 1 {
-		log.Panic("env var BOT_TOKEN not set")
+		log.Panic("Env var BOT_TOKEN not set. Get a token from Botfather.")
+	}
+	dbFile := os.Getenv("DB_FILE")
+	if len(dbFile) < 1 {
+		log.Panic("Env var DB_FILE not set. Specify the path for your sqlite database file.")
 	}
 
 	bot, err := tg.NewBotAPI(token)
@@ -66,7 +70,7 @@ func main() {
 		log.Panic(errors.Wrap(err, "failed to connect to Telegram bot API"))
 	}
 
-	store, err := brain.CreateStore("sqlite3", "./slangbrain.db")
+	store, err := brain.CreateStore("sqlite3", dbFile)
 	if err != nil {
 		log.Panic(err)
 	}
