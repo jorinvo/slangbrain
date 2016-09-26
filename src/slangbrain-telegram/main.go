@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"./brain"
+	"slangbrain-telegram/brain"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
