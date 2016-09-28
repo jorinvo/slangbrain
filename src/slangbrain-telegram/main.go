@@ -40,13 +40,14 @@ Start by adding a new fact using the __/add__ button below.
 After you added some facts type  _@slangbrainbot ..._ to search them.`
 
 	// Emoji :memo:
-	addReply = "Send me a new fact \xF0\x9F\x93\x9D"
+	addReply = "Reply with a new fact \xF0\x9F\x93\x9D"
 
 	// Emoji :scream:
 	errReply = "Something went wrong, try again \xF0\x9F\x98\xB1"
 
 	// Emoji :+1:
-	addDoneReply = "Fact added \xF0\x9F\x91\x8D"
+	addDoneReply = `Fact added \xF0\x9F\x91\x8D
+What's next?`
 
 	// Markdown formatted
 	inlineQueryReply = `_%s_
@@ -158,7 +159,7 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 	// search in all brains of user
 	for i, fact := range facts {
 		title := fmt.Sprintf("%v (%s) %s", i+1, fact.ChatTitle, firstChars(10, fact.Content))
-		msg := fmt.Sprintf(inlineQueryReply, q.Query, fact.ChatTitle, fact.Content)
+		msg := fmt.Sprintf(inlineQueryReply, q.Query, fact.Content)
 		result := tg.NewInlineQueryResultArticleMarkdown(strconv.Itoa(fact.ID), title, msg)
 		result.Description = fact.Content
 		results = append(results, result)
