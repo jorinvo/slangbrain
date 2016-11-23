@@ -26,7 +26,7 @@ var (
 )
 
 // Emoji :pencil2:
-var addButton = addCmd + " \xE2\x9C\x8F"
+var addButton = addCmd + " \u270f\ufe0f"
 
 var (
 	// Markdown formatted
@@ -40,14 +40,13 @@ Start by adding a new fact using the __/add__ button below.
 After you added some facts type  _@slangbrainbot ..._ to search them.`
 
 	// Emoji :memo:
-	addReply = "Reply with a new fact \xF0\x9F\x93\x9D"
+	addReply = "Send me a new fact \U0001f4dd"
 
 	// Emoji :scream:
-	errReply = "Something went wrong, try again \xF0\x9F\x98\xB1"
+	errReply = "Something went wrong, try again \U0001f631"
 
 	// Emoji :+1:
-	addDoneReply = `Fact added \xF0\x9F\x91\x8D
-What's next?`
+	addDoneReply = "Fact added \U0001f44d"
 
 	// Markdown formatted
 	inlineQueryReply = `_%s_
@@ -104,52 +103,54 @@ func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
 		return
 	}
 
-	userID := msg.From.ID
-	chatID := msg.Chat.ID
+	verbose("[m]", msg.From.UserName, "-", msg.Text)
+
+	reply, err := getReply(store, msg)
+	if err != nil {
+		log.Println(err)
+	}
+	// Ignore unhandled messages
+	if reply.Text == "" {
+		return
+	}
+	_, err = bot.Send(reply)
+	if err != nil {
+		log.Println(errors.Wrap(err, "failed sending reply"))
+	}
+}
+
+func getReply(store brain.Store, msg *tg.Message) (tg.MessageConfig, error) {
 	chatTitle := msg.Chat.Title
 	if chatTitle == "" {
 		chatTitle = msg.Chat.UserName
 	}
 
-	verbose("[m]", msg.From.UserName, "-", msg.Text)
-
-	var reply tg.MessageConfig
-
-	err := store.AddChat(userID, chatID, chatTitle)
+	chat, err := store.UseChat(msg.Chat.ID, msg.From.ID, chatTitle)
 	if err != nil {
-		log.Println(errors.Wrap(err, "failed to save chat"))
-		reply = addKeyboard(tg.NewMessage(chatID, errReply))
-		send(bot, reply)
-		return
+		return replyWithKeyboard(chat.ID, errReply), err
 	}
 
 	switch {
 	// `/start` or `/help`
 	case strings.HasPrefix(msg.Text, startCmd) || strings.HasPrefix(msg.Text, helpCmd):
-		reply = addKeyboard(tg.NewMessage(chatID, fmt.Sprintf(helpReply, msg.From.FirstName)))
+		reply := replyWithKeyboard(chat.ID, fmt.Sprintf(helpReply, msg.From.FirstName))
 		reply.ParseMode = "Markdown"
+		return reply, nil
 	// `/add`
 	case strings.HasPrefix(msg.Text, addCmd):
-		reply = forceReply(tg.NewMessage(chatID, addReply))
+		err := store.SetMode(chat.ID, brain.AddMode)
+		return tg.NewMessage(chat.ID, addReply), err
 	// `/add` reply
-	case msg.ReplyToMessage != nil && msg.ReplyToMessage.Text == addReply:
-		err := store.AddFact(chatID, msg.Text)
+	case chat.Mode == brain.AddMode:
+		err := store.AddFact(chat.ID, msg.Text)
 		if err != nil {
-			log.Println(err)
-			reply = addKeyboard(tg.NewMessage(chatID, errReply))
-		} else {
-			reply = addKeyboard(tg.NewMessage(chatID, addDoneReply))
-			reply.ReplyToMessageID = msg.MessageID
+			return replyWithKeyboard(chat.ID, errReply), err
 		}
+		err = store.SetMode(chat.ID, brain.IdleMode)
+		return replyWithKeyboard(chat.ID, addDoneReply), err
 	}
 
-	// Ignore unhandled messages
-	if reply.Text == "" {
-		return
-	}
-
-	send(bot, reply)
-
+	return tg.MessageConfig{}, nil
 }
 
 func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
@@ -168,9 +169,9 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 
 	// search in all brains of user
 	for i, fact := range facts {
-		title := fmt.Sprintf("%v (%s) %s", i+1, fact.ChatTitle, firstChars(10, fact.Content))
+		title := fmt.Sprintf("%v (%s) %s", i+1, fact.Chat.Title, firstChars(10, fact.Content))
 		msg := fmt.Sprintf(inlineQueryReply, q.Query, fact.Content)
-		result := tg.NewInlineQueryResultArticleMarkdown(strconv.Itoa(fact.ID), title, msg)
+		result := tg.NewInlineQueryResultArticleMarkdown(strconv.Itoa(i+1), title, msg)
 		result.Description = fact.Content
 		results = append(results, result)
 	}
@@ -186,22 +187,11 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
 	}
 }
 
-func send(bot *tg.BotAPI, reply tg.MessageConfig) {
-	_, err := bot.Send(reply)
-	if err != nil {
-		log.Println(errors.Wrap(err, "failed sending reply"))
-	}
-}
-
-func addKeyboard(msg tg.MessageConfig) tg.MessageConfig {
+func replyWithKeyboard(chatID int64, text string) tg.MessageConfig {
+	msg := tg.NewMessage(chatID, text)
 	keyboard := tg.NewReplyKeyboard(tg.NewKeyboardButtonRow(tg.NewKeyboardButton(addButton)))
 	keyboard.OneTimeKeyboard = true
 	msg.ReplyMarkup = keyboard
-	return msg
-}
-
-func forceReply(msg tg.MessageConfig) tg.MessageConfig {
-	msg.ReplyMarkup = tg.ForceReply{ForceReply: true}
 	return msg
 }
 
