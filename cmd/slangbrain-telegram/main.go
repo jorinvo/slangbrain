@@ -6,7 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -66,6 +69,16 @@ func main() {
 		log.Println("Env var DB_FILE not set. Specify the path for your sqlite database file.")
 		os.Exit(1)
 	}
+	addr := os.Getenv("ADDR")
+	if len(addr) < 1 {
+		log.Println("Env var ADDR not set. Use address to bind webhook server to. Can also be only :<port>.")
+		os.Exit(1)
+	}
+	webhook, err := url.Parse(os.Getenv("WEBHOOK"))
+	if err != nil {
+		log.Println("Env var WEBHOOK not valid. Specify the URL Telegram should send updates to.")
+		os.Exit(1)
+	}
 
 	store, err := brain.CreateStore("sqlite3", dbFile)
 	if err != nil {
@@ -84,13 +97,22 @@ func main() {
 		log.Println("failed to connect to Telegram bot API:", err)
 		os.Exit(1)
 	}
-
 	verbose("Authorized on account", bot.Self.UserName)
 
-	u := tg.NewUpdate(0)
-	u.Timeout = 60
+	webhook.Path = path.Join(webhook.Path, bot.Token)
+	_, err = bot.SetWebhook(tg.NewWebhook(webhook.String()))
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 
-	updates, err := bot.GetUpdatesChan(u)
+	updates := bot.ListenForWebhook("/" + bot.Token)
+	go func() {
+		err := http.ListenAndServe(addr, nil)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	for update := range updates {
 		handleMessage(store, bot, update.Message)
