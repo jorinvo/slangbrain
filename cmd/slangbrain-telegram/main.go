@@ -3,7 +3,6 @@ package main
 // Thanks for help with unicode http://apps.timwhitlock.info/emoji/tables/unicode
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 	tg "gopkg.in/telegram-bot-api.v4"
 )
-
-var verboseFlag = flag.Bool("verbose", false, "print progress information")
 
 var (
 	startCmd = "/start"
@@ -58,7 +55,18 @@ After you added some facts type  _@slangbrainbot ..._ to search them.`
 )
 
 func main() {
-	flag.Parse()
+	verboseVar := os.Getenv("VERBOSE")
+	var (
+		verbose bool
+		err     error
+	)
+	if len(verboseVar) > 0 {
+		verbose, err = strconv.ParseBool(verboseVar)
+		if err != nil {
+			log.Println("Env var VERBOSE has to be boolean.")
+			os.Exit(1)
+		}
+	}
 	token := os.Getenv("BOT_TOKEN")
 	if len(token) < 1 {
 		log.Println("Env var BOT_TOKEN not set. Get a token from Botfather.")
@@ -97,7 +105,9 @@ func main() {
 		log.Println("failed to connect to Telegram bot API:", err)
 		os.Exit(1)
 	}
-	verbose("Authorized on account", bot.Self.UserName)
+	if verbose {
+		log.Println("Authorized on account", bot.Self.UserName)
+	}
 
 	webhook.Path = path.Join(webhook.Path, bot.Token)
 	_, err = bot.SetWebhook(tg.NewWebhook(webhook.String()))
@@ -115,17 +125,19 @@ func main() {
 	}()
 
 	for update := range updates {
-		handleMessage(store, bot, update.Message)
-		handleInlineQuery(store, bot, update.InlineQuery)
+		handleMessage(store, bot, update.Message, verbose)
+		handleInlineQuery(store, bot, update.InlineQuery, verbose)
 	}
 }
 
-func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message) {
+func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message, verbose bool) {
 	if msg == nil {
 		return
 	}
 
-	verbose("[m]", msg.From.UserName, "-", msg.Text)
+	if verbose {
+		log.Println("[m]", msg.From.UserName, "-", msg.Text)
+	}
 
 	reply, err := getReply(store, msg)
 	if err != nil {
@@ -175,12 +187,14 @@ func getReply(store brain.Store, msg *tg.Message) (tg.MessageConfig, error) {
 	return tg.MessageConfig{}, nil
 }
 
-func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery) {
+func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery, verbose bool) {
 	if q == nil {
 		return
 	}
 
-	verbose("[q]", q.From.UserName, "-", q.Query)
+	if verbose {
+		log.Println("[q]", q.From.UserName, "-", q.Query)
+	}
 
 	userID := q.From.ID
 	var results []interface{}
@@ -223,10 +237,4 @@ func firstChars(i int, s string) string {
 		return s[0:len(s)]
 	}
 	return s[0:i] + "..."
-}
-
-func verbose(info ...interface{}) {
-	if *verboseFlag {
-		log.Println(info...)
-	}
 }
