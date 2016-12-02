@@ -54,7 +54,16 @@ After you added some facts type  _@slangbrainbot ..._ to search them.`
 %s`
 )
 
+type config struct {
+	logger  *log.Logger
+	verbose bool
+	store   brain.Store
+	bot     *tg.BotAPI
+}
+
 func main() {
+	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+
 	verboseVar := os.Getenv("VERBOSE")
 	var (
 		verbose bool
@@ -63,56 +72,56 @@ func main() {
 	if len(verboseVar) > 0 {
 		verbose, err = strconv.ParseBool(verboseVar)
 		if err != nil {
-			log.Println("Env var VERBOSE has to be boolean.")
+			logger.Println("Env var VERBOSE has to be boolean.")
 			os.Exit(1)
 		}
 	}
 	token := os.Getenv("BOT_TOKEN")
 	if len(token) < 1 {
-		log.Println("Env var BOT_TOKEN not set. Get a token from Botfather.")
+		logger.Println("Env var BOT_TOKEN not set. Get a token from Botfather.")
 		os.Exit(1)
 	}
 	dbFile := os.Getenv("DB_FILE")
 	if len(dbFile) < 1 {
-		log.Println("Env var DB_FILE not set. Specify the path for your sqlite database file.")
+		logger.Println("Env var DB_FILE not set. Specify the path for your sqlite database file.")
 		os.Exit(1)
 	}
 	addr := os.Getenv("ADDR")
 	if len(addr) < 1 {
-		log.Println("Env var ADDR not set. Use address to bind webhook server to. Can also be only :<port>.")
+		logger.Println("Env var ADDR not set. Use address to bind webhook server to. Can also be only :<port>.")
 		os.Exit(1)
 	}
 	webhook, err := url.Parse(os.Getenv("WEBHOOK"))
 	if err != nil {
-		log.Println("Env var WEBHOOK not valid. Specify the URL Telegram should send updates to.")
+		logger.Println("Env var WEBHOOK not valid. Specify the URL Telegram should send updates to.")
 		os.Exit(1)
 	}
 
 	store, err := brain.CreateStore("sqlite3", dbFile)
 	if err != nil {
-		log.Println("failed to create store: ", err)
+		logger.Println("failed to create store: ", err)
 		os.Exit(1)
 	}
 	defer func() {
 		err := store.Close()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 	}()
 
 	bot, err := tg.NewBotAPI(token)
 	if err != nil {
-		log.Println("failed to connect to Telegram bot API:", err)
+		logger.Println("failed to connect to Telegram bot API:", err)
 		os.Exit(1)
 	}
 	if verbose {
-		log.Println("Authorized on account", bot.Self.UserName)
+		logger.Println("Authorized on account", bot.Self.UserName)
 	}
 
 	webhook.Path = path.Join(webhook.Path, bot.Token)
 	_, err = bot.SetWebhook(tg.NewWebhook(webhook.String()))
 	if err != nil {
-		log.Println(err)
+		logger.Println(err)
 		os.Exit(1)
 	}
 
@@ -120,36 +129,38 @@ func main() {
 	go func() {
 		err := http.ListenAndServe(addr, nil)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 	}()
 
+	c := &config{logger, verbose, store, bot}
+
 	for update := range updates {
-		handleMessage(store, bot, update.Message, verbose)
-		handleInlineQuery(store, bot, update.InlineQuery, verbose)
+		handleMessage(c, update.Message)
+		handleInlineQuery(c, update.InlineQuery)
 	}
 }
 
-func handleMessage(store brain.Store, bot *tg.BotAPI, msg *tg.Message, verbose bool) {
+func handleMessage(c *config, msg *tg.Message) {
 	if msg == nil {
 		return
 	}
 
-	if verbose {
-		log.Println("[m]", msg.From.UserName, "-", msg.Text)
+	if c.verbose {
+		c.logger.Println("[m]", msg.From.UserName, "-", msg.Text)
 	}
 
-	reply, err := getReply(store, msg)
+	reply, err := getReply(c.store, msg)
 	if err != nil {
-		log.Println(err)
+		c.logger.Println(err)
 	}
 	// Ignore unhandled messages
 	if reply.Text == "" {
 		return
 	}
-	_, err = bot.Send(reply)
+	_, err = c.bot.Send(reply)
 	if err != nil {
-		log.Println(errors.Wrap(err, "failed sending reply"))
+		c.logger.Println(errors.Wrap(err, "failed sending reply"))
 	}
 }
 
@@ -187,20 +198,20 @@ func getReply(store brain.Store, msg *tg.Message) (tg.MessageConfig, error) {
 	return tg.MessageConfig{}, nil
 }
 
-func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery, verbose bool) {
+func handleInlineQuery(c *config, q *tg.InlineQuery) {
 	if q == nil {
 		return
 	}
 
-	if verbose {
-		log.Println("[q]", q.From.UserName, "-", q.Query)
+	if c.verbose {
+		c.logger.Println("[q]", q.From.UserName, "-", q.Query)
 	}
 
 	userID := q.From.ID
 	var results []interface{}
-	facts, err := store.FindFacts(userID, q.Query)
+	facts, err := c.store.FindFacts(userID, q.Query)
 	if err != nil {
-		log.Println(err)
+		c.logger.Println(err)
 	}
 
 	// search in all brains of user
@@ -218,8 +229,8 @@ func handleInlineQuery(store brain.Store, bot *tg.BotAPI, q *tg.InlineQuery, ver
 		Results:       results,
 	}
 
-	if _, err := bot.AnswerInlineQuery(inlineConf); err != nil {
-		log.Println(err)
+	if _, err := c.bot.AnswerInlineQuery(inlineConf); err != nil {
+		c.logger.Println(err)
 	}
 }
 
