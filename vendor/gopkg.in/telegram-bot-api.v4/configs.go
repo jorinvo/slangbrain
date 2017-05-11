@@ -275,6 +275,7 @@ func (config PhotoConfig) method() string {
 // AudioConfig contains information about a SendAudio request.
 type AudioConfig struct {
 	BaseFile
+	Caption   string
 	Duration  int
 	Performer string
 	Title     string
@@ -295,6 +296,9 @@ func (config AudioConfig) values() (url.Values, error) {
 	if config.Title != "" {
 		v.Add("title", config.Title)
 	}
+	if config.Caption != "" {
+		v.Add("caption", config.Caption)
+	}
 
 	return v, nil
 }
@@ -312,6 +316,9 @@ func (config AudioConfig) params() (map[string]string, error) {
 	}
 	if config.Title != "" {
 		params["title"] = config.Title
+	}
+	if config.Caption != "" {
+		params["caption"] = config.Caption
 	}
 
 	return params, nil
@@ -431,6 +438,7 @@ func (config VideoConfig) method() string {
 // VoiceConfig contains information about a SendVoice request.
 type VoiceConfig struct {
 	BaseFile
+	Caption  string
 	Duration int
 }
 
@@ -537,6 +545,91 @@ func (config ContactConfig) values() (url.Values, error) {
 
 func (config ContactConfig) method() string {
 	return "sendContact"
+}
+
+// GameConfig allows you to send a game.
+type GameConfig struct {
+	BaseChat
+	GameShortName string
+}
+
+func (config GameConfig) values() (url.Values, error) {
+	v, _ := config.BaseChat.values()
+
+	v.Add("game_short_name", config.GameShortName)
+
+	return v, nil
+}
+
+func (config GameConfig) method() string {
+	return "sendGame"
+}
+
+// SetGameScoreConfig allows you to update the game score in a chat.
+type SetGameScoreConfig struct {
+	UserID             int
+	Score              int
+	Force              bool
+	DisableEditMessage bool
+	ChatID             int
+	ChannelUsername    string
+	MessageID          int
+	InlineMessageID    string
+}
+
+func (config SetGameScoreConfig) values() (url.Values, error) {
+	v := url.Values{}
+
+	v.Add("user_id", strconv.Itoa(config.UserID))
+	v.Add("score", strconv.Itoa(config.Score))
+	if config.InlineMessageID == "" {
+		if config.ChannelUsername == "" {
+			v.Add("chat_id", strconv.Itoa(config.ChatID))
+		} else {
+			v.Add("chat_id", config.ChannelUsername)
+		}
+		v.Add("message_id", strconv.Itoa(config.MessageID))
+	} else {
+		v.Add("inline_message_id", config.InlineMessageID)
+	}
+	v.Add("disable_edit_message", strconv.FormatBool(config.DisableEditMessage))
+
+	return v, nil
+}
+
+func (config SetGameScoreConfig) method() string {
+	return "setGameScore"
+}
+
+// GetGameHighScoresConfig allows you to fetch the high scores for a game.
+type GetGameHighScoresConfig struct {
+	UserID          int
+	ChatID          int
+	ChannelUsername string
+	MessageID       int
+	InlineMessageID string
+}
+
+func (config GetGameHighScoresConfig) values() (url.Values, error) {
+	v := url.Values{}
+
+	v.Add("user_id", strconv.Itoa(config.UserID))
+	if config.InlineMessageID == "" {
+		if config.ChannelUsername == "" {
+			v.Add("chat_id", strconv.Itoa(config.ChatID))
+		} else {
+			v.Add("chat_id", config.ChannelUsername)
+		}
+		v.Add("message_id", strconv.Itoa(config.MessageID))
+	} else {
+		v.Add("inline_message_id", config.InlineMessageID)
+	}
+
+	return v, nil
+}
+
+func (config GetGameHighScoresConfig) method() string {
+	return "getGameHighScores"
 }
 
 // ChatActionConfig contains information about a SendChatAction request.
@@ -669,6 +762,8 @@ type CallbackConfig struct {
 	CallbackQueryID string `json:"callback_query_id"`
 	Text            string `json:"text"`
 	ShowAlert       bool   `json:"show_alert"`
+	URL             string `json:"url"`
+	CacheTime       int    `json:"cache_time"`
 }
 
 // ChatMemberConfig contains information about a user in a chat for use

@@ -1,3 +1,25 @@
+# Slangbrain
+
+[![GoDoc](https://godoc.org/qvl.io/slangbrain?status.svg)](https://godoc.org/qvl.io/slangbrain)
+[![Build Status](https://travis-ci.org/qvl/slangbrain.svg?branch=master)](https://travis-ci.org/qvl/slangbrain)
+[![Go Report Card](https://goreportcard.com/badge/qvl.io/slangbrain)](https://goreportcard.com/report/qvl.io/slangbrain)
+
+
+## Install
+
+- With [Go](https://golang.org/):
+```
+go get qvl.io/slangbrain
+```
+
+- With [Homebrew](http://brew.sh/):
+```
+  brew install qvl/tap/slangbrain
+```
+
+- Download from https://github.com/qvl/slangbrain/releases
+
+
 ## Development
 
 1. `go get github.com/jorinvo/slangbrain` to get project
@@ -7,10 +29,24 @@
 5. For local development use `ngrok` (https://ngrok.com) as webhook
 
 
-https://www.sitepoint.com/building-facebook-chat-bot-node-heroku/
-https://chatbotsmagazine.com/11-messenger-bot-tricks-to-increase-retention-301416630681
-https://chatbotsmagazine.com/what-do-the-recent-facebook-updates-mean-for-chatbot-developers-b26e6365d938
-https://www.supermemo.com/english/algsm11.htm
-https://kilianvalkhof.com/2017/chatbots/6-things-i-learned-creating-my-own-messenger-chatbot/
-https://chatbotslife.com/ultimate-bot-design-guide-a-living-doc-69a589ee0028
-https://www.techinasia.com/talk/built-first-ever-sg-government-chatbot
+### Contributing
+
+Make sure to use `gofmt` and create a [Pull Request](https://github.com/qvl/slangbrain/pulls).
+
+When changing external dependencies please use [dep](https://github.com/golang/dep/) to vendor them.
+
+
+### Releasing
+
+Push a new Git tag and [GoReleaser](https://github.com/goreleaser/releaser) will automatically create a release.
+
+
+## Thank you
+
+To these helpful open source projects Slangbrain is built on top of:
+
+
+
+## License
+
+[MIT](./license)
