@@ -1,10 +1,16 @@
-memo = "6b69f7dee10879003312616727df7b3238a3d83dcfbc794703995b43154a01ea"
+memo = "f187fa650b99a92c703a083ec333ff2b0406fba6b4880a028bc266e08ba08e99"
 
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   revision = "ca5e3819723d8eeaf170ad510e7da1d6d2e94a08"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/paked/messenger"
+  packages = ["."]
+  revision = "64c15a121b44a038131924a44f170ef8a09fd00f"
 
 [[projects]]
   branch = "master"
