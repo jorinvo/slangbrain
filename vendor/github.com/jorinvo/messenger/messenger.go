@@ -15,8 +15,8 @@ const (
 	ProfileURL = "https://graph.facebook.com/v2.6/"
 	// ProfileFields is a list of JSON field names which will be populated by the profile query.
 	ProfileFields = "first_name,last_name,profile_pic,locale,timezone,gender"
-	// SendSettingsURL is API endpoint for saving settings.
-	SendSettingsURL = "https://graph.facebook.com/v2.6/me/thread_settings"
+	// SettingsURL is API endpoint for saving settings.
+	SettingsURL = "https://graph.facebook.com/v2.6/me/messenger_profile"
 )
 
 // Options are the settings used when creating a Messenger client.
@@ -143,7 +143,9 @@ func (m *Messenger) ProfileByID(id int64) (Profile, error) {
 	if err != nil {
 		return p, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -166,53 +168,31 @@ func (m *Messenger) ProfileByID(id int64) (Profile, error) {
 	return p, err
 }
 
-// GreetingSetting sends settings for greeting
-func (m *Messenger) GreetingSetting(text string) error {
-	d := GreetingSetting{
-		SettingType: "greeting",
-		Greeting: GreetingInfo{
-			Text: text,
-		},
-	}
-
-	data, err := json.Marshal(d)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", SendSettingsURL, bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.URL.RawQuery = "access_token=" + m.token
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return checkFacebookError(resp.Body)
+// SetGreeting sets greetings.
+// Set Locale: "default" for a fallback greeting.
+func (m *Messenger) SetGreeting(g []Greeting) error {
+	return m.postSetting(greetingSettings{Greeting: g})
 }
 
-// CallToActionsSetting sends settings for Get Started or Persist Menu
-func (m *Messenger) CallToActionsSetting(state string, actions []CallToActionsItem) error {
-	d := CallToActionsSetting{
-		SettingType:   "call_to_actions",
-		ThreadState:   state,
-		CallToActions: actions,
-	}
+// PeristentMenu sends settings for Persist Menu
+func (m *Messenger) PeristentMenu(l []LocalizedMenu) error {
+	return m.postSetting(menuSettings{PersistentMenu: l})
+}
 
-	data, err := json.Marshal(d)
+// GetStarted displays a "Get Started" button for new users.
+// When a users pushes the button, a postback with the given payload is triggered.
+func (m *Messenger) GetStarted(p string) error {
+	return m.postSetting(getStartedSettings{GetStarted: getStartedPayload{p}})
+
+}
+
+func (m *Messenger) postSetting(data interface{}) error {
+	encoded, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", SendSettingsURL, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", SettingsURL, bytes.NewBuffer(encoded))
 	if err != nil {
 		return err
 	}
@@ -226,7 +206,9 @@ func (m *Messenger) CallToActionsSetting(state string, actions []CallToActionsIt
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	return checkFacebookError(resp.Body)
 }

@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+f="dev.db"
+
+test -f $f && rm $f
+sqlite3 $f < setup.sql
+sqlite3 $f < seed.sql

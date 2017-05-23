@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+go run cmd/slangbrain-messenger/main.go \
+  -sqlite dev.db \
+  -verify 'By$TWhbI0ZmR*EDco6fSDF~DvQO0kzyVLEJL4UzoA' \
+  -token 'EAARfY6MlcqEBAGcAg8A0RmZBZAB5DHmnhJRutBgn4xaFk6brkXTIdK9Jok4ZBpJwgwA6LuyodTmuRZCZAZBDVbHdvHVCh17PAqvnjztb1HUg673Hqc5cNZAGX83lZBF4Gx5C3vzpzOlALfkImJKUT9bAveF1LQqHI4KgKQwFPZAfcRAZDZD' \
+  $1
+

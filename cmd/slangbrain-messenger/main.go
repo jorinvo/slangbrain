@@ -8,28 +8,20 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
-
+	"github.com/jorinvo/slangbrain/messenger"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/paked/messenger"
 )
 
 var version string
 
-const usage = `Slangebrain Messenger bot
+const cliUsage = `Slangebrain Messenger bot
 
 Usage: %s [flags]
 
 Flags:
 `
-
-type config struct {
-	logger  *log.Logger
-	verbose bool
-	store   brain.Store
-}
 
 func main() {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
@@ -41,10 +33,11 @@ func main() {
 	port := flag.Int("port", 8080, "")
 	verifyToken := flag.String("verify", "", "")
 	token := flag.String("token", "", "")
+	init := flag.Bool("init", false, "Pass to setup Bot setting on startup.")
 
 	// Parse args
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, usage, os.Args[0])
+		fmt.Fprintf(os.Stderr, cliUsage, os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -68,8 +61,7 @@ func main() {
 
 	store, err := brain.CreateStore("sqlite3", *sqlite)
 	if err != nil {
-		logger.Println("failed to create store: ", err)
-		os.Exit(1)
+		logger.Fatalln("failed to create store:", err)
 	}
 	defer func() {
 		err := store.Close()
@@ -77,52 +69,24 @@ func main() {
 			logger.Println(err)
 		}
 	}()
+	logger.Printf("Database initialized: %s", *sqlite)
 
-	client := messenger.New(messenger.Options{
-		Verify:      true,
-		VerifyToken: *verifyToken,
+	handler, err := messenger.Run(messenger.Config{
+		Log:         logger,
 		Token:       *token,
+		VerifyToken: *verifyToken,
+		Store:       store,
+		Init:        *init,
 	})
-
-	// err = client.GreetingSetting("Welcome to Slangebrain!")
-	// if err != nil {
-	// 	log.Println("failed to set greeting:", err)
-	// 	os.Exit(1)
-	// }
-
-	// TODO: show menu with modes: add and study
-	// client.CallToActionsSetting
-
-	// For beginning, always add mode. Just collecting phrases.
-	client.HandleMessage(func(m messenger.Message, r *messenger.Response) {
-		if m.IsEcho {
-			return
-		}
-
-		parts := strings.SplitN(m.Text, "\n", 2)
-		foreign := strings.TrimSpace(parts[0])
-		mother := ""
-		if len(parts) > 1 {
-			mother = strings.TrimSpace(parts[1])
-		}
-
-		err := store.AddPhrase(m.Sender.ID, foreign, mother)
-		if err != nil {
-			log.Println("failed to save phrase:", err)
-		}
-
-		err = r.Text("Phrase saved. Add next one.")
-		if err != nil {
-			log.Println("failed to send message:", err)
-		}
-	})
+	if err != nil {
+		log.Fatalln("failed to start messenger:", err)
+	}
 
 	addr := *host + ":" + strconv.Itoa(*port)
 
-	log.Printf("Server running at %s", addr)
-	err = http.ListenAndServe(addr, client.Handler())
+	logger.Printf("Server running at %s", addr)
+	err = http.ListenAndServe(addr, handler)
 	if err != nil {
-		log.Println("failed to start server:", err)
-		os.Exit(1)
+		logger.Fatalln("failed to start server:", err)
 	}
 }
