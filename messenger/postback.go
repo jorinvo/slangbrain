@@ -54,11 +54,11 @@ func (b bot) study(chatID int64) (string, []messenger.QuickReply, error) {
 		return messageErr, nil, errors.Wrapf(err, "failed to study with id %v", chatID)
 	}
 	if study.Total == 0 {
-		return messageStudyDone, nil, err
+		return messageStudyDone, nil, nil
 	}
 	switch study.Mode {
 	case brain.ButtonsExplanation:
-		return fmt.Sprintf(messageButtons, study.Phrase), buttonsShow, err
+		return fmt.Sprintf(messageButtons, study.Phrase), buttonsShow, nil
 	default:
 		return messageErr, nil, errors.Wrapf(err, "unknown study mode %v", study.Mode)
 	}
