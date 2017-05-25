@@ -2,7 +2,9 @@ package brain
 
 var (
 	addPhraseStmt = `
-		INSERT INTO phrases (chatid, phrase, explanation) VALUES ($1, $2, $3)
+		INSERT INTO phrases (chatid, phrase, explanation)
+		VALUES ($1, $2, $3)
+		RETURNING id
 	`
 
 	addStudyStmt = `
@@ -14,62 +16,68 @@ var (
 	`
 
 	setModeStmt = `
-		REPLACE INTO chats (chatid, mode) VALUES ($1, $2)
+		INSERT INTO chats (chatid, mode) VALUES ($1, $2)
+		ON CONFLICT (chatid)
+		DO UPDATE
+		SET mode = $2
+		WHERE chats.chatid = $1
 	`
 
 	getStudyStmt = `
-		WITH tmp AS (
-			SELECT *
-			FROM (
-				SELECT SUM(score) AS sumscore, studies.id as id, studymode, phrase, explanation, timestamp
-				FROM studies
-				JOIN phrases
-				ON phraseid = phrases.id
-				WHERE chatid = $1
-				GROUP BY phraseid, studymode
-				ORDER BY timestamp
-			)
-			WHERE (julianday('now') - julianday(timestamp)) >= (2 << sumscore + 1) / 24.0
+		with
+		grouped as (
+			select sum(score) as sumscore, timestamp, studies.id as id, studymode, phrase, explanation
+			from studies
+			join phrases
+			on phraseid = phrases.id
+			where chatid = $1
+			group by phraseid, studymode, studies.id, phrase, explanation
+			order by timestamp
+		),
+		filtered as (
+			select id, studymode, phrase, explanation
+			from grouped
+			where now() - timestamp >= (power(2, sumscore + 1) || ' hours')::interval
+		),
+		total as (
+			select count(1)
+			from filtered
 		)
-		SELECT id, studymode, phrase, explanation, total
-		FROM tmp
-		JOIN (
-			SELECT COUNT(1) AS total FROM tmp
-		)
-		LIMIT 1
+
+		select *
+		from filtered
+		cross join total
+		limit 1
 	`
 
 	scoreStmt = `
-		INSERT INTO studies (phraseid, studymode, score)
-		SELECT *
-		FROM (
-			SELECT phraseid, studymode
-			FROM (
-				SELECT SUM(score) AS sumscore, timestamp, phraseid, studymode
-				FROM studies
-				JOIN phrases
-				ON phraseid = phrases.id
-				WHERE chatid = 1373046609441564
-				GROUP BY phraseid, studymode
-				ORDER BY timestamp
-			)
-			WHERE (julianday('now') - julianday(timestamp)) >= (2 << sumscore + 1) / 24.0
-			LIMIT 1
+		insert into studies (phraseid, studymode, score)
+		with
+		grouped as (
+			select sum(score) as sumscore, timestamp, phraseid, studymode
+			from studies
+			join phrases
+			on phraseid = phrases.id
+			where chatid = $1
+			group by phraseid, studymode, studies.id
+			order by timestamp
+		),
+		filtered as (
+			select phraseid, studymode
+			from grouped
+			where now() - timestamp >= (power(2, sumscore + 1) || ' hours')::interval
+		),
+		score as (
+			select ($2)::integer
 		)
-		JOIN (SELECT 20)
+
+		select *
+		from filtered
+		cross join score
+		limit 1
 	`
 
 	countStudiesStmt = `
-		SELECT COUNT(1)
-		FROM (
-			SELECT SUM(score) AS sumscore, timestamp
-			FROM studies
-			JOIN phrases
-			ON phraseid = phrases.id
-			WHERE chatid = $1
-			GROUP BY phraseid, studymode
-			ORDER BY timestamp
-		)
-		WHERE (julianday('now') - julianday(timestamp)) >= (2 << sumscore + 1) / 24.0
+		TODO
 	`
 )

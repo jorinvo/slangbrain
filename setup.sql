@@ -1,22 +1,22 @@
+CREATE TABLE IF NOT EXISTS chats (
+  id          SERIAL PRIMARY KEY,
+  chatid      BIGINT  UNIQUE NOT NULL,
+  mode        INTEGER DEFAULT 0,
+  studymodes  INTEGER DEFAULT 3
+);
+
 CREATE TABLE IF NOT EXISTS phrases (
-  id INTEGER PRIMARY KEY,
-  chatid BIGINT,
-  phrase TEXT,
+  id          SERIAL PRIMARY KEY,
+  chatid      BIGINT,
+  phrase      TEXT,
   explanation TEXT
 );
 
-CREATE TABLE IF NOT EXISTS chats (
-  id INTEGER PRIMARY KEY,
-  chatid BIGINT UNIQUE NOT NULL,
-  mode INTEGER DEFAULT 0,
-  studymodes INTEGER DEFAULT 3
-);
-
 CREATE TABLE IF NOT EXISTS studies (
-  id INTEGER PRIMARY KEY,
-  phraseid REFERENCES phrases NOT NULL,
-  score INTEGER DEFAULT 0,
+  id        SERIAL PRIMARY KEY,
+  phraseid  INTEGER REFERENCES phrases NOT NULL,
+  score     INTEGER DEFAULT 0,
   studymode INTEGER NOT NULL,
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  timestamp timestamp DEFAULT CURRENT_TIMESTAMP
 );
 

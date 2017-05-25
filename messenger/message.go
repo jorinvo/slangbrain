@@ -25,12 +25,18 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 
 	var fn func(messenger.Message) (string, []messenger.QuickReply, error)
 
-	if m.QuickReply != nil && m.QuickReply.Payload == payloadStudy {
-		fn = b.messageStartStudying
+	if m.QuickReply != nil && m.QuickReply.Payload == payloadStartIdle {
+		fn = b.messageStartIdle
+	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadStartStudy {
+		fn = b.messageStartStudy
+	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadStartAdd {
+		fn = b.messageStartAdd
 	} else if mode == brain.ModeStudy {
 		fn = b.messageStudy
 	} else if mode == brain.ModeAdd {
 		fn = b.messageAdd
+	} else {
+		fn = b.messageStartIdle
 	}
 	// TODO: else idle
 
@@ -43,18 +49,34 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	}
 }
 
-func (b bot) messageStartStudying(m messenger.Message) (string, []messenger.QuickReply, error) {
+func (b bot) messageStartIdle(m messenger.Message) (string, []messenger.QuickReply, error) {
+	err := b.store.SetMode(m.Sender.ID, brain.ModeIdle)
+	if err != nil {
+		return messageErr, buttonsIdleMode, err
+	}
+	return messageStartIdle, buttonsIdleMode, nil
+}
+
+func (b bot) messageStartAdd(m messenger.Message) (string, []messenger.QuickReply, error) {
+	err := b.store.SetMode(m.Sender.ID, brain.ModeAdd)
+	if err != nil {
+		return messageErr, buttonsIdleMode, err
+	}
+	return messageStartAdd, buttonsAddMode, nil
+}
+
+func (b bot) messageStartStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
 	err := b.store.SetMode(m.Sender.ID, brain.ModeStudy)
 	if err != nil {
-		return messageErr, nil, fmt.Errorf("failed to set mode: %v", err)
+		return messageErr, buttonsIdleMode, err
 	}
-	return b.study(m.Sender.ID)
+	return b.startStudy(m.Sender.ID)
 }
 
 func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, error) {
 	parts := strings.SplitN(m.Text, "\n", 2)
 	if len(parts) == 1 {
-		return messageErrExplanation, nil, fmt.Errorf("explanation missing: %s", m.Text)
+		return messageErrExplanation, buttonsAddMode, fmt.Errorf("explanation missing: %s", m.Text)
 	}
 	phrase := strings.TrimSpace(parts[0])
 	explanation := strings.TrimSpace(parts[1])
@@ -63,20 +85,20 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 	if err != nil {
 		return messageErr, nil, fmt.Errorf("failed to save phrase: %v", err)
 	}
-	count, err := b.store.CountStudies(m.Sender.ID)
-	var buttons []messenger.QuickReply
-	if err == nil && count > 0 {
-		buttons = []messenger.QuickReply{
-			button(fmt.Sprintf("study (%d)", count), payloadStudy),
-		}
-	}
+	// count, err := b.store.CountStudies(m.Sender.ID)
+	// var buttons []messenger.QuickReply
+	// if err == nil && count > 0 {
+	// 	buttons = []messenger.QuickReply{
+	// 		button(fmt.Sprintf("study (%d)", count), payloadStartStudy),
+	// 	}
+	// }
 	// Fail silent when counting errors
-	return "Phrase saved. Add next one.", buttons, err
+	return "Phrase saved. Add next one.", buttonsAddMode, err
 }
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
 	if m.QuickReply == nil {
-		return "Currently only quick replies are supported.", nil, fmt.Errorf("not a quick reply: %v", m)
+		return "Currently only quick replies are supported.", buttonsStudyMode, fmt.Errorf("not a quick reply: %v", m)
 	}
 
 	switch m.QuickReply.Payload {
@@ -89,7 +111,7 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 		case brain.ButtonsExplanation:
 			return study.Explanation, buttonsScore, nil
 		default:
-			return messageErr, nil, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)
+			return messageErr, buttonsStudyMode, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)
 		}
 
 	case payloadScoreBad:
@@ -99,6 +121,6 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 	case payloadScoreGood:
 		return b.scoreAndStudy(m.Sender.ID, brain.ScoreGood)
 	default:
-		return messageErr, nil, fmt.Errorf("unknown payload: %s", m.QuickReply.Payload)
+		return messageErr, buttonsStudyMode, fmt.Errorf("unknown payload: %s", m.QuickReply.Payload)
 	}
 }

@@ -24,6 +24,10 @@ func CreateStore(driverName, dataSourceName string) (Store, error) {
 		return store, fmt.Errorf("failed to initialize database adapter: %v", err)
 	}
 
+	if err = db.Ping(); err != nil {
+		return store, fmt.Errorf("failed to ping database: %v", err)
+	}
+
 	setupStmt, err := ioutil.ReadFile(setupSQL)
 	if err != nil {
 		return store, fmt.Errorf("failed to read setup script from %s: %v", setupSQL, err)
@@ -33,42 +37,42 @@ func CreateStore(driverName, dataSourceName string) (Store, error) {
 		return store, fmt.Errorf("failed to setup tables: %v", err)
 	}
 
-	err = db.Ping()
-	return store, fmt.Errorf("failed to connect to database: %v", err)
+	return store, nil
 }
 
 // AddPhrase stores a new phrase.
 func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
-	r, err := store.db.Exec(addPhraseStmt, chatID, phrase, explanation)
-	if err != nil {
+	var phraseID int
+	row := store.db.QueryRow(addPhraseStmt, chatID, phrase, explanation)
+	if err := row.Scan(&phraseID); err != nil {
 		return fmt.Errorf("failed to add phrase for chatID %d: %s - %s: %v", chatID, phrase, explanation, err)
 	}
-	phraseID, err := r.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("failed to add phrase for chatID %d: %s - %s: %v", chatID, phrase, explanation, err)
-	}
-
 	for _, mode := range Studymodes {
-		_, err = store.db.Exec(addStudyStmt, phraseID, mode)
+		_, err := store.db.Exec(addStudyStmt, phraseID, mode)
 		if err != nil {
 			return fmt.Errorf("failed to add phrase for chatID %d: %s - %s: %v", chatID, phrase, explanation, err)
 		}
 	}
-	return fmt.Errorf("failed to add phrase for chatID %d: %s - %s: %v", chatID, phrase, explanation, err)
+	return nil
 }
 
 // GetMode fetches the mode for a chat.
 func (store Store) GetMode(chatID int64) (Mode, error) {
 	var m Mode
 	row := store.db.QueryRow(getModeStmt, chatID)
-	err := row.Scan(&m)
-	return m, fmt.Errorf("failed to get mode for chatID %d: %v", chatID, err)
+	if err := row.Scan(&m); err != nil {
+		return m, fmt.Errorf("failed to get mode for chatID %d: %v", chatID, err)
+	}
+	return m, nil
 }
 
 // SetMode updates the mode for a chat.
 func (store Store) SetMode(chatID int64, mode Mode) error {
 	_, err := store.db.Exec(setModeStmt, chatID, mode)
-	return fmt.Errorf("failed to set mode for chatID %d: %d: %v", chatID, mode, err)
+	if err != nil {
+		return fmt.Errorf("failed to set mode for chatID %d: %d: %v", chatID, mode, err)
+	}
+	return nil
 }
 
 // GetStudy ...
@@ -79,13 +83,19 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 	if err == sql.ErrNoRows {
 		err = nil
 	}
-	return s, fmt.Errorf("failed to study with chatID %d: %v", chatID, err)
+	if err != nil {
+		return s, fmt.Errorf("failed to study with chatID %d: %v", chatID, err)
+	}
+	return s, nil
 }
 
 // ScoreStudy ...
 func (store Store) ScoreStudy(chatID int64, score Score) error {
 	_, err := store.db.Exec(scoreStmt, chatID, score)
-	return fmt.Errorf("failed to score study for chatID %d: %d: %v", chatID, score, err)
+	if err != nil {
+		return fmt.Errorf("failed to score study for chatID %d: %d: %v", chatID, score, err)
+	}
+	return nil
 }
 
 // CountStudies ...
@@ -96,10 +106,16 @@ func (store Store) CountStudies(chatID int64) (int, error) {
 	if err == sql.ErrNoRows {
 		err = nil
 	}
-	return count, fmt.Errorf("failed to count studies for chatID %d: %v", chatID, err)
+	if err != nil {
+		return count, fmt.Errorf("failed to count studies for chatID %d: %v", chatID, err)
+	}
+	return count, nil
 }
 
 // Close the underlying database connection.
 func (store *Store) Close() error {
-	return fmt.Errorf("failed to close database: %v", store.db.Close())
+	if err := store.db.Close(); err != nil {
+		return fmt.Errorf("failed to close database: %v", err)
+	}
+	return nil
 }

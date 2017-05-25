@@ -5,41 +5,22 @@ import (
 	"github.com/jorinvo/slangbrain/brain"
 )
 
+// Only handling the Get Started button here, at the moment
 func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
-	var err error
-	msg := messageErr
-	var buttons []messenger.QuickReply
-
 	b.log.Println("postback", p.Payload)
 
-	switch p.Payload {
-	case payloadGetStarted:
-		err = b.store.SetMode(p.Sender.ID, brain.ModeAdd)
-		if err != nil {
-			b.log.Println("failed to set mode:", err)
-			break
-		}
-		msg = messageWelcome
-	case payloadAdd:
-		err = b.store.SetMode(p.Sender.ID, brain.ModeAdd)
-		if err != nil {
-			b.log.Println("failed to set mode:", err)
-			break
-		}
-		msg = messageAdd
-	case payloadStudy:
-		err = b.store.SetMode(p.Sender.ID, brain.ModeStudy)
-		if err != nil {
-			b.log.Println("failed to set mode:", err)
-			break
-		}
-		msg, buttons, err = b.study(p.Sender.ID)
-		if err != nil {
-			b.log.Println("failed to study:", err)
-		}
+	if p.Payload != payloadGetStarted {
+		return
 	}
 
-	err = r.TextWithReplies(msg, buttons)
+	// For now, start in add mode.
+	// Later there might be a better introduction for users.
+	err := b.store.SetMode(p.Sender.ID, brain.ModeAdd)
+	if err != nil {
+		b.log.Println("failed to set mode:", err)
+	}
+
+	err = r.Text(messageWelcome)
 	if err != nil {
 		b.log.Println("failed to send message:", err)
 	}

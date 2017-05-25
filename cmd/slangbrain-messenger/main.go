@@ -11,7 +11,7 @@ import (
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 var version string
@@ -28,12 +28,11 @@ func main() {
 
 	versionFlag := flag.Bool("version", false, "Print binary version")
 	// silent := flag.Bool("silent", false, "Suppress all output")
-	sqlite := flag.String("sqlite", "", "")
+	db := flag.String("db", "", "")
 	host := flag.String("host", "localhost", "")
 	port := flag.Int("port", 8080, "")
 	verifyToken := flag.String("verify", "", "")
 	token := flag.String("token", "", "")
-	init := flag.Bool("init", false, "Pass to setup Bot setting on startup.")
 
 	// Parse args
 	flag.Usage = func() {
@@ -46,8 +45,8 @@ func main() {
 		fmt.Printf("ghbackup %s %s %s\n", version, runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}
-	if *sqlite == "" {
-		logger.Println("Flag -sqlite is required.")
+	if *db == "" {
+		logger.Println("Flag -db is required.")
 		os.Exit(1)
 	}
 	if *token == "" {
@@ -59,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	store, err := brain.CreateStore("sqlite3", *sqlite)
+	store, err := brain.CreateStore("postgres", *db)
 	if err != nil {
 		logger.Fatalln("failed to create store:", err)
 	}
@@ -69,14 +68,13 @@ func main() {
 			logger.Println(err)
 		}
 	}()
-	logger.Printf("Database initialized: %s", *sqlite)
+	logger.Printf("Database initialized: %s", *db)
 
 	handler, err := messenger.Run(messenger.Config{
 		Log:         logger,
 		Token:       *token,
 		VerifyToken: *verifyToken,
 		Store:       store,
-		Init:        *init,
 	})
 	if err != nil {
 		log.Fatalln("failed to start messenger:", err)

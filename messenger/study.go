@@ -7,17 +7,20 @@ import (
 	"github.com/jorinvo/slangbrain/brain"
 )
 
-func (b bot) study(chatID int64) (string, []messenger.QuickReply, error) {
+func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 	study, err := b.store.GetStudy(chatID)
 	if err != nil {
-		return messageErr, nil, fmt.Errorf("failed to study with id %v: %v", chatID, err)
+		return messageErr, buttonsStudyMode, err
 	}
 	if study.Total == 0 {
-		return messageStudyDone, buttonsAdd, nil
+		if err = b.store.SetMode(chatID, brain.ModeIdle); err != nil {
+			return messageErr, buttonsStudyMode, err
+		}
+		return messageStudyDone, buttonsIdleMode, nil
 	}
 	switch study.Mode {
 	case brain.ButtonsExplanation:
-		return fmt.Sprintf(messageButtons, study.Phrase), buttonsShow, nil
+		return fmt.Sprintf(messageStudyQuestion, study.Phrase), buttonsShow, nil
 	default:
 		return messageErr, nil, fmt.Errorf("unknown study mode %v (%v)", study.Mode, study)
 	}
@@ -26,7 +29,7 @@ func (b bot) study(chatID int64) (string, []messenger.QuickReply, error) {
 func (b bot) scoreAndStudy(chatID int64, score brain.Score) (string, []messenger.QuickReply, error) {
 	err := b.store.ScoreStudy(chatID, score)
 	if err != nil {
-		return messageErr, nil, fmt.Errorf("failed to score study with id %v: %v", chatID, err)
+		return messageErr, buttonsStudyMode, err
 	}
-	return b.study(chatID)
+	return b.startStudy(chatID)
 }

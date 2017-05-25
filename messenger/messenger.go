@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	payloadAdd        = "PAYLOAD_ADD"
-	payloadStudy      = "PAYLOAD_STUDY"
+	payloadStartIdle  = "PAYLOAD_STARTIDLE"
+	payloadStartAdd   = "PAYLOAD_STARTADD"
+	payloadStartStudy = "PAYLOAD_STARTSTUDY"
 	payloadGetStarted = "PAYLOAD_GETSTARTED"
 	payloadShow       = "PAYLOAD_SHOW"
 	payloadScoreBad   = "PAYLOAD_SCOREBAD"
@@ -20,28 +21,41 @@ const (
 )
 
 const (
-	messageAdd = `Please send me a phrase and its explanation.
+	messageStartIdle = "What would you like to do next?"
+	messageStartAdd  = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
 	messageWelcome = `Welcome to Slangbrain!
 ...
 
-` + messageAdd
+` + messageStartAdd
 	messageErr            = "Sorry, something went wrong."
 	messageErrExplanation = "The phrase is missing an explanation. Please send it again with explanation."
 	messageStudyDone      = "Congrats, you finished all your studies for now!"
-	messageButtons        = `Do you know what this means?
+	messageStudyQuestion  = `Do you know what this means?
 
 %s`
 	greeting = "Welcome to Slangebrain!"
 )
 
 var (
-	buttonAdd = button("add phrase", payloadAdd)
+	buttonStudyDone = button("done studying", payloadStartIdle)
 )
 
 var (
-	buttonsAdd   = []messenger.QuickReply{buttonAdd}
-	buttonsShow  = []messenger.QuickReply{button("show", payloadShow)}
+	buttonsIdleMode = []messenger.QuickReply{
+		button("study", payloadStartStudy),
+		button("add phrases", payloadStartAdd),
+	}
+	buttonsAddMode = []messenger.QuickReply{
+		button("done adding", payloadStartIdle),
+	}
+	buttonsStudyMode = []messenger.QuickReply{
+		buttonStudyDone,
+	}
+	buttonsShow = []messenger.QuickReply{
+		buttonStudyDone,
+		button("show", payloadShow),
+	}
 	buttonsScore = []messenger.QuickReply{
 		button("don't know", payloadScoreBad),
 		button("soso", payloadScoreOk),
@@ -55,7 +69,6 @@ type Config struct {
 	Token       string
 	VerifyToken string
 	Store       brain.Store
-	Init        bool
 }
 
 type bot struct {
@@ -76,37 +89,19 @@ func Run(config Config) (http.Handler, error) {
 		Token:       config.Token,
 	})
 
-	if config.Init {
-
-		err := client.SetGreeting([]messenger.Greeting{
-			{Locale: "default", Text: greeting},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to set greeting: %v", err)
-		}
-		config.Log.Printf("Greeting set to: %s", greeting)
-
-		err = client.GetStarted(payloadGetStarted)
-		if err != nil {
-			return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
-		}
-		config.Log.Printf("Get Started button activated")
-
-		// Set menu
-		err = client.PeristentMenu([]messenger.LocalizedMenu{{
-			Locale:                "default",
-			ComposerInputDisabled: true,
-			Items: []messenger.MenuItem{
-				menuItem("Add Phrases", payloadAdd),
-				menuItem("Study", payloadStudy),
-			},
-		}})
-		if err != nil {
-			return nil, fmt.Errorf("failed to enable set menu: %v", err)
-		}
-		config.Log.Printf("Persistent Menu loaded")
-
+	err := client.SetGreeting([]messenger.Greeting{
+		{Locale: "default", Text: greeting},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to set greeting: %v", err)
 	}
+	config.Log.Printf("Greeting set to: %s", greeting)
+
+	err = client.GetStarted(payloadGetStarted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
+	}
+	config.Log.Printf("Get Started button activated")
 
 	client.HandleMessage(b.MessageHandler)
 	client.HandlePostBack(b.PostbackHandler)
@@ -119,13 +114,5 @@ func button(title, payload string) messenger.QuickReply {
 		ContentType: "text",
 		Title:       title,
 		Payload:     payload,
-	}
-}
-
-func menuItem(title, payload string) messenger.MenuItem {
-	return messenger.MenuItem{
-		Type:    "postback",
-		Title:   title,
-		Payload: payload,
 	}
 }

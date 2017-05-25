@@ -8,16 +8,16 @@ INSERT INTO phrases (phrase, explanation, chatid) VALUES
 
 INSERT INTO studies (phraseid, studymode, score, timestamp) VALUES
   /* ready to study */
-  (1, 1, 0, DateTime('Now', '-1 Day')),
+  (1, 1, 0, timestamp 'now' + interval '-1 Day'),
   /* just added. need to wait. */
-  (2, 1, 0, DateTime('Now')),
+  (2, 1, 0, timestamp 'now'),
   /* not ready to study because of sumscore */
-  (3, 1,  0, DateTime('Now', '-6 Days')),
-  (3, 1,  1, DateTime('Now', '-5 Days')),
-  (3, 1, -1, DateTime('Now', '-5 Days')),
-  (3, 1,  1, DateTime('Now', '-4 Days')),
-  (3, 1,  1, DateTime('Now', '-2 Days')),
-  (3, 1,  1, DateTime('Now', '-1 Day')),
+  (3, 1,  0, timestamp 'now' + interval '-6 Days'),
+  (3, 1,  1, timestamp 'now' + interval '-5 Days'),
+  (3, 1, -1, timestamp 'now' + interval '-5 Days'),
+  (3, 1,  1, timestamp 'now' + interval '-4 Days'),
+  (3, 1,  1, timestamp 'now' + interval '-2 Days'),
+  (3, 1,  1, timestamp 'now' + interval '-1 Day'),
   /* ready to study */
-  (4, 1, 0, DateTime('Now', '-5 Days')),
-  (4, 1, 1, DateTime('Now', '-3 Days'));
+  (4, 1, 0, timestamp 'now' + interval '-5 Days'),
+  (4, 1, 1, timestamp 'now' + interval '-3 Days');
