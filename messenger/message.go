@@ -5,6 +5,7 @@ import (
 
 	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/pkg/errors"
 )
 
 func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
@@ -21,64 +22,66 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	}
 
 	if mode == brain.ModeStudy {
-		msg := messageErr
-		var buttons []messenger.QuickReply
-		if m.QuickReply == nil {
+		reply, buttons, err := b.messageStudy(m)
+		if err == nil && reply == "" {
 			return
 		}
-		switch m.QuickReply.Payload {
-		case payloadShow:
-			study, err := b.store.GetStudy(m.Sender.ID)
-			if err != nil {
-				b.log.Println("failed to show study:", err)
-				break
-			}
-			switch study.Mode {
-			case brain.ButtonsExplanation:
-				msg = study.Explanation
-				buttons = buttonsScore
-			}
-		case payloadScoreBad:
-			msg, buttons, err = b.scoreAndStudy(m.Sender.ID, brain.ScoreBad)
-			if err != nil {
-				b.log.Println("failed to continue studies:", err)
-			}
-		case payloadScoreOk:
-			msg, buttons, err = b.scoreAndStudy(m.Sender.ID, brain.ScoreOK)
-			if err != nil {
-				b.log.Println("failed to continue studies:", err)
-			}
-		case payloadScoreGood:
-			msg, buttons, err = b.scoreAndStudy(m.Sender.ID, brain.ScoreGood)
-			if err != nil {
-				b.log.Println("failed to continue studies:", err)
-			}
-		}
-
-		err = r.TextWithReplies(msg, buttons)
+		err = r.TextWithReplies(reply, buttons)
 		if err != nil {
 			b.log.Println("failed to send message:", err)
 		}
 	}
 
 	if mode == brain.ModeAdd {
-		parts := strings.SplitN(m.Text, "\n", 2)
-		phrase := strings.TrimSpace(parts[0])
-		explanation := ""
-		if len(parts) > 1 {
-			explanation = strings.TrimSpace(parts[1])
-		}
-
-		err = b.store.AddPhrase(m.Sender.ID, phrase, explanation)
+		reply, err := b.messageAdd(m)
 		if err != nil {
-			b.log.Println("failed to save phrase:", err)
-			// TODO: keep user updated
+			b.log.Println(err)
 			return
 		}
-
-		err = r.Text("Phrase saved. Add next one.")
+		err = r.Text(reply)
 		if err != nil {
 			b.log.Println("failed to send message:", err)
 		}
+	}
+}
+
+func (b bot) messageAdd(m messenger.Message) (string, error) {
+	parts := strings.SplitN(m.Text, "\n", 2)
+	phrase := strings.TrimSpace(parts[0])
+	explanation := ""
+	if len(parts) > 1 {
+		explanation = strings.TrimSpace(parts[1])
+	}
+	err := b.store.AddPhrase(m.Sender.ID, phrase, explanation)
+	// TODO: keep user updated
+	return "Phrase saved. Add next one.", errors.Wrap(err, "failed to save phrase")
+}
+
+func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
+	if m.QuickReply == nil {
+		return "", nil, nil
+	}
+
+	switch m.QuickReply.Payload {
+	case payloadShow:
+		study, err := b.store.GetStudy(m.Sender.ID)
+		if err != nil {
+			return "", nil, errors.Wrap(err, "failed to show study")
+		}
+		switch study.Mode {
+		case brain.ButtonsExplanation:
+			return study.Explanation, buttonsScore, nil
+		default:
+			return "", nil, errors.New("unknown study mode")
+		}
+
+	case payloadScoreBad:
+		return b.scoreAndStudy(m.Sender.ID, brain.ScoreBad)
+	case payloadScoreOk:
+		return b.scoreAndStudy(m.Sender.ID, brain.ScoreOK)
+	case payloadScoreGood:
+		return b.scoreAndStudy(m.Sender.ID, brain.ScoreGood)
+	default:
+		return "", nil, nil
 	}
 }

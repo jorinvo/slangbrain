@@ -86,20 +86,6 @@ func Run(config Config) (http.Handler, error) {
 		}
 		config.Log.Printf("Get Started button activated")
 
-		// Set menu
-		err = client.PeristentMenu([]messenger.LocalizedMenu{{
-			Locale:                "default",
-			ComposerInputDisabled: true,
-			Items: []messenger.MenuItem{
-				menuItem("Add Phrases", payloadAdd),
-				menuItem("Study", payloadStudy),
-			},
-		}})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to enable set menu")
-		}
-		config.Log.Printf("Persistent Menu loaded")
-
 	}
 
 	client.HandleMessage(b.MessageHandler)
@@ -113,13 +99,5 @@ func button(title, payload string) messenger.QuickReply {
 		ContentType: "text",
 		Title:       title,
 		Payload:     payload,
-	}
-}
-
-func menuItem(title, payload string) messenger.MenuItem {
-	return messenger.MenuItem{
-		Type:    "postback",
-		Title:   title,
-		Payload: payload,
 	}
 }
