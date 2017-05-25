@@ -1,10 +1,10 @@
-memo = "40b763fc2e9ac1e901a2cf090b31e2d7d80035993a4b0e7ba1adca9a3a702c6f"
+memo = "5cf939d2ab64da7d1d3a239502d77714e8e74b4fa6cabee53cdd255a50a15fc9"
 
 [[projects]]
   branch = "master"
   name = "github.com/jorinvo/messenger"
   packages = ["."]
-  revision = "17fa9b59a09285f00bc7113bb76778e03f5a4de2"
+  revision = "a41fcd67e4f5b789a6fdd340c225dfa280c03d8a"
 
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
@@ -14,12 +14,6 @@ memo = "40b763fc2e9ac1e901a2cf090b31e2d7d80035993a4b0e7ba1adca9a3a702c6f"
 
 [[projects]]
   branch = "master"
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  revision = "c605e284fe17294bda444b34710735b29d1a9d90"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "513929065c19401a1c7b76ecd942f9f86a0c061b"
+  revision = "7dcfb8076726a3fdd9353b6b8a1f1b6be6811bd6"

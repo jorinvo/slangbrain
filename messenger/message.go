@@ -6,7 +6,6 @@ import (
 
 	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/pkg/errors"
 )
 
 func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
@@ -47,7 +46,7 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 func (b bot) messageStartStudying(m messenger.Message) (string, []messenger.QuickReply, error) {
 	err := b.store.SetMode(m.Sender.ID, brain.ModeStudy)
 	if err != nil {
-		return messageErr, nil, errors.Wrap(err, "failed to set mode")
+		return messageErr, nil, fmt.Errorf("failed to set mode: %v", err)
 	}
 	return b.study(m.Sender.ID)
 }
@@ -55,14 +54,14 @@ func (b bot) messageStartStudying(m messenger.Message) (string, []messenger.Quic
 func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, error) {
 	parts := strings.SplitN(m.Text, "\n", 2)
 	if len(parts) == 1 {
-		return messageErrExplanation, nil, errors.Errorf("explanation missing: %s", m.Text)
+		return messageErrExplanation, nil, fmt.Errorf("explanation missing: %s", m.Text)
 	}
 	phrase := strings.TrimSpace(parts[0])
 	explanation := strings.TrimSpace(parts[1])
 	err := b.store.AddPhrase(m.Sender.ID, phrase, explanation)
 	// TODO: keep user updated
 	if err != nil {
-		return messageErr, nil, errors.Wrap(err, "failed to save phrase")
+		return messageErr, nil, fmt.Errorf("failed to save phrase: %v", err)
 	}
 	count, err := b.store.CountStudies(m.Sender.ID)
 	var buttons []messenger.QuickReply
@@ -77,20 +76,20 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
 	if m.QuickReply == nil {
-		return "Currently only quick replies are supported.", nil, errors.Errorf("not a quick reply: %v", m)
+		return "Currently only quick replies are supported.", nil, fmt.Errorf("not a quick reply: %v", m)
 	}
 
 	switch m.QuickReply.Payload {
 	case payloadShow:
 		study, err := b.store.GetStudy(m.Sender.ID)
 		if err != nil {
-			return messageErr, buttonsShow, errors.Wrap(err, "failed to show study")
+			return messageErr, buttonsShow, fmt.Errorf("failed to show study: %v", err)
 		}
 		switch study.Mode {
 		case brain.ButtonsExplanation:
 			return study.Explanation, buttonsScore, nil
 		default:
-			return messageErr, nil, errors.New("SHOULD NEVER HAPPEN: unknown study mode")
+			return messageErr, nil, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)
 		}
 
 	case payloadScoreBad:
@@ -100,6 +99,6 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 	case payloadScoreGood:
 		return b.scoreAndStudy(m.Sender.ID, brain.ScoreGood)
 	default:
-		return messageErr, nil, errors.Errorf("unknown payload: %s", m.QuickReply.Payload)
+		return messageErr, nil, fmt.Errorf("unknown payload: %s", m.QuickReply.Payload)
 	}
 }

@@ -1,12 +1,12 @@
 package messenger
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -82,13 +82,13 @@ func Run(config Config) (http.Handler, error) {
 			{Locale: "default", Text: greeting},
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to set greeting")
+			return nil, fmt.Errorf("failed to set greeting: %v", err)
 		}
 		config.Log.Printf("Greeting set to: %s", greeting)
 
 		err = client.GetStarted(payloadGetStarted)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to enable Get Started button")
+			return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
 		}
 		config.Log.Printf("Get Started button activated")
 
@@ -102,7 +102,7 @@ func Run(config Config) (http.Handler, error) {
 			},
 		}})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to enable set menu")
+			return nil, fmt.Errorf("failed to enable set menu: %v", err)
 		}
 		config.Log.Printf("Persistent Menu loaded")
 
