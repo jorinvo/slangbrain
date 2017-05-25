@@ -40,6 +40,7 @@ var (
 )
 
 var (
+	buttonsAdd   = []messenger.QuickReply{buttonAdd}
 	buttonsShow  = []messenger.QuickReply{button("show", payloadShow)}
 	buttonsScore = []messenger.QuickReply{
 		button("don't know", payloadScoreBad),

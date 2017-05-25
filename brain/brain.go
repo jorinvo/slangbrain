@@ -6,6 +6,7 @@ type Mode int
 
 const (
 	// ModeIdle ...
+	// Currently not in use
 	ModeIdle Mode = iota
 	// ModeAdd ...
 	ModeAdd

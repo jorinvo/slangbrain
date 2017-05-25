@@ -14,7 +14,7 @@ func (b bot) study(chatID int64) (string, []messenger.QuickReply, error) {
 		return messageErr, nil, errors.Wrapf(err, "failed to study with id %v", chatID)
 	}
 	if study.Total == 0 {
-		return messageStudyDone, nil, nil
+		return messageStudyDone, buttonsAdd, nil
 	}
 	switch study.Mode {
 	case brain.ButtonsExplanation:
