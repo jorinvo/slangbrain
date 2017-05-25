@@ -21,18 +21,19 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 		return
 	}
 
-	if mode == brain.ModeStudy {
+	switch mode {
+	case brain.ModeStudy:
 		reply, buttons, err := b.messageStudy(m)
-		if err == nil && reply == "" {
+		if err != nil {
+			b.log.Println(err)
 			return
 		}
 		err = r.TextWithReplies(reply, buttons)
 		if err != nil {
 			b.log.Println("failed to send message:", err)
 		}
-	}
 
-	if mode == brain.ModeAdd {
+	case brain.ModeAdd:
 		reply, err := b.messageAdd(m)
 		if err != nil {
 			b.log.Println(err)
@@ -47,11 +48,11 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 
 func (b bot) messageAdd(m messenger.Message) (string, error) {
 	parts := strings.SplitN(m.Text, "\n", 2)
-	phrase := strings.TrimSpace(parts[0])
-	explanation := ""
-	if len(parts) > 1 {
-		explanation = strings.TrimSpace(parts[1])
+	if len(parts) == 1 {
+		return messageErrExplanation, nil
 	}
+	phrase := strings.TrimSpace(parts[0])
+	explanation := strings.TrimSpace(parts[1])
 	err := b.store.AddPhrase(m.Sender.ID, phrase, explanation)
 	// TODO: keep user updated
 	return "Phrase saved. Add next one.", errors.Wrap(err, "failed to save phrase")
@@ -59,7 +60,7 @@ func (b bot) messageAdd(m messenger.Message) (string, error) {
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
 	if m.QuickReply == nil {
-		return "", nil, nil
+		return "Currently only quick replies are supported.", nil, nil
 	}
 
 	switch m.QuickReply.Payload {

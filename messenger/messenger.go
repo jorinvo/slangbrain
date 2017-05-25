@@ -26,9 +26,10 @@ Separate them with a linebreak.`
 ...
 
 ` + messageAdd
-	messageErr       = "Sorry, something went wrong."
-	messageStudyDone = "Congrats, you finished all your studies for now!"
-	messageButtons   = `Do you know what this means?
+	messageErr            = "Sorry, something went wrong."
+	messageErrExplanation = "The phrase is missing an explanation. Please send it again with explanation."
+	messageStudyDone      = "Congrats, you finished all your studies for now!"
+	messageButtons        = `Do you know what this means?
 
 %s`
 	greeting = "Welcome to Slangebrain!"
