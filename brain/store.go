@@ -49,7 +49,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		return errors.Wrapf(err, "failed to add phrase for chatID %d: %s - %s", chatID, phrase, explanation)
 	}
 
-	for mode := range Studymodes {
+	for _, mode := range Studymodes {
 		_, err = store.db.Exec(addStudyStmt, phraseID, mode)
 		if err != nil {
 			return errors.Wrapf(err, "failed to add phrase for chatID %d: %s - %s", chatID, phrase, explanation)
@@ -87,6 +87,17 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 func (store Store) ScoreStudy(chatID int64, score Score) error {
 	_, err := store.db.Exec(scoreStmt, chatID, score)
 	return errors.Wrapf(err, "failed to score study for chatID %d: %d", chatID, score)
+}
+
+// CountStudies ...
+func (store Store) CountStudies(chatID int64) (int, error) {
+	count := 0
+	row := store.db.QueryRow(countStudiesStmt, chatID)
+	err := row.Scan(&count)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return count, errors.Wrapf(err, "failed to count studies for chatID %d", chatID)
 }
 
 // Close the underlying database connection.

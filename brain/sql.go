@@ -58,4 +58,18 @@ var (
 		)
 		JOIN (SELECT 20)
 	`
+
+	countStudiesStmt = `
+		SELECT COUNT(1)
+		FROM (
+			SELECT SUM(score) AS sumscore, timestamp
+			FROM studies
+			JOIN phrases
+			ON phraseid = phrases.id
+			WHERE chatid = $1
+			GROUP BY phraseid, studymode
+			ORDER BY timestamp
+		)
+		WHERE (julianday('now') - julianday(timestamp)) >= (2 << sumscore + 1) / 24.0
+	`
 )
