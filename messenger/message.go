@@ -110,6 +110,8 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 		switch study.Mode {
 		case brain.GuessExplanation:
 			return study.Explanation, buttonsScore, nil
+		case brain.GuessPhrase:
+			return study.Phrase, buttonsScore, nil
 		default:
 			return messageErr, buttonsStudyMode, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)
 		}
