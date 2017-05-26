@@ -80,10 +80,31 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 	}
 	phrase := strings.TrimSpace(parts[0])
 	explanation := strings.TrimSpace(parts[1])
-	err := b.store.AddPhrase(m.Sender.ID, phrase, explanation)
+	// Check for existing phrases
+	p, err := b.store.FindPhrase(m.Sender.ID, func(p brain.Phrase) bool {
+		return p.Phrase == phrase
+	})
+	if err != nil {
+		return messageErr, nil, fmt.Errorf("failed to lookup phrase: %v", err)
+	}
+	if p.Phrase != "" {
+		return fmt.Sprintf(messagePhraseExists, p.Phrase, p.Explanation), buttonsAddMode, nil
+	}
+	// Check for existing explanation
+	p, err = b.store.FindPhrase(m.Sender.ID, func(p brain.Phrase) bool {
+		return p.Explanation == explanation
+	})
+	if err != nil {
+		return messageErr, nil, fmt.Errorf("failed to lookup phrase: %v", err)
+	}
+	if p.Phrase != "" {
+		return fmt.Sprintf(messageExplanationExists, p.Phrase, p.Explanation), buttonsAddMode, nil
+	}
+	// Save phrase
+	err = b.store.AddPhrase(m.Sender.ID, phrase, explanation)
 	// TODO: keep user updated
 	if err != nil {
-		return messageErr, nil, fmt.Errorf("failed to save phrase: %v", err)
+		return messageErr, buttonsAddMode, fmt.Errorf("failed to save phrase: %v", err)
 	}
 	// count, err := b.store.CountStudies(m.Sender.ID)
 	// var buttons []messenger.QuickReply

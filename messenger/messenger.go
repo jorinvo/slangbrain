@@ -34,6 +34,14 @@ Separate them with a linebreak.`
 	messageStudyQuestion  = `Do you know what this means?
 
 %s`
+	messagePhraseExists = `You already saved this phrase before:
+%s
+%s
+`
+	messageExplanationExists = `You already saved a phrase with the same explanation:
+%s
+%s
+`
 	greeting = "Welcome to Slangebrain!"
 )
 

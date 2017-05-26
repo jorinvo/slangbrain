@@ -249,6 +249,31 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 // 	return count, nil
 // }
 
+// FindPhrase ...
+func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {
+	var p Phrase
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		c := tx.Bucket(bp).Cursor()
+		prefix := itob(chatID)
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			var tmp Phrase
+			if err := json.Unmarshal(v, &tmp); err != nil {
+				return err
+			}
+			if fn(tmp) {
+				p = tmp
+				return nil
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return p, fmt.Errorf("failed to find phrase with chatID %d: %v", chatID, err)
+	}
+	return p, nil
+}
+
 // Close the underlying database connection.
 func (store *Store) Close() error {
 	if err := store.db.Close(); err != nil {
