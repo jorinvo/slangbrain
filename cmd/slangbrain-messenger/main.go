@@ -11,7 +11,6 @@ import (
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
-	_ "github.com/lib/pq"
 )
 
 var version string
@@ -58,7 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	store, err := brain.CreateStore("postgres", *db)
+	store, err := brain.CreateStore(*db)
 	if err != nil {
 		logger.Fatalln("failed to create store:", err)
 	}

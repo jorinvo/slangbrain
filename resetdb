@@ -1,7 +1,0 @@
-#!/bin/bash
-set -e
-
-dropdb slangbrain
-createdb slangbrain
-psql slangbrain < setup.sql
-psql slangbrain < seed.sql

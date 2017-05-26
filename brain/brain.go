@@ -6,7 +6,6 @@ type Mode int
 
 const (
 	// ModeIdle ...
-	// Currently not in use
 	ModeIdle Mode = iota
 	// ModeAdd ...
 	ModeAdd
@@ -18,25 +17,20 @@ const (
 type Studymode int
 
 const (
-	// ButtonsExplanation  ...
-	ButtonsExplanation Studymode = 1 << iota
-	// ButtonsPhrase ...
-	ButtonsPhrase
-	// TypeExplanation ...
-	TypeExplanation
-	// TypePhrase ...
-	TypePhrase
+	// GuessPhrase  ...
+	GuessPhrase Studymode = 1 << iota
+	// GuessExplanation ...
+	GuessExplanation
 )
 
 // Studymodes ...
-var Studymodes = []Studymode{ButtonsExplanation, ButtonsPhrase, TypeExplanation, TypePhrase}
+var Studymodes = []Studymode{GuessPhrase, GuessExplanation}
 
 // Study ...
 type Study struct {
-	ID          int
-	Mode        Studymode
 	Phrase      string
 	Explanation string
+	Mode        Studymode
 	Total       int
 }
 
@@ -51,3 +45,18 @@ const (
 	// ScoreGood ...
 	ScoreGood
 )
+
+// Phrase ...
+type Phrase struct {
+	Phrase           string
+	Explanation      string
+	ScorePhrase      Score
+	ScoreExplanation Score
+}
+
+func newPhrase(phrase, explanation string) Phrase {
+	return Phrase{
+		Phrase:      phrase,
+		Explanation: explanation,
+	}
+}

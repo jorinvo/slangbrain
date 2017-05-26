@@ -108,7 +108,7 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 			return messageErr, buttonsShow, fmt.Errorf("failed to show study: %v", err)
 		}
 		switch study.Mode {
-		case brain.ButtonsExplanation:
+		case brain.GuessExplanation:
 			return study.Explanation, buttonsScore, nil
 		default:
 			return messageErr, buttonsStudyMode, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)

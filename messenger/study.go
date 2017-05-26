@@ -19,7 +19,7 @@ func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 		return messageStudyDone, buttonsIdleMode, nil
 	}
 	switch study.Mode {
-	case brain.ButtonsExplanation:
+	case brain.GuessExplanation:
 		return fmt.Sprintf(messageStudyQuestion, study.Phrase), buttonsShow, nil
 	default:
 		return messageErr, nil, fmt.Errorf("unknown study mode %v (%v)", study.Mode, study)
