@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"flag"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
 	"strings"
@@ -89,13 +91,27 @@ func main() {
 		log.Fatalln("failed to start messenger:", err)
 	}
 
+	// Start server and setup graceful shutdown
 	addr := *host + ":" + strconv.Itoa(*port)
+	signals := make(chan os.Signal)
+	// CTRL-C to shutdown
+	signal.Notify(signals, os.Interrupt)
+	h := &http.Server{Addr: addr, Handler: handler}
 
-	logger.Printf("Server running at %s", addr)
-	err = http.ListenAndServe(addr, handler)
-	if err != nil {
-		logger.Fatalln("failed to start server:", err)
+	go func() {
+		logger.Printf("Server running at %s", addr)
+		err = h.ListenAndServe()
+		if err != nil {
+			logger.Fatalln("failed to start server:", err)
+		}
+	}()
+
+	<-signals
+	logger.Println("Waiting for connections before shutting down server.")
+	if err = h.Shutdown(context.Background()); err != nil {
+		logger.Fatalln("failed to shutdown gracefully:", err)
 	}
+	logger.Println("Server gracefully stopped.")
 }
 
 func csvImport(store brain.Store, logger *log.Logger, toImport string) {
