@@ -35,6 +35,8 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 		fn = b.messageStudy
 	} else if mode == brain.ModeAdd {
 		fn = b.messageAdd
+	} else if mode == brain.ModeGetStarted {
+		fn = b.messageGetStarted
 	} else {
 		fn = b.messageStartIdle
 	}
@@ -146,4 +148,11 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 	default:
 		return messageErr, buttonsStudyMode, fmt.Errorf("unknown payload: %s", m.QuickReply.Payload)
 	}
+}
+
+func (b bot) messageGetStarted(m messenger.Message) (string, []messenger.QuickReply, error) {
+	// For now, start in add mode.
+	// Later there might be a better introduction for users.
+	err := b.store.SetMode(m.Sender.ID, brain.ModeAdd)
+	return messageWelcome, nil, err
 }

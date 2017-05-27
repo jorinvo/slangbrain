@@ -3,7 +3,7 @@ set -e
 
 go run main.go \
   -db 'boltdev.db' \
-  -verify 'By$TWhbI0ZmR*EDco6fSDF~DvQO0kzyVLEJL4UzoA' \
-  -token 'EAARfY6MlcqEBAGcAg8A0RmZBZAB5DHmnhJRutBgn4xaFk6brkXTIdK9Jok4ZBpJwgwA6LuyodTmuRZCZAZBDVbHdvHVCh17PAqvnjztb1HUg673Hqc5cNZAGX83lZBF4Gx5C3vzpzOlALfkImJKUT9bAveF1LQqHI4KgKQwFPZAfcRAZDZD' \
+  -verify 'SmhklHbrVi4MInnC8Fih58TBTIc$jeXTadn%bChS' \
+  -token 'EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD' \
   $1
 

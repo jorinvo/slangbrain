@@ -58,7 +58,7 @@ func (store Store) GetMode(chatID int64) (Mode, error) {
 			}
 			mode = Mode(i)
 		} else {
-			mode = ModeIdle
+			mode = ModeGetStarted
 		}
 		return nil
 	})
