@@ -133,17 +133,23 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 			if err != nil {
 				return err
 			}
-			if timestamp > now {
-				continue
-			}
-			total++
 			if timestamp < oldest || oldest == 0 {
 				oldest = timestamp
 				keyOldest = k
 			}
+			if timestamp <= now {
+				total++
+			}
 		}
 		// No studies found
-		if keyOldest == nil {
+		if total == 0 {
+			var next time.Duration
+			if oldest > 0 {
+				next = time.Second * time.Duration(oldest-now)
+			}
+			study = Study{
+				Next: next,
+			}
 			return nil
 		}
 		// Get study from phrase

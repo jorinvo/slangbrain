@@ -1,5 +1,7 @@
 package brain
 
+import "time"
+
 // Mode is the state of a chat.
 // We need to keep track of the state each chat is in.
 type Mode int
@@ -34,6 +36,7 @@ type Study struct {
 	Explanation string
 	Mode        Studymode
 	Total       int
+	Next        time.Duration
 }
 
 // Score ...

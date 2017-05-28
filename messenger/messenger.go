@@ -24,25 +24,37 @@ const (
 	messageStartIdle = "What would you like to do next?"
 	messageStartAdd  = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
-	messageWelcome = `Welcome to Slangbrain!
-...
+	messageWelcome = `Welcome!
+Slangebrain is here to help you with your language studies.
+Whenever you pick up a new phrase, just add it to your Slangebrain and remember it forever.
+Master the language you encounter in your every day life instead of being limited to a textbook.`
+	messageWelcome2 = `You begin by adding phrases and after Slangbrain will test your memories in a natural schedule.
 
 ` + messageStartAdd
 	messageErr            = "Sorry, something went wrong."
 	messageErrExplanation = "The phrase is missing an explanation. Please send it again with explanation."
-	messageStudyDone      = "Congrats, you finished all your studies for now!"
-	messageStudyQuestion  = `Do you know what this means?
+	messageStudyDone      = `Congrats, you finished all your studies for now!
+Come back in %s.`
+	messageStudyEmpty = `You have added no phrases yet.
+Click the button below and get started.`
+	messageStudyQuestion = `Do you remember how to say this?
 
-%s`
+%s
+
+Use the buttons or type the phrase.`
 	messagePhraseExists = `You already saved this phrase before:
 %s
-%s
-`
+%s`
 	messageExplanationExists = `You already saved a phrase with the same explanation:
 %s
+%s`
+	messageAddDone = `Phrase saved:
 %s
-`
-	greeting = "Welcome to Slangebrain!"
+%s
+
+Add next one.`
+	greeting = `Slangbrain helps you with our language Studies.
+Master the language you encounter in your every day life instead of being limited to a textbook.`
 )
 
 var (
@@ -55,14 +67,14 @@ var (
 		button("add phrases", payloadStartAdd),
 	}
 	buttonsAddMode = []messenger.QuickReply{
-		button("done adding", payloadStartIdle),
+		button("stop adding phrases", payloadStartIdle),
 	}
 	buttonsStudyMode = []messenger.QuickReply{
 		buttonStudyDone,
 	}
 	buttonsShow = []messenger.QuickReply{
 		buttonStudyDone,
-		button("show", payloadShow),
+		button("show phrase", payloadShow),
 	}
 	buttonsScore = []messenger.QuickReply{
 		button("don't know", payloadScoreBad),
@@ -103,7 +115,7 @@ func Run(config Config) (http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to set greeting: %v", err)
 	}
-	config.Log.Printf("Greeting set to: %s", greeting)
+	config.Log.Println("Greeting set")
 
 	err = client.GetStarted(payloadGetStarted)
 	if err != nil {

@@ -116,7 +116,7 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 	// 	}
 	// }
 	// Fail silent when counting errors
-	return "Phrase saved. Add next one.", buttonsAddMode, err
+	return fmt.Sprintf(messageAddDone, phrase, explanation), buttonsAddMode, err
 }
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
