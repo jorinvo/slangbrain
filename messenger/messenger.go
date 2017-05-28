@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	payloadStartIdle  = "PAYLOAD_STARTIDLE"
+	payloadIdle       = "PAYLOAD_IDLE"
+	payloadStartMenu  = "PAYLOAD_STARTMENU"
 	payloadStartAdd   = "PAYLOAD_STARTADD"
 	payloadStartStudy = "PAYLOAD_STARTSTUDY"
 	payloadGetStarted = "PAYLOAD_GETSTARTED"
@@ -21,8 +22,10 @@ const (
 )
 
 const (
-	messageStartIdle = "What would you like to do next?"
-	messageStartAdd  = `Please send me a phrase and its explanation.
+	messageStartMenu = `What would you like to do next?
+Please use the buttons below.`
+	messageIdle     = "Good, just send me a message to continue with your studies."
+	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
 	messageWelcome = `Welcome!
 Slangebrain is here to help you with your language studies.
@@ -65,16 +68,17 @@ Master the language you encounter in your every day life instead of being limite
 )
 
 var (
-	buttonStudyDone = button("done studying", payloadStartIdle)
+	buttonStudyDone = button("done studying", payloadStartMenu)
 )
 
 var (
-	buttonsIdleMode = []messenger.QuickReply{
+	buttonsMenuMode = []messenger.QuickReply{
 		button("study", payloadStartStudy),
 		button("add phrases", payloadStartAdd),
+		button("done for now", payloadIdle),
 	}
 	buttonsAddMode = []messenger.QuickReply{
-		button("stop adding phrases", payloadStartIdle),
+		button("stop adding phrases", payloadStartMenu),
 	}
 	buttonsStudyMode = []messenger.QuickReply{
 		buttonStudyDone,

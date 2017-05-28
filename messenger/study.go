@@ -16,8 +16,8 @@ func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 	}
 	// No studies ready
 	if study.Total == 0 {
-		// Go to idle mode
-		if err = b.store.SetMode(chatID, brain.ModeIdle); err != nil {
+		// Go to menu mode
+		if err = b.store.SetMode(chatID, brain.ModeMenu); err != nil {
 			return messageErr, buttonsStudyMode, err
 		}
 		// Display time until next study is ready or there are not studies yet
@@ -25,7 +25,7 @@ func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 		if study.Next > 0 {
 			msg = fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
 		}
-		return msg, buttonsIdleMode, nil
+		return msg, buttonsMenuMode, nil
 	}
 	// Send study to user
 	return fmt.Sprintf(messageStudyQuestion, study.Explanation), buttonsShow, nil

@@ -31,9 +31,12 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 
 	var fn func(messenger.Message) (string, []messenger.QuickReply, error)
 
-	if m.QuickReply != nil && m.QuickReply.Payload == payloadStartIdle {
-		// Start idle mode
-		fn = b.messageStartIdle
+	if m.QuickReply != nil && m.QuickReply.Payload == payloadStartMenu {
+		// Start menu mode
+		fn = b.messageStartMenu
+	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadIdle {
+		// Start study mode
+		fn = b.messageIdle
 	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadStartStudy {
 		// Start study mode
 		fn = b.messageStartStudy
@@ -50,8 +53,8 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 		// Get started when no mode was set
 		fn = b.messageGetStarted
 	} else {
-		// If something goes wrong fall back to idle mode
-		fn = b.messageStartIdle
+		// If something goes wrong fall back to menu mode
+		fn = b.messageStartMenu
 	}
 
 	reply, buttons, err := fn(m)
@@ -63,18 +66,22 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	}
 }
 
-func (b bot) messageStartIdle(m messenger.Message) (string, []messenger.QuickReply, error) {
-	err := b.store.SetMode(m.Sender.ID, brain.ModeIdle)
+func (b bot) messageStartMenu(m messenger.Message) (string, []messenger.QuickReply, error) {
+	err := b.store.SetMode(m.Sender.ID, brain.ModeMenu)
 	if err != nil {
-		return messageErr, buttonsIdleMode, err
+		return messageErr, buttonsMenuMode, err
 	}
-	return messageStartIdle, buttonsIdleMode, nil
+	return messageStartMenu, buttonsMenuMode, nil
+}
+
+func (b bot) messageIdle(m messenger.Message) (string, []messenger.QuickReply, error) {
+	return messageIdle, nil, nil
 }
 
 func (b bot) messageStartAdd(m messenger.Message) (string, []messenger.QuickReply, error) {
 	err := b.store.SetMode(m.Sender.ID, brain.ModeAdd)
 	if err != nil {
-		return messageErr, buttonsIdleMode, err
+		return messageErr, buttonsMenuMode, err
 	}
 	return messageStartAdd, buttonsAddMode, nil
 }
@@ -82,7 +89,7 @@ func (b bot) messageStartAdd(m messenger.Message) (string, []messenger.QuickRepl
 func (b bot) messageStartStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
 	err := b.store.SetMode(m.Sender.ID, brain.ModeStudy)
 	if err != nil {
-		return messageErr, buttonsIdleMode, err
+		return messageErr, buttonsMenuMode, err
 	}
 	return b.startStudy(m.Sender.ID)
 }
