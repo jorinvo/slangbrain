@@ -17,24 +17,10 @@ const (
 	ModeGetStarted
 )
 
-// Studymode ...
-type Studymode int
-
-const (
-	// GuessPhrase  ...
-	GuessPhrase Studymode = 1 << iota
-	// GuessExplanation ...
-	GuessExplanation
-)
-
-// Studymodes ...
-var Studymodes = []Studymode{GuessPhrase, GuessExplanation}
-
 // Study ...
 type Study struct {
 	Phrase      string
 	Explanation string
-	Mode        Studymode
 	Total       int
 	Next        time.Duration
 }
@@ -53,10 +39,9 @@ const (
 
 // Phrase ...
 type Phrase struct {
-	Phrase           string
-	Explanation      string
-	ScorePhrase      Score
-	ScoreExplanation Score
+	Phrase      string
+	Explanation string
+	Score       Score
 }
 
 func newPhrase(phrase, explanation string) Phrase {

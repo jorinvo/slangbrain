@@ -11,6 +11,9 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// Time to wait for first study in hours
+const startStudytime = 2
+
 var (
 	bm = []byte("modes")
 	bp = []byte("phrases")
@@ -98,17 +101,10 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		if err = bPhrases.Put(bPhraseID, buf); err != nil {
 			return err
 		}
-		// Save study times for all study modes
+		// Save study time
 		bStudytimes := tx.Bucket(bst)
-		next := itob(time.Now().Add(4 * time.Hour).Unix())
-		for _, sm := range Studymodes {
-			key := append(bPhraseID, itob(int64(sm))...)
-			if err = bStudytimes.Put(key, next); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		next := itob(time.Now().Add(startStudytime * time.Hour).Unix())
+		return bStudytimes.Put(bPhraseID, next)
 	})
 
 	if err != nil {
@@ -154,20 +150,14 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 		}
 		// Get study from phrase
 		var p Phrase
-		if err := json.Unmarshal(tx.Bucket(bp).Get(keyOldest[:16]), &p); err != nil {
-			return err
-		}
-		m, err := btoi(keyOldest[16:])
-		if err != nil {
+		if err := json.Unmarshal(tx.Bucket(bp).Get(keyOldest), &p); err != nil {
 			return err
 		}
 		study = Study{
 			Phrase:      p.Phrase,
 			Explanation: p.Explanation,
-			Mode:        Studymode(m),
 			Total:       total,
 		}
-
 		return nil
 	})
 
@@ -208,19 +198,12 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 		// Get phrase
 		var p Phrase
 		bPhrases := tx.Bucket(bp)
-		key := studyKey[:16]
-		if err := json.Unmarshal(bPhrases.Get(key), &p); err != nil {
+		if err := json.Unmarshal(bPhrases.Get(studyKey), &p); err != nil {
 			return err
 		}
 		// Update score
-		var newScore Score
-		if bytes.Equal(studyKey[8:16], itob(int64(GuessPhrase))) {
-			p.ScorePhrase += score
-			newScore = p.ScorePhrase
-		} else {
-			p.ScoreExplanation += score
-			newScore = p.ScoreExplanation
-		}
+		p.Score += score
+		newScore := p.Score
 		if newScore < 0 {
 			newScore = 0
 		}
@@ -229,7 +212,7 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 		if err != nil {
 			return err
 		}
-		if err = bPhrases.Put(key, buf); err != nil {
+		if err = bPhrases.Put(studyKey, buf); err != nil {
 			return err
 		}
 		// Update study time
@@ -246,14 +229,6 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 	}
 	return nil
 }
-
-// // CountStudies ...
-// func (store Store) CountStudies(chatID int64) (int, error) {
-// 	if err != nil {
-// 		return count, fmt.Errorf("failed to count studies for chatID %d: %v", chatID, err)
-// 	}
-// 	return count, nil
-// }
 
 // FindPhrase ...
 func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {

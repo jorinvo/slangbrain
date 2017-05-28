@@ -14,24 +14,21 @@ func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 	if err != nil {
 		return messageErr, buttonsStudyMode, err
 	}
+	// No studies ready
 	if study.Total == 0 {
+		// Go to idle mode
 		if err = b.store.SetMode(chatID, brain.ModeIdle); err != nil {
 			return messageErr, buttonsStudyMode, err
 		}
+		// Display time until next study is ready or there are not studies yet
 		msg := messageStudyEmpty
 		if study.Next > 0 {
 			msg = fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
 		}
 		return msg, buttonsIdleMode, nil
 	}
-	switch study.Mode {
-	case brain.GuessExplanation:
-		return fmt.Sprintf(messageStudyQuestion, study.Phrase), buttonsShow, nil
-	case brain.GuessPhrase:
-		return fmt.Sprintf(messageStudyQuestion, study.Explanation), buttonsShow, nil
-	default:
-		return messageErr, nil, fmt.Errorf("unknown study mode %v (%v)", study.Mode, study)
-	}
+	// Send study to user
+	return fmt.Sprintf(messageStudyQuestion, study.Explanation), buttonsShow, nil
 }
 
 func (b bot) scoreAndStudy(chatID int64, score brain.Score) (string, []messenger.QuickReply, error) {

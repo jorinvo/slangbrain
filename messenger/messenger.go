@@ -42,12 +42,11 @@ Click the button below and get started.`
 %s
 
 Use the buttons or type the phrase.`
-	messagePhraseExists = `You already saved this phrase before:
-%s
-%s`
 	messageExplanationExists = `You already saved a phrase with the same explanation:
 %s
-%s`
+%s
+
+Please send it again with an explanation you can distinguish from the existing one.`
 	messageAddDone = `Phrase saved:
 %s
 %s

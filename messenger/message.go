@@ -26,21 +26,27 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	var fn func(messenger.Message) (string, []messenger.QuickReply, error)
 
 	if m.QuickReply != nil && m.QuickReply.Payload == payloadStartIdle {
+		// Start idle mode
 		fn = b.messageStartIdle
 	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadStartStudy {
+		// Start study mode
 		fn = b.messageStartStudy
 	} else if m.QuickReply != nil && m.QuickReply.Payload == payloadStartAdd {
+		// Start add mode
 		fn = b.messageStartAdd
 	} else if mode == brain.ModeStudy {
+		// Handle quick replies and messages for study mode
 		fn = b.messageStudy
 	} else if mode == brain.ModeAdd {
+		// Handle quick replies and messages for add mode
 		fn = b.messageAdd
 	} else if mode == brain.ModeGetStarted {
+		// Get started when no mode was set
 		fn = b.messageGetStarted
 	} else {
+		// If something goes wrong fall back to idle mode
 		fn = b.messageStartIdle
 	}
-	// TODO: else idle
 
 	reply, buttons, err := fn(m)
 	if err != nil {
@@ -82,18 +88,8 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 	}
 	phrase := strings.TrimSpace(parts[0])
 	explanation := strings.TrimSpace(parts[1])
-	// Check for existing phrases
-	p, err := b.store.FindPhrase(m.Sender.ID, func(p brain.Phrase) bool {
-		return p.Phrase == phrase
-	})
-	if err != nil {
-		return messageErr, nil, fmt.Errorf("failed to lookup phrase: %v", err)
-	}
-	if p.Phrase != "" {
-		return fmt.Sprintf(messagePhraseExists, p.Phrase, p.Explanation), buttonsAddMode, nil
-	}
 	// Check for existing explanation
-	p, err = b.store.FindPhrase(m.Sender.ID, func(p brain.Phrase) bool {
+	p, err := b.store.FindPhrase(m.Sender.ID, func(p brain.Phrase) bool {
 		return p.Explanation == explanation
 	})
 	if err != nil {
@@ -103,20 +99,10 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 		return fmt.Sprintf(messageExplanationExists, p.Phrase, p.Explanation), buttonsAddMode, nil
 	}
 	// Save phrase
-	err = b.store.AddPhrase(m.Sender.ID, phrase, explanation)
-	// TODO: keep user updated
-	if err != nil {
+	if err = b.store.AddPhrase(m.Sender.ID, phrase, explanation); err != nil {
 		return messageErr, buttonsAddMode, fmt.Errorf("failed to save phrase: %v", err)
 	}
-	// count, err := b.store.CountStudies(m.Sender.ID)
-	// var buttons []messenger.QuickReply
-	// if err == nil && count > 0 {
-	// 	buttons = []messenger.QuickReply{
-	// 		button(fmt.Sprintf("study (%d)", count), payloadStartStudy),
-	// 	}
-	// }
-	// Fail silent when counting errors
-	return fmt.Sprintf(messageAddDone, phrase, explanation), buttonsAddMode, err
+	return fmt.Sprintf(messageAddDone, phrase, explanation), buttonsAddMode, nil
 }
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
@@ -130,15 +116,7 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 		if err != nil {
 			return messageErr, buttonsShow, fmt.Errorf("failed to show study: %v", err)
 		}
-		switch study.Mode {
-		case brain.GuessExplanation:
-			return study.Explanation, buttonsScore, nil
-		case brain.GuessPhrase:
-			return study.Phrase, buttonsScore, nil
-		default:
-			return messageErr, buttonsStudyMode, fmt.Errorf("SHOULD NEVER HAPPEN: unknown study mode: %v (%v)", study.Mode, study)
-		}
-
+		return study.Phrase, buttonsScore, nil
 	case payloadScoreBad:
 		return b.scoreAndStudy(m.Sender.ID, brain.ScoreBad)
 	case payloadScoreOk:
@@ -151,8 +129,6 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 }
 
 func (b bot) messageGetStarted(m messenger.Message) (string, []messenger.QuickReply, error) {
-	// For now, start in add mode.
-	// Later there might be a better introduction for users.
 	err := b.store.SetMode(m.Sender.ID, brain.ModeAdd)
 	return messageWelcome, nil, err
 }
