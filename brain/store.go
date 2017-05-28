@@ -261,6 +261,13 @@ func (store *Store) Close() error {
 	return nil
 }
 
+// BackupTo writes backups to a file.
+func (store *Store) BackupTo(file string) error {
+	return store.db.View(func(tx *bolt.Tx) error {
+		return tx.CopyFile(file, 0600)
+	})
+}
+
 // StudyNow is only for debugging. Resets all study times to now.
 func (store *Store) StudyNow() error {
 	return store.db.Update(func(tx *bolt.Tx) error {

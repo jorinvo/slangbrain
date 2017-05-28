@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
@@ -37,6 +40,7 @@ func main() {
 	port := flag.Int("port", 8080, "")
 	verifyToken := flag.String("verify", "", "required unless import")
 	token := flag.String("token", "", "required unless import")
+	backupDir := flag.String("backup", "", "Directory to write backups to. When not set, backups are disabled.")
 	toImport := flag.String("import", "", "")
 	studynow := flag.Bool("studynow", false, "")
 
@@ -97,13 +101,16 @@ func main() {
 		log.Fatalln("failed to start messenger:", err)
 	}
 
-	// Start server and setup graceful shutdown
+	// Listen to system events
 	addr := *host + ":" + strconv.Itoa(*port)
-	signals := make(chan os.Signal)
+	shutdownSignals := make(chan os.Signal)
+	alrmSignals := make(chan os.Signal)
 	// CTRL-C to shutdown
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(shutdownSignals, os.Interrupt)
+	signal.Notify(alrmSignals, syscall.SIGALRM)
 	h := &http.Server{Addr: addr, Handler: handler}
 
+	// Start server
 	go func() {
 		logger.Printf("Server running at %s", addr)
 		err = h.ListenAndServe()
@@ -112,7 +119,25 @@ func main() {
 		}
 	}()
 
-	<-signals
+	// Backup DB on SIGALRM, if -backup is set
+	if *backupDir != "" {
+		go func() {
+			for {
+				<-alrmSignals
+				logger.Println("Backup triggered")
+				filename := "slangbrain-" + strconv.Itoa(int(time.Now().Unix())) + ".db"
+				file := filepath.Join(*backupDir, filename)
+				if err := store.BackupTo(file); err != nil {
+					logger.Printf("Error while backing up files: %v", err)
+				} else {
+					logger.Printf("Backup successfully written to %s", file)
+				}
+			}
+		}()
+		logger.Printf("Backups enabled with directory: %s", *backupDir)
+	}
+
+	<-shutdownSignals
 	logger.Println("Waiting for connections before shutting down server.")
 	if err = h.Shutdown(context.Background()); err != nil {
 		logger.Fatalln("failed to shutdown gracefully:", err)
