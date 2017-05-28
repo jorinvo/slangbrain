@@ -42,23 +42,23 @@ func (b bot) scoreAndStudy(chatID int64, score brain.Score) (string, []messenger
 	return b.startStudy(chatID)
 }
 
-// Format like "X hour[s] X minute[s]". Only works for positive values.
+// Format like "X hour[s] X minute[s]".
+// Returns empty string for negativ durations.
 func formatDuration(d time.Duration) string {
+	// Precision in minutes
+	d = time.Duration(math.Ceil(float64(d)/float64(time.Minute))) * time.Minute
 	s := ""
-	// Floor hours, rest is minutes
 	h := d / time.Hour
-	// Ceil minutes, because there is not more precision
-	m := math.Ceil(float64(d-h*time.Hour) / float64(time.Minute))
+	m := (d - h*time.Hour) / time.Minute
 	if h > 1 {
 		s += fmt.Sprintf("%d", h) + " hours "
 	} else if h == 1 {
 		s += "1 hour "
 	}
 	if m > 1 {
-		s += fmt.Sprintf("%.f", m) + " minutes"
+		s += fmt.Sprintf("%d", m) + " minutes"
 	} else if m > 0 {
 		s += "1 minute"
-		// Return empty string for negative durations
 	} else if s != "" {
 		// No minutes, only hours, remove trailing space
 		s = s[:len(s)-1]
