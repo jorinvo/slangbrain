@@ -15,12 +15,12 @@ import (
 const startStudytime = 2
 
 var (
-	bm = []byte("modes")
-	bp = []byte("phrases")
+	bucketModes   = []byte("modes")
+	bucketPhrases = []byte("phrases")
 	// bmid = []byte("messengerids")
-	bst = []byte("studytimes")
+	bucketStudytime = []byte("studytimes")
 	// bsl     = []byte("studylogs")
-	buckets = [][]byte{bm, bp, bst}
+	buckets = [][]byte{bucketModes, bucketPhrases, bucketStudytime}
 )
 
 // Store ...
@@ -54,12 +54,12 @@ func CreateStore(dbFile string) (Store, error) {
 func (store Store) GetMode(chatID int64) (Mode, error) {
 	var mode Mode
 	err := store.db.View(func(tx *bolt.Tx) error {
-		if m := tx.Bucket(bm).Get(itob(chatID)); m != nil {
-			i, err := btoi(m)
+		if bm := tx.Bucket(bucketModes).Get(itob(chatID)); bm != nil {
+			iMode, err := btoi(bm)
 			if err != nil {
 				return err
 			}
-			mode = Mode(i)
+			mode = Mode(iMode)
 		} else {
 			mode = ModeGetStarted
 		}
@@ -74,7 +74,7 @@ func (store Store) GetMode(chatID int64) (Mode, error) {
 // SetMode updates the mode for a chat.
 func (store Store) SetMode(chatID int64, mode Mode) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bm).Put(itob(chatID), itob(int64(mode)))
+		return tx.Bucket(bucketModes).Put(itob(chatID), itob(int64(mode)))
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set mode for chatID %d: %d: %v", chatID, mode, err)
@@ -85,26 +85,26 @@ func (store Store) SetMode(chatID int64, mode Mode) error {
 // AddPhrase stores a new phrase.
 func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bPhrases := tx.Bucket(bp)
+		bp := tx.Bucket(bucketPhrases)
 		// Get phrase id
-		id, err := bPhrases.NextSequence()
+		sequence, err := bp.NextSequence()
 		if err != nil {
 			return err
 		}
-		bPhraseID := append(itob(chatID), itob(int64(id))...)
+		phraseID := append(itob(chatID), itob(int64(sequence))...)
 		// Phrase to JSON
 		buf, err := json.Marshal(newPhrase(phrase, explanation))
 		if err != nil {
 			return err
 		}
 		// Save Phrase
-		if err = bPhrases.Put(bPhraseID, buf); err != nil {
+		if err = bp.Put(phraseID, buf); err != nil {
 			return err
 		}
 		// Save study time
-		bStudytimes := tx.Bucket(bst)
+		bs := tx.Bucket(bucketStudytime)
 		next := itob(time.Now().Add(startStudytime * time.Hour).Unix())
-		return bStudytimes.Put(bPhraseID, next)
+		return bs.Put(phraseID, next)
 	})
 
 	if err != nil {
@@ -117,21 +117,21 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 func (store Store) GetStudy(chatID int64) (Study, error) {
 	var study Study
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bst).Cursor()
+		c := tx.Bucket(bucketStudytime).Cursor()
 		now := time.Now().Unix()
 		prefix := itob(chatID)
 		total := 0
-		var oldest int64
-		var keyOldest []byte
+		var keyTime int64
+		var key []byte
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			timestamp, err := btoi(v)
 			if err != nil {
 				return err
 			}
-			if timestamp < oldest || oldest == 0 {
-				oldest = timestamp
-				keyOldest = k
+			if timestamp < keyTime || keyTime == 0 {
+				keyTime = timestamp
+				key = k
 			}
 			if timestamp <= now {
 				total++
@@ -140,17 +140,15 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 		// No studies found
 		if total == 0 {
 			var next time.Duration
-			if oldest > 0 {
-				next = time.Second * time.Duration(oldest-now)
+			if keyTime > 0 {
+				next = time.Second * time.Duration(keyTime-now)
 			}
-			study = Study{
-				Next: next,
-			}
+			study = Study{Next: next}
 			return nil
 		}
 		// Get study from phrase
 		var p Phrase
-		if err := json.Unmarshal(tx.Bucket(bp).Get(keyOldest), &p); err != nil {
+		if err := json.Unmarshal(tx.Bucket(bucketPhrases).Get(key), &p); err != nil {
 			return err
 		}
 		study = Study{
@@ -170,13 +168,13 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 // ScoreStudy ...
 func (store Store) ScoreStudy(chatID int64, score Score) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bStudytimes := tx.Bucket(bst)
-		c := bStudytimes.Cursor()
+		bs := tx.Bucket(bucketStudytime)
+		c := bs.Cursor()
 		now := time.Now()
 		uNow := now.Unix()
 		prefix := itob(chatID)
-		var studyTime int64
-		var studyKey []byte
+		var keyTime int64
+		var key []byte
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			timestamp, err := btoi(v)
@@ -186,19 +184,19 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 			if timestamp > uNow {
 				continue
 			}
-			if timestamp < studyTime || studyTime == 0 {
-				studyTime = timestamp
-				studyKey = k
+			if timestamp < keyTime || keyTime == 0 {
+				keyTime = timestamp
+				key = k
 			}
 		}
 		// No studies found
-		if studyKey == nil {
+		if key == nil {
 			return errors.New("no study found")
 		}
 		// Get phrase
 		var p Phrase
-		bPhrases := tx.Bucket(bp)
-		if err := json.Unmarshal(bPhrases.Get(studyKey), &p); err != nil {
+		bp := tx.Bucket(bucketPhrases)
+		if err := json.Unmarshal(bp.Get(key), &p); err != nil {
 			return err
 		}
 		// Update score
@@ -212,12 +210,12 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 		if err != nil {
 			return err
 		}
-		if err = bPhrases.Put(studyKey, buf); err != nil {
+		if err = bp.Put(key, buf); err != nil {
 			return err
 		}
 		// Update study time
 		next := itob(now.Add((2 << uint(newScore)) * time.Hour).Unix())
-		if err = bStudytimes.Put(studyKey, next); err != nil {
+		if err = bs.Put(key, next); err != nil {
 			return err
 		}
 
@@ -234,7 +232,7 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {
 	var p Phrase
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bp).Cursor()
+		c := tx.Bucket(bucketPhrases).Cursor()
 		prefix := itob(chatID)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var tmp Phrase

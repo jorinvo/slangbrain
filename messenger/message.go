@@ -119,13 +119,10 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 		if err != nil {
 			return messageErr, buttonsStudyMode, fmt.Errorf("failed to get study: %v", err)
 		}
-		// Ignore special chars
-		userReply := specialChars.ReplaceAllString(strings.TrimSpace(m.Text), "")
-		phrase := specialChars.ReplaceAllString(study.Phrase, "")
-		// Score user reply and pick appropriate reply
+		// Score user unput and pick appropriate reply
 		var score brain.Score
 		var m1 string
-		if userReply == phrase {
+		if normPhrase(m.Text) == normPhrase(study.Phrase) {
 			score = brain.ScoreGood
 			m1 = messageStudyCorrect
 		} else {
@@ -160,4 +157,8 @@ func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, 
 func (b bot) messageGetStarted(m messenger.Message) (string, []messenger.QuickReply, error) {
 	err := b.store.SetMode(m.Sender.ID, brain.ModeAdd)
 	return messageWelcome, nil, err
+}
+
+func normPhrase(s string) string {
+	return specialChars.ReplaceAllString(strings.ToLower(strings.TrimSpace(s)), "")
 }
