@@ -35,6 +35,12 @@ Master the language you encounter in your every day life instead of being limite
 	messageErrExplanation = "The phrase is missing an explanation. Please send it again with explanation."
 	messageStudyDone      = `Congrats, you finished all your studies for now!
 Come back in %s.`
+	messageStudyCorrect = "Nice, your answer was correct!"
+	messageStudyWrong   = `Sorry, the correct version is:
+
+%s
+
+`
 	messageStudyEmpty = `You have added no phrases yet.
 Click the button below and get started.`
 	messageStudyQuestion = `Do you remember how to say this?

@@ -2,11 +2,17 @@ package messenger
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
 )
+
+// Everything that is not in the unicode character classes
+// for letters or numeric values
+// See: http://www.fileformat.info/info/unicode/category/index.htm
+var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}]`)
 
 func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	if m.IsEcho {
@@ -106,23 +112,46 @@ func (b bot) messageAdd(m messenger.Message) (string, []messenger.QuickReply, er
 }
 
 func (b bot) messageStudy(m messenger.Message) (string, []messenger.QuickReply, error) {
+	id := m.Sender.ID
+	// Handle message
 	if m.QuickReply == nil {
-		return "Currently only quick replies are supported.", buttonsStudyMode, fmt.Errorf("not a quick reply: %v", m)
+		study, err := b.store.GetStudy(id)
+		if err != nil {
+			return messageErr, buttonsStudyMode, fmt.Errorf("failed to get study: %v", err)
+		}
+		// Ignore special chars
+		userReply := specialChars.ReplaceAllString(strings.TrimSpace(m.Text), "")
+		phrase := specialChars.ReplaceAllString(study.Phrase, "")
+		// Score user reply and pick appropriate reply
+		var score brain.Score
+		var m1 string
+		if userReply == phrase {
+			score = brain.ScoreGood
+			m1 = messageStudyCorrect
+		} else {
+			score = brain.ScoreBad
+			m1 = fmt.Sprintf(messageStudyWrong, study.Phrase)
+		}
+		m2, b, err := b.scoreAndStudy(id, score)
+		if err != nil {
+			return m2, b, err
+		}
+		return m1 + m2, b, nil
 	}
-
+	// Handle quick replies
 	switch m.QuickReply.Payload {
 	case payloadShow:
-		study, err := b.store.GetStudy(m.Sender.ID)
+		study, err := b.store.GetStudy(id)
 		if err != nil {
-			return messageErr, buttonsShow, fmt.Errorf("failed to show study: %v", err)
+			return messageErr, buttonsShow, fmt.Errorf("failed to get study: %v", err)
 		}
 		return study.Phrase, buttonsScore, nil
 	case payloadScoreBad:
-		return b.scoreAndStudy(m.Sender.ID, brain.ScoreBad)
+		return b.scoreAndStudy(id, brain.ScoreBad)
 	case payloadScoreOk:
-		return b.scoreAndStudy(m.Sender.ID, brain.ScoreOK)
+		return b.scoreAndStudy(id, brain.ScoreOK)
 	case payloadScoreGood:
-		return b.scoreAndStudy(m.Sender.ID, brain.ScoreGood)
+		return b.scoreAndStudy(id, brain.ScoreGood)
 	default:
 		return messageErr, buttonsStudyMode, fmt.Errorf("unknown payload: %s", m.QuickReply.Payload)
 	}
