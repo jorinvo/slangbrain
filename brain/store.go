@@ -248,7 +248,7 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 	})
 
 	if err != nil {
-		return p, fmt.Errorf("failed to find phrase with chatID %d: %v", chatID, err)
+		return p, fmt.Errorf("failed to find phrase with chatid %d: %v", chatID, err)
 	}
 	return p, nil
 }
@@ -259,6 +259,17 @@ func (store *Store) Close() error {
 		return fmt.Errorf("failed to close database: %v", err)
 	}
 	return nil
+}
+
+// StudyNow is only for debugging. Resets all study times to now.
+func (store *Store) StudyNow() error {
+	return store.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketStudytime)
+		now := itob(time.Now().Unix())
+		return b.ForEach(func(k, v []byte) error {
+			return b.Put(k, now)
+		})
+	})
 }
 
 func itob(v int64) []byte {

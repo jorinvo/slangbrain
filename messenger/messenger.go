@@ -53,8 +53,10 @@ Use the buttons or type the phrase.`
 %s
 
 Please send it again with an explanation you can distinguish from the existing one.`
-	messageAddDone = `Phrase saved:
+	messageAddDone = `Saved phrase:
 %s
+
+With explanation:
 %s
 
 Add next one.`

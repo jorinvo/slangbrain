@@ -38,6 +38,7 @@ func main() {
 	verifyToken := flag.String("verify", "", "required unless import")
 	token := flag.String("token", "", "required unless import")
 	toImport := flag.String("import", "", "")
+	studynow := flag.Bool("studynow", false, "")
 
 	// Parse args
 	flag.Usage = func() {
@@ -66,6 +67,11 @@ func main() {
 		}
 	}()
 	logger.Printf("Database initialized: %s", *db)
+
+	if *studynow {
+		studyNow(store, logger)
+		return
+	}
 
 	if *toImport != "" {
 		csvImport(store, logger, *toImport)
@@ -149,5 +155,12 @@ func csvImport(store brain.Store, logger *log.Logger, toImport string) {
 				logger.Fatalln(err)
 			}
 		}
+	}
+}
+
+func studyNow(store brain.Store, logger *log.Logger) {
+	logger.Println("Study now - Setting all study times")
+	if err := store.StudyNow(); err != nil {
+		logger.Println("Failed to update study times", err)
 	}
 }
