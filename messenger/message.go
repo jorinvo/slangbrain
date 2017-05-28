@@ -19,7 +19,13 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 		return
 	}
 
-	b.log.Println("message", m.QuickReply, m.Text)
+	// Logging
+
+	logMsg := "message: "
+	if m.QuickReply != nil {
+		logMsg += "[" + m.QuickReply.Payload + "] "
+	}
+	b.log.Println(logMsg + m.Text)
 
 	mode, err := b.store.GetMode(m.Sender.ID)
 	if err != nil {

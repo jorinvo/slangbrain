@@ -73,9 +73,12 @@ var (
 
 var (
 	buttonsMenuMode = []messenger.QuickReply{
-		button("study", payloadStartStudy),
-		button("add phrases", payloadStartAdd),
-		button("done for now", payloadIdle),
+		// Waving hand emoji
+		button("\U0001F44B done for now", payloadIdle),
+		// Plus sign emoji
+		button("\u2795 add phrases", payloadStartAdd),
+		// Teacher emoji
+		button("\U0001F468\u200D\U0001F3EB study", payloadStartStudy),
 	}
 	buttonsAddMode = []messenger.QuickReply{
 		button("stop adding phrases", payloadStartMenu),
@@ -85,12 +88,14 @@ var (
 	}
 	buttonsShow = []messenger.QuickReply{
 		buttonStudyDone,
-		button("show phrase", payloadShow),
+		button("\U0001F449 show phrase", payloadShow),
 	}
 	buttonsScore = []messenger.QuickReply{
-		button("don't know", payloadScoreBad),
+		// Ok thumb down emoji
+		button("\U0001F44E didn't know", payloadScoreBad),
 		button("soso", payloadScoreOk),
-		button("easy", payloadScoreGood),
+		// Ok hand emoji
+		button("\U0001F44C easy", payloadScoreGood),
 	}
 )
 
