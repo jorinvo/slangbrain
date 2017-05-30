@@ -205,7 +205,7 @@ func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
 		return msg, buttonsMenuMode, nil
 	}
 	// Send study to user
-	return fmt.Sprintf(messageStudyQuestion, study.Explanation), buttonsShow, nil
+	return fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
 }
 
 func (b bot) scoreAndStudy(chatID int64, score brain.Score) (string, []messenger.QuickReply, error) {

@@ -50,7 +50,7 @@ Come back in %s.`
 `
 	messageStudyEmpty = `You have added no phrases yet.
 Click the button below and get started.`
-	messageStudyQuestion = `Do you remember how to say this?
+	messageStudyQuestion = `%d. Do you remember how to say this?
 
 %s
 
