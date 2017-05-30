@@ -11,11 +11,12 @@ import (
 
 const (
 	payloadIdle       = "PAYLOAD_IDLE"
+	payloadShowHelp   = "PAYLOAD_SHOWHELP"
 	payloadStartMenu  = "PAYLOAD_STARTMENU"
 	payloadStartAdd   = "PAYLOAD_STARTADD"
 	payloadStartStudy = "PAYLOAD_STARTSTUDY"
 	payloadGetStarted = "PAYLOAD_GETSTARTED"
-	payloadShow       = "PAYLOAD_SHOW"
+	payloadShowStudy  = "PAYLOAD_SHOWSTUDY"
 	payloadScoreBad   = "PAYLOAD_SCOREBAD"
 	payloadScoreOk    = "PAYLOAD_SCOREOK"
 	payloadScoreGood  = "PAYLOAD_SCOREGOOD"
@@ -24,6 +25,8 @@ const (
 const (
 	messageStartMenu = `What would you like to do next?
 Please use the buttons below.`
+	messageHelp = `this is help
+`
 	messageIdle     = "Good, just send me a message to continue with your studies."
 	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
@@ -34,9 +37,10 @@ Master the language you encounter in your every day life instead of being limite
 	messageWelcome2 = `You begin by adding phrases and after Slangbrain will test your memories in a natural schedule.
 
 ` + messageStartAdd
-	messageErr            = "Sorry, something went wrong."
-	messageErrExplanation = "The phrase is missing an explanation. Please send it again with explanation."
-	messageStudyDone      = `Congrats, you finished all your studies for now!
+	messageErr              = "Sorry, something went wrong."
+	messageExplanationEmpty = "The phrase is missing an explanation. Please send it again with explanation."
+	messagePhraseEmpty      = "Please send a phrase."
+	messageStudyDone        = `Congrats, you finished all your studies for now!
 Come back in %s.`
 	messageStudyCorrect = "Nice, your answer was correct!"
 	messageStudyWrong   = `Sorry, the correct version is:
@@ -60,35 +64,43 @@ Please send it again with an explanation you can distinguish from the existing o
 %s
 
 With explanation:
-%s
-
-Add next one.`
-	greeting = `Slangbrain helps you with our language Studies.
+%s`
+	messageAddNext = "Add next phrase."
+	greeting       = `Slangbrain helps you with our language Studies.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
 )
 
 var (
 	buttonStudyDone = button("done studying", payloadStartMenu)
+	// Teacher emoji
+	buttonStudy = button("\U0001F468\U0000200D\U0001F3EB study", payloadStartStudy)
+	// Plus sign emoji
+	buttonAdd = button("\u2795 phrases", payloadStartAdd)
+	// Waving hand emoji
+	buttonDone = button("\u2714 done", payloadIdle)
 )
 
 var (
 	buttonsMenuMode = []messenger.QuickReply{
-		// Waving hand emoji
-		button("\U0001F44B done for now", payloadIdle),
-		// Plus sign emoji
-		button("\u2795 add phrases", payloadStartAdd),
-		// Teacher emoji
-		button("\U0001F468\u200D\U0001F3EB study", payloadStartStudy),
+		buttonStudy,
+		buttonAdd,
+		button("\u2753 help", payloadShowHelp),
+		buttonDone,
+	}
+	buttonsHelp = []messenger.QuickReply{
+		buttonStudy,
+		buttonAdd,
+		buttonDone,
 	}
 	buttonsAddMode = []messenger.QuickReply{
-		button("stop adding phrases", payloadStartMenu),
+		button("stop adding", payloadStartMenu),
 	}
 	buttonsStudyMode = []messenger.QuickReply{
 		buttonStudyDone,
 	}
 	buttonsShow = []messenger.QuickReply{
 		buttonStudyDone,
-		button("\U0001F449 show phrase", payloadShow),
+		button("\U0001F449 show phrase", payloadShowStudy),
 	}
 	buttonsScore = []messenger.QuickReply{
 		// Ok thumb down emoji
@@ -108,22 +120,24 @@ type Config struct {
 }
 
 type bot struct {
-	store brain.Store
-	log   *log.Logger
+	store  brain.Store
+	log    *log.Logger
+	client *messenger.Messenger
 }
 
 // Run ...
 func Run(config Config) (http.Handler, error) {
-	b := bot{
-		store: config.Store,
-		log:   config.Log,
-	}
-
 	client := messenger.New(messenger.Options{
 		Verify:      true,
 		VerifyToken: config.VerifyToken,
 		Token:       config.Token,
 	})
+
+	b := bot{
+		store:  config.Store,
+		log:    config.Log,
+		client: client,
+	}
 
 	err := client.SetGreeting([]messenger.Greeting{
 		{Locale: "default", Text: greeting},
