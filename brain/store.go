@@ -18,9 +18,9 @@ var (
 	bucketModes   = []byte("modes")
 	bucketPhrases = []byte("phrases")
 	// bmid = []byte("messengerids")
-	bucketStudytime = []byte("studytimes")
+	bucketStudytimes = []byte("studytimes")
 	// bsl     = []byte("studylogs")
-	buckets = [][]byte{bucketModes, bucketPhrases, bucketStudytime}
+	buckets = [][]byte{bucketModes, bucketPhrases, bucketStudytimes}
 )
 
 // Store ...
@@ -102,7 +102,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 			return err
 		}
 		// Save study time
-		bs := tx.Bucket(bucketStudytime)
+		bs := tx.Bucket(bucketStudytimes)
 		next := itob(time.Now().Add(startStudytime * time.Hour).Unix())
 		return bs.Put(phraseID, next)
 	})
@@ -117,7 +117,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 func (store Store) GetStudy(chatID int64) (Study, error) {
 	var study Study
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketStudytime).Cursor()
+		c := tx.Bucket(bucketStudytimes).Cursor()
 		now := time.Now().Unix()
 		prefix := itob(chatID)
 		total := 0
@@ -168,7 +168,7 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 // ScoreStudy ...
 func (store Store) ScoreStudy(chatID int64, score Score) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bs := tx.Bucket(bucketStudytime)
+		bs := tx.Bucket(bucketStudytimes)
 		c := bs.Cursor()
 		now := time.Now()
 		uNow := now.Unix()
@@ -268,14 +268,44 @@ func (store *Store) BackupTo(file string) error {
 	})
 }
 
-// StudyNow is only for debugging. Resets all study times to now.
+// StudyNow is only for debugging.
+// Resets all study times to now.
 func (store *Store) StudyNow() error {
 	return store.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketStudytime)
+		b := tx.Bucket(bucketStudytimes)
 		now := itob(time.Now().Unix())
 		return b.ForEach(func(k, v []byte) error {
 			return b.Put(k, now)
 		})
+	})
+}
+
+// DeleteChat is only for debugging.
+// Removes all records of a given chat.
+func (store *Store) DeleteChat(chatID int64) error {
+	return store.db.Update(func(tx *bolt.Tx) error {
+		key := itob(chatID)
+		// Remove mode
+		if err := tx.Bucket(bucketModes).Delete(key); err != nil {
+			return err
+		}
+		// Remove phrases
+		bp := tx.Bucket(bucketPhrases)
+		c := bp.Cursor()
+		for k, _ := c.Seek(key); k != nil && bytes.HasPrefix(k, key); k, _ = c.Next() {
+			if err := bp.Delete(k); err != nil {
+				return err
+			}
+		}
+		// Remove study times
+		bs := tx.Bucket(bucketStudytimes)
+		c = bp.Cursor()
+		for k, _ := c.Seek(key); k != nil && bytes.HasPrefix(k, key); k, _ = c.Next() {
+			if err := bs.Delete(k); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 

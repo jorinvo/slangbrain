@@ -43,6 +43,7 @@ func main() {
 	backupDir := flag.String("backup", "", "Directory to write backups to. When not set, backups are disabled.")
 	toImport := flag.String("import", "", "")
 	studynow := flag.Bool("studynow", false, "")
+	rmChat := flag.Int64("rmchat", 0, "")
 
 	// Parse args
 	flag.Usage = func() {
@@ -79,6 +80,11 @@ func main() {
 
 	if *toImport != "" {
 		csvImport(store, logger, *toImport)
+		return
+	}
+
+	if *rmChat != 0 {
+		deleteChat(store, logger, *rmChat)
 		return
 	}
 
@@ -187,5 +193,12 @@ func studyNow(store brain.Store, logger *log.Logger) {
 	logger.Println("Study now - Setting all study times")
 	if err := store.StudyNow(); err != nil {
 		logger.Println("Failed to update study times", err)
+	}
+}
+
+func deleteChat(store brain.Store, logger *log.Logger, id int64) {
+	logger.Println("deleting all data for chat with id:", id)
+	if err := store.DeleteChat(id); err != nil {
+		logger.Println(err)
 	}
 }
