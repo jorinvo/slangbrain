@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
@@ -11,10 +12,11 @@ import (
 
 // Config ...
 type Config struct {
-	Log         *log.Logger
-	Token       string
-	VerifyToken string
-	Store       brain.Store
+	Log            *log.Logger
+	Token          string
+	VerifyToken    string
+	Store          brain.Store
+	NotifyInterval time.Duration
 }
 
 type bot struct {
@@ -45,14 +47,42 @@ func Run(config Config) (http.Handler, error) {
 	}
 	config.Log.Println("Greeting set")
 
-	err = client.GetStarted(payloadGetStarted)
-	if err != nil {
+	if err := client.GetStarted(payloadGetStarted); err != nil {
 		return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
 	}
 	config.Log.Printf("Get Started button activated")
 
-	client.HandleMessage(b.MessageHandler)
 	client.HandlePostBack(b.PostbackHandler)
+	client.HandleRead(b.ReadHandler)
+	client.HandleMessage(b.MessageHandler)
+
+	if config.NotifyInterval > 0 {
+		config.Log.Println("Notifications enabled")
+		go func() {
+			for range time.Tick(config.NotifyInterval) {
+				config.Log.Println("Sending notifications")
+				dueStudies, err := config.Store.GetDueStudies()
+				if err != nil {
+					config.Log.Println(err)
+					return
+				}
+				now := time.Now()
+				for chatID, count := range dueStudies {
+					profile, err := client.ProfileByID(chatID)
+					if err != nil {
+						config.Log.Printf("Failed to get profile for %d: %v", chatID, err)
+						continue
+					}
+					to := messenger.Recipient{ID: chatID}
+					msg := fmt.Sprintf(messageStudiesDue, profile.FirstName, count)
+					if err = client.SendWithReplies(to, msg, buttonsStudiesDue); err != nil {
+						config.Log.Printf("Failed to notify user %d: %v", chatID, err)
+					}
+					b.trackActivity(chatID, now)
+				}
+			}
+		}()
+	}
 
 	return client.Handler(), nil
 }

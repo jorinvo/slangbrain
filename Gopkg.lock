@@ -10,10 +10,10 @@ memo = "10bf61bdf7b071b0dfcf31bf72c1a102a6ceae7b46888fb0392ed931fe36d95c"
   branch = "master"
   name = "github.com/jorinvo/messenger"
   packages = ["."]
-  revision = "a41fcd67e4f5b789a6fdd340c225dfa280c03d8a"
+  revision = "b4d181da977ec56d60b1cba53fc598cb645d8748"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "a55a76086885b80f79961eacb876ebd8caf3868d"
+  revision = "b90f89a1e7a9c1f6b918820b3daa7f08488c8594"

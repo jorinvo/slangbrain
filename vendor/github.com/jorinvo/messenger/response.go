@@ -58,7 +58,7 @@ func checkFacebookError(r io.Reader) error {
 // Response is used for responding to events with messages.
 type Response struct {
 	token string
-	to    Recipient
+	To    Recipient
 }
 
 // Text sends a textual message.
@@ -69,7 +69,7 @@ func (r *Response) Text(message string) error {
 // TextWithReplies sends a textual message with some replies
 func (r *Response) TextWithReplies(message string, replies []QuickReply) error {
 	m := SendMessage{
-		Recipient: r.to,
+		Recipient: r.To,
 		Message: MessageData{
 			Text:         message,
 			Attachment:   nil,
@@ -82,7 +82,7 @@ func (r *Response) TextWithReplies(message string, replies []QuickReply) error {
 // AttachmentWithReplies sends a attachment message with some replies
 func (r *Response) AttachmentWithReplies(attachment *StructuredMessageAttachment, replies []QuickReply) error {
 	m := SendMessage{
-		Recipient: r.to,
+		Recipient: r.To,
 		Message: MessageData{
 			Attachment:   attachment,
 			QuickReplies: replies,
@@ -105,7 +105,7 @@ func (r *Response) Image(im image.Image) error {
 // Attachment sends an image, sound, video or a regular file to a chat.
 func (r *Response) Attachment(dataType AttachmentType, url string) error {
 	m := SendStructuredMessage{
-		Recipient: r.to,
+		Recipient: r.To,
 		Message: StructuredMessageData{
 			Attachment: StructuredMessageAttachment{
 				Type: dataType,
@@ -133,7 +133,7 @@ func (r *Response) AttachmentData(dataType AttachmentType, filename string, file
 		return err
 	}
 
-	w.WriteField("recipient", fmt.Sprintf(`{"id":"%v"}`, r.to.ID))
+	w.WriteField("recipient", fmt.Sprintf(`{"id":"%v"}`, r.To.ID))
 	w.WriteField("message", fmt.Sprintf(`{"attachment":{"type":"%v", "payload":{}}}`, dataType))
 
 	req, err := http.NewRequest("POST", SendMessageURL, &b)
@@ -159,7 +159,7 @@ func (r *Response) AttachmentData(dataType AttachmentType, filename string, file
 // ButtonTemplate sends a message with the main contents being button elements
 func (r *Response) ButtonTemplate(text string, buttons *[]StructuredMessageButton) error {
 	m := SendStructuredMessage{
-		Recipient: r.to,
+		Recipient: r.To,
 		Message: StructuredMessageData{
 			Attachment: StructuredMessageAttachment{
 				Type: "template",
@@ -179,7 +179,7 @@ func (r *Response) ButtonTemplate(text string, buttons *[]StructuredMessageButto
 // GenericTemplate is a message which allows for structural elements to be sent
 func (r *Response) GenericTemplate(elements *[]StructuredMessageElement) error {
 	m := SendStructuredMessage{
-		Recipient: r.to,
+		Recipient: r.To,
 		Message: StructuredMessageData{
 			Attachment: StructuredMessageAttachment{
 				Type: "template",
@@ -197,7 +197,7 @@ func (r *Response) GenericTemplate(elements *[]StructuredMessageElement) error {
 // SenderAction sends a info about sender action
 func (r *Response) SenderAction(action string) error {
 	m := SendSenderAction{
-		Recipient:    r.to,
+		Recipient:    r.To,
 		SenderAction: action,
 	}
 	return r.DispatchMessage(&m)

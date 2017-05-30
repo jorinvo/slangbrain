@@ -11,16 +11,23 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// Time to wait for first study in hours
-const startStudytime = 2
+const (
+	// Time to wait for first study in hours
+	startStudytime = 2
+	// Minimum number of studies needed to be due before notifying user
+	dueMinCount = 5
+	// Time user has to be inactive before being notified
+	dueMinInactive = 15 * time.Minute
+)
 
 var (
-	bucketModes   = []byte("modes")
-	bucketPhrases = []byte("phrases")
-	// bmid = []byte("messengerids")
+	bucketModes      = []byte("modes")
+	bucketPhrases    = []byte("phrases")
 	bucketStudytimes = []byte("studytimes")
 	// bsl     = []byte("studylogs")
-	buckets = [][]byte{bucketModes, bucketPhrases, bucketStudytimes}
+	bucketReads      = []byte("reads")
+	bucketActivities = []byte("activities")
+	buckets          = [][]byte{bucketModes, bucketPhrases, bucketStudytimes, bucketReads, bucketActivities}
 )
 
 // Store ...
@@ -251,6 +258,92 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 		return p, fmt.Errorf("failed to find phrase with chatid %d: %v", chatID, err)
 	}
 	return p, nil
+}
+
+// SetRead ...
+func (store Store) SetRead(chatID int64, t time.Time) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketReads).Put(itob(chatID), itob(t.Unix()))
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set read for chatID %d: %v: %v", chatID, t, err)
+	}
+	return nil
+}
+
+// SetActivity ...
+func (store Store) SetActivity(chatID int64, t time.Time) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketActivities).Put(itob(chatID), itob(t.Unix()))
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set activity for chatID %d: %v: %v", chatID, t, err)
+	}
+	return nil
+}
+
+// GetDueStudies ...
+func (store Store) GetDueStudies() (map[int64]uint, error) {
+	dueStudies := map[int64]uint{}
+	now := time.Now().Unix()
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		err := tx.Bucket(bucketStudytimes).ForEach(func(k, v []byte) error {
+			t, err := btoi(v)
+			if err != nil {
+				return err
+			}
+			if t < now {
+				return nil
+			}
+			chatID, err := btoi(k[:8])
+			if err != nil {
+				return err
+			}
+			dueStudies[chatID]++
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		// Check if user should be notified
+		ba := tx.Bucket(bucketActivities)
+		br := tx.Bucket(bucketReads)
+		for chatID, count := range dueStudies {
+			// Too little studies due
+			if count < dueMinCount {
+				fmt.Println("too little studies due")
+				delete(dueStudies, chatID)
+				continue
+			}
+			key := itob(chatID)
+			// User was active just now
+			activity, err := btoi(ba.Get(key))
+			if err != nil {
+				return err
+			}
+			if time.Duration(now-activity)*time.Second < dueMinInactive {
+				fmt.Println("user was just active")
+				delete(dueStudies, chatID)
+				continue
+			}
+			// User hasn't read last message
+			read, err := btoi(br.Get(key))
+			if err != nil {
+				return err
+			}
+			if read < activity {
+				fmt.Println("user hasn't read last message")
+				delete(dueStudies, chatID)
+				continue
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return dueStudies, fmt.Errorf("failed to get due studies: %v", err)
+	}
+	return dueStudies, nil
 }
 
 // Close the underlying database connection.

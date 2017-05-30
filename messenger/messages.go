@@ -43,7 +43,8 @@ Please send it again with an explanation you can distinguish from the existing o
 
 With explanation:
 %s`
-	messageAddNext = "Add next phrase."
-	greeting       = `Slangbrain helps you with our language Studies.
+	messageAddNext    = "Add next phrase."
+	messageStudiesDue = `Hey %s, there are %d phrases ready for review!`
+	greeting          = `Slangbrain helps you with our language Studies.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
 )

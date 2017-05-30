@@ -37,12 +37,20 @@ func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
 	}
 }
 
+func (b bot) ReadHandler(read messenger.Read, res *messenger.Response) {
+	b.log.Printf("read message (%d)", res.To.ID)
+	if err := b.store.SetRead(res.To.ID, read.Watermark()); err != nil {
+		b.log.Println(err)
+	}
+}
+
 func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	if m.IsEcho {
 		return
 	}
 
 	b.logMessage(m)
+	b.trackActivity(m.Sender.ID, m.Time)
 
 	// Helper to send replies and log errors
 	send := func(reply string, buttons []messenger.QuickReply, err error) {
@@ -179,8 +187,14 @@ func (b bot) logMessage(m messenger.Message) {
 	b.log.Println(logMsg + m.Text)
 }
 
-func (b bot) messageStartMenu(id int64) (string, []messenger.QuickReply, error) {
-	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
+func (b bot) trackActivity(chatID int64, t time.Time) {
+	if err := b.store.SetActivity(chatID, t); err != nil {
+		b.log.Println(err)
+	}
+}
+
+func (b bot) messageStartMenu(chatID int64) (string, []messenger.QuickReply, error) {
+	if err := b.store.SetMode(chatID, brain.ModeMenu); err != nil {
 		return messageErr, buttonsMenuMode, err
 	}
 	return messageStartMenu, buttonsMenuMode, nil

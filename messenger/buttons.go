@@ -5,7 +5,7 @@ import "github.com/jorinvo/messenger"
 var (
 	buttonStudyDone = button("done studying", payloadStartMenu)
 	// Teacher emoji
-	buttonStudy = button("\U0001F468\U0000200D\U0001F3EB study", payloadStartStudy)
+	buttonStudy = button("\U0001F468\u200D\U0001F3EB study", payloadStartStudy)
 	// Plus sign emoji
 	buttonAdd = button("\u2795 phrases", payloadStartAdd)
 	// Waving hand emoji
@@ -40,6 +40,10 @@ var (
 		button("soso", payloadScoreOk),
 		// Ok hand emoji
 		button("\U0001F44C easy", payloadScoreGood),
+	}
+	buttonsStudiesDue = []messenger.QuickReply{
+		buttonStudy,
+		button("not now", payloadStartMenu),
 	}
 )
 

@@ -249,7 +249,7 @@ func (m *Messenger) dispatch(r Receive) {
 			}
 
 			resp := &Response{
-				to:    Recipient{info.Sender.ID},
+				To:    Recipient{info.Sender.ID},
 				token: m.token,
 			}
 
@@ -302,7 +302,7 @@ func (m *Messenger) dispatch(r Receive) {
 // Response returns new Response object
 func (m *Messenger) Response(to int64) *Response {
 	return &Response{
-		to:    Recipient{to},
+		To:    Recipient{to},
 		token: m.token,
 	}
 }
@@ -316,7 +316,7 @@ func (m *Messenger) Send(to Recipient, message string) error {
 func (m *Messenger) SendGeneralMessage(to Recipient, elements *[]StructuredMessageElement) error {
 	r := &Response{
 		token: m.token,
-		to:    to,
+		To:    to,
 	}
 	return r.GenericTemplate(elements)
 }
@@ -325,7 +325,7 @@ func (m *Messenger) SendGeneralMessage(to Recipient, elements *[]StructuredMessa
 func (m *Messenger) SendWithReplies(to Recipient, message string, replies []QuickReply) error {
 	response := &Response{
 		token: m.token,
-		to:    to,
+		To:    to,
 	}
 
 	return response.TextWithReplies(message, replies)
@@ -335,7 +335,7 @@ func (m *Messenger) SendWithReplies(to Recipient, message string, replies []Quic
 func (m *Messenger) Attachment(to Recipient, dataType AttachmentType, url string) error {
 	response := &Response{
 		token: m.token,
-		to:    to,
+		To:    to,
 	}
 
 	return response.Attachment(dataType, url)

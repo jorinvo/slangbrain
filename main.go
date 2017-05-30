@@ -41,6 +41,7 @@ func main() {
 	verifyToken := flag.String("verify", "", "required unless import")
 	token := flag.String("token", "", "required unless import")
 	backupDir := flag.String("backup", "", "Directory to write backups to. When not set, backups are disabled.")
+	notifyInterval := flag.Duration("notify", 0, "")
 	toImport := flag.String("import", "", "")
 	studynow := flag.Bool("studynow", false, "")
 	rmChat := flag.Int64("rmchat", 0, "")
@@ -98,10 +99,11 @@ func main() {
 	}
 
 	handler, err := messenger.Run(messenger.Config{
-		Log:         logger,
-		Token:       *token,
-		VerifyToken: *verifyToken,
-		Store:       store,
+		Log:            logger,
+		Token:          *token,
+		VerifyToken:    *verifyToken,
+		Store:          store,
+		NotifyInterval: *notifyInterval,
 	})
 	if err != nil {
 		log.Fatalln("failed to start messenger:", err)
