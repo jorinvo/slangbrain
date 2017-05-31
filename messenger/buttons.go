@@ -21,7 +21,7 @@ var (
 	buttonsMenuMode = []messenger.QuickReply{
 		buttonStudy,
 		buttonAdd,
-		buttonHelp,
+		// buttonHelp,
 		buttonDone,
 	}
 	buttonsHelp = []messenger.QuickReply{
@@ -50,7 +50,7 @@ var (
 	}
 	buttonsStudyEmpty = []messenger.QuickReply{
 		buttonAdd,
-		buttonHelp,
+		// buttonHelp,
 	}
 	buttonsStudiesDue = []messenger.QuickReply{
 		buttonStudy,
