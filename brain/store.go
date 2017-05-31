@@ -123,7 +123,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 // GetStudy ...
 func (store Store) GetStudy(chatID int64) (Study, error) {
 	var study Study
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketStudytimes).Cursor()
 		now := time.Now().Unix()
 		prefix := itob(chatID)
@@ -238,7 +238,7 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 // FindPhrase ...
 func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {
 	var p Phrase
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
 		prefix := itob(chatID)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
@@ -258,6 +258,47 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 		return p, fmt.Errorf("failed to find phrase with chatid %d: %v", chatID, err)
 	}
 	return p, nil
+}
+
+// DeleteStudyPhrase ...
+func (store Store) DeleteStudyPhrase(chatID int64) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		bs := tx.Bucket(bucketStudytimes)
+		c := bs.Cursor()
+		now := time.Now().Unix()
+		prefix := itob(chatID)
+		var keyTime int64
+		var key []byte
+
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			timestamp, err := btoi(v)
+			if err != nil {
+				return err
+			}
+			if timestamp > now {
+				continue
+			}
+			if timestamp < keyTime || keyTime == 0 {
+				keyTime = timestamp
+				key = k
+			}
+		}
+		// No studies found
+		if key == nil {
+			return errors.New("no study found")
+		}
+		// Delete study time
+		if err := bs.Delete(key); err != nil {
+			return err
+		}
+		// Delete phrase
+		return tx.Bucket(bucketPhrases).Delete(key)
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to delete study phrase for chatID %d: %v", chatID, err)
+	}
+	return nil
 }
 
 // SetRead ...
@@ -286,7 +327,7 @@ func (store Store) SetActivity(chatID int64, t time.Time) error {
 func (store Store) GetDueStudies() (map[int64]uint, error) {
 	dueStudies := map[int64]uint{}
 	now := time.Now().Unix()
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	err := store.db.View(func(tx *bolt.Tx) error {
 		err := tx.Bucket(bucketStudytimes).ForEach(func(k, v []byte) error {
 			t, err := btoi(v)
 			if err != nil {

@@ -154,6 +154,21 @@ func (b bot) handleQuickReplies(id int64, payload string) {
 	case payloadScoreGood:
 		b.send(b.scoreAndStudy(id, brain.ScoreGood))
 
+	case payloadDelete:
+		b.send(id, messageConfirmDelete, buttonsConfirmDelete, nil)
+
+	case payloadConfirmDelete:
+		if err := b.store.DeleteStudyPhrase(id); err != nil {
+			b.send(id, messageErr, nil, nil)
+		} else {
+			b.send(id, messageDeleted, nil, nil)
+		}
+		b.send(b.startStudy(id))
+
+	case payloadCancelDelete:
+		b.send(id, messageCancelDelete, nil, nil)
+		b.send(b.startStudy(id))
+
 	case payloadStartMenu:
 		fallthrough
 	default:
@@ -203,11 +218,10 @@ func (b bot) startStudy(id int64) (int64, string, []messenger.QuickReply, error)
 			return id, messageErr, buttonsStudyMode, err
 		}
 		// Display time until next study is ready or there are not studies yet
-		msg := messageStudyEmpty
-		if study.Next > 0 {
-			msg = fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
+		if study.Next == 0 {
+			return id, messageStudyEmpty, buttonsStudyEmpty, nil
 		}
-		return id, msg, buttonsMenuMode, nil
+		return id, fmt.Sprintf(messageStudyDone, formatDuration(study.Next)), buttonsMenuMode, nil
 	}
 	// Send study to user
 	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
