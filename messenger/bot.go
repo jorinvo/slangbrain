@@ -257,7 +257,7 @@ func formatDuration(d time.Duration) string {
 	return s
 }
 func normPhrase(s string) string {
-	s = inParantheses.ReplaceAllString("", s)
+	s = inParantheses.ReplaceAllString(s, "")
 	s = strings.TrimSpace(s)
 	s = strings.ToLower(s)
 	return specialChars.ReplaceAllString(s, "")
