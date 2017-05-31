@@ -5,10 +5,10 @@ const (
 Please use the buttons below.`
 	messageHelp = `this is help
 `
-	messageIdle     = "Good, just send me a message to continue with your studies."
+	messageIdle     = "Good, just send me a like or a message to continue with your studies."
 	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
-	messageWelcome = `Welcome!
+	messageWelcome = `Hello %s!
 Slangebrain is here to help you with your language studies.
 Whenever you pick up a new phrase, just add it to your Slangebrain and remember it forever.
 Master the language you encounter in your every day life instead of being limited to a textbook.`

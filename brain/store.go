@@ -15,9 +15,9 @@ const (
 	// Time to wait for first study in hours
 	startStudytime = 2
 	// Minimum number of studies needed to be due before notifying user
-	dueMinCount = 5
+	dueMinCount = 3
 	// Time user has to be inactive before being notified
-	dueMinInactive = 15 * time.Minute
+	dueMinInactive = 10 * time.Minute
 )
 
 var (
@@ -292,7 +292,7 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 			if err != nil {
 				return err
 			}
-			if t < now {
+			if t > now {
 				return nil
 			}
 			chatID, err := btoi(k[:8])

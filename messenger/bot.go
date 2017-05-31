@@ -26,15 +26,7 @@ func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
 		return
 	}
 
-	err := b.store.SetMode(p.Sender.ID, brain.ModeAdd)
-	if err != nil {
-		b.log.Println("failed to set mode:", err)
-	}
-
-	err = r.Text(messageWelcome)
-	if err != nil {
-		b.log.Println("failed to send message:", err)
-	}
+	b.messageWelcome(p.Sender.ID)
 }
 
 func (b bot) ReadHandler(read messenger.Read, res *messenger.Response) {
@@ -52,34 +44,24 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 	b.logMessage(m)
 	b.trackActivity(m.Sender.ID, m.Time)
 
-	// Helper to send replies and log errors
-	send := func(reply string, buttons []messenger.QuickReply, err error) {
-		if err != nil {
-			b.log.Println(err)
-		}
-		if err = r.TextWithReplies(reply, buttons); err != nil {
-			b.log.Println("failed to send message:", err)
-		}
-	}
-
 	if m.QuickReply != nil {
-		b.handleQuickReplies(send, m.Sender.ID, m.QuickReply.Payload)
+		b.handleQuickReplies(m.Sender.ID, m.QuickReply.Payload)
 		return
 	}
-	b.handleMessages(send, m.Sender.ID, m.Text)
+	b.handleMessages(m.Sender.ID, m.Text)
 }
 
-func (b bot) handleMessages(send replySender, id int64, msg string) {
+func (b bot) handleMessages(id int64, msg string) {
 	mode, err := b.store.GetMode(id)
 	if err != nil {
-		send(messageErr, buttonsMenuMode, fmt.Errorf("failed to get mode for id %v: %v", id, err))
+		b.send(id, messageErr, buttonsMenuMode, fmt.Errorf("failed to get mode for id %v: %v", id, err))
 		return
 	}
 	switch mode {
 	case brain.ModeStudy:
 		study, err := b.store.GetStudy(id)
 		if err != nil {
-			send(messageErr, buttonsStudyMode, fmt.Errorf("failed to get study: %v", err))
+			b.send(id, messageErr, buttonsStudyMode, fmt.Errorf("failed to get study: %v", err))
 			return
 		}
 		// Score user unput and pick appropriate reply
@@ -89,18 +71,18 @@ func (b bot) handleMessages(send replySender, id int64, msg string) {
 			score = brain.ScoreBad
 			m1 = fmt.Sprintf(messageStudyWrong, study.Phrase)
 		}
-		send(m1, nil, nil)
-		send(b.scoreAndStudy(id, score))
+		b.send(id, m1, nil, nil)
+		b.send(b.scoreAndStudy(id, score))
 
 	case brain.ModeAdd:
 		parts := strings.SplitN(strings.TrimSpace(msg), "\n", 2)
 		phrase := strings.TrimSpace(parts[0])
 		if phrase == "" {
-			send(messagePhraseEmpty, buttonsAddMode, nil)
+			b.send(id, messagePhraseEmpty, buttonsAddMode, nil)
 			return
 		}
 		if len(parts) == 1 {
-			send(messageExplanationEmpty, buttonsAddMode, nil)
+			b.send(id, messageExplanationEmpty, buttonsAddMode, nil)
 			return
 		}
 		explanation := strings.TrimSpace(parts[1])
@@ -109,73 +91,72 @@ func (b bot) handleMessages(send replySender, id int64, msg string) {
 			return p.Explanation == explanation
 		})
 		if err != nil {
-			send(messageErr, nil, fmt.Errorf("failed to lookup phrase: %v", err))
+			b.send(id, messageErr, nil, fmt.Errorf("failed to lookup phrase: %v", err))
 			return
 		}
 		if p.Phrase != "" {
-			send(fmt.Sprintf(messageExplanationExists, p.Phrase, p.Explanation), buttonsAddMode, nil)
+			b.send(id, fmt.Sprintf(messageExplanationExists, p.Phrase, p.Explanation), buttonsAddMode, nil)
 			return
 		}
 		// Save phrase
 		if err = b.store.AddPhrase(id, phrase, explanation); err != nil {
-			send(messageErr, buttonsAddMode, fmt.Errorf("failed to save phrase: %v", err))
+			b.send(id, messageErr, buttonsAddMode, fmt.Errorf("failed to save phrase: %v", err))
 			return
 		}
-		send(fmt.Sprintf(messageAddDone, phrase, explanation), nil, nil)
-		send(messageAddNext, buttonsAddMode, nil)
+		b.send(id, fmt.Sprintf(messageAddDone, phrase, explanation), nil, nil)
+		b.send(id, messageAddNext, buttonsAddMode, nil)
 
 	case brain.ModeGetStarted:
-		send(messageWelcome, nil, b.store.SetMode(id, brain.ModeAdd))
-		send(messageWelcome2, nil, nil)
+		b.messageWelcome(id)
 
 	default:
-		send(b.messageStartMenu(id))
+		b.send(b.messageStartMenu(id))
 	}
 }
 
-func (b bot) handleQuickReplies(send replySender, id int64, payload string) {
+func (b bot) handleQuickReplies(id int64, payload string) {
 	switch payload {
 	case payloadIdle:
-		send(messageIdle, nil, nil)
+		b.send(id, messageIdle, nil, nil)
 
 	case payloadStartStudy:
 		if err := b.store.SetMode(id, brain.ModeStudy); err != nil {
-			send(messageErr, buttonsMenuMode, err)
+			b.send(id, messageErr, buttonsMenuMode, err)
 			return
 		}
-		send(b.startStudy(id))
+		b.send(b.startStudy(id))
 
 	case payloadStartAdd:
 		if err := b.store.SetMode(id, brain.ModeAdd); err != nil {
-			send(messageErr, buttonsMenuMode, err)
+			b.send(id, messageErr, buttonsMenuMode, err)
 			return
 		}
-		send(messageStartAdd, buttonsAddMode, nil)
+		b.send(id, messageStartAdd, buttonsAddMode, nil)
 
 	case payloadShowHelp:
-		send(messageHelp, buttonsHelp, nil)
+		b.send(id, messageHelp, buttonsHelp, nil)
 
 	case payloadShowStudy:
 		study, err := b.store.GetStudy(id)
 		if err != nil {
-			send(messageErr, buttonsShow, fmt.Errorf("failed to get study: %v", err))
+			b.send(id, messageErr, buttonsShow, fmt.Errorf("failed to get study: %v", err))
 			return
 		}
-		send(study.Phrase, buttonsScore, nil)
+		b.send(id, study.Phrase, buttonsScore, nil)
 
 	case payloadScoreBad:
-		send(b.scoreAndStudy(id, brain.ScoreBad))
+		b.send(b.scoreAndStudy(id, brain.ScoreBad))
 
 	case payloadScoreOk:
-		send(b.scoreAndStudy(id, brain.ScoreOK))
+		b.send(b.scoreAndStudy(id, brain.ScoreOK))
 
 	case payloadScoreGood:
-		send(b.scoreAndStudy(id, brain.ScoreGood))
+		b.send(b.scoreAndStudy(id, brain.ScoreGood))
 
 	case payloadStartMenu:
 		fallthrough
 	default:
-		send(b.messageStartMenu(id))
+		b.send(b.messageStartMenu(id))
 	}
 }
 
@@ -187,47 +168,66 @@ func (b bot) logMessage(m messenger.Message) {
 	b.log.Println(logMsg + m.Text)
 }
 
-func (b bot) trackActivity(chatID int64, t time.Time) {
-	if err := b.store.SetActivity(chatID, t); err != nil {
+func (b bot) trackActivity(id int64, t time.Time) {
+	if err := b.store.SetActivity(id, t); err != nil {
 		b.log.Println(err)
 	}
 }
 
-func (b bot) messageStartMenu(chatID int64) (string, []messenger.QuickReply, error) {
-	if err := b.store.SetMode(chatID, brain.ModeMenu); err != nil {
-		return messageErr, buttonsMenuMode, err
+func (b bot) messageStartMenu(id int64) (int64, string, []messenger.QuickReply, error) {
+	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
+		return id, messageErr, buttonsMenuMode, err
 	}
-	return messageStartMenu, buttonsMenuMode, nil
+	return id, messageStartMenu, buttonsMenuMode, nil
 }
 
-func (b bot) startStudy(chatID int64) (string, []messenger.QuickReply, error) {
-	study, err := b.store.GetStudy(chatID)
+func (b bot) messageWelcome(id int64) {
+	p, err := b.client.ProfileByID(id)
 	if err != nil {
-		return messageErr, buttonsStudyMode, err
+		b.log.Printf("failed to get profile for %d: %v", id, err)
+	}
+	b.send(id, fmt.Sprintf(messageWelcome, p.FirstName), nil, nil)
+	b.send(id, messageWelcome2, nil, b.store.SetMode(id, brain.ModeAdd))
+}
+
+func (b bot) startStudy(id int64) (int64, string, []messenger.QuickReply, error) {
+	study, err := b.store.GetStudy(id)
+	if err != nil {
+		return id, messageErr, buttonsStudyMode, err
 	}
 	// No studies ready
 	if study.Total == 0 {
 		// Go to menu mode
-		if err = b.store.SetMode(chatID, brain.ModeMenu); err != nil {
-			return messageErr, buttonsStudyMode, err
+		if err = b.store.SetMode(id, brain.ModeMenu); err != nil {
+			return id, messageErr, buttonsStudyMode, err
 		}
 		// Display time until next study is ready or there are not studies yet
 		msg := messageStudyEmpty
 		if study.Next > 0 {
 			msg = fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
 		}
-		return msg, buttonsMenuMode, nil
+		return id, msg, buttonsMenuMode, nil
 	}
 	// Send study to user
-	return fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
+	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
 }
 
-func (b bot) scoreAndStudy(chatID int64, score brain.Score) (string, []messenger.QuickReply, error) {
-	err := b.store.ScoreStudy(chatID, score)
+func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []messenger.QuickReply, error) {
+	err := b.store.ScoreStudy(id, score)
 	if err != nil {
-		return messageErr, buttonsStudyMode, err
+		return id, messageErr, buttonsStudyMode, err
 	}
-	return b.startStudy(chatID)
+	return b.startStudy(id)
+}
+
+// Send replies and log errors
+func (b bot) send(id int64, reply string, buttons []messenger.QuickReply, err error) {
+	if err != nil {
+		b.log.Println(err)
+	}
+	if err = b.client.SendWithReplies(messenger.Recipient{ID: id}, reply, buttons); err != nil {
+		b.log.Println("failed to send message:", err)
+	}
 }
 
 // Format like "X hour[s] X minute[s]".
