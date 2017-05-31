@@ -5,14 +5,14 @@ const (
 Please use the buttons below.`
 	messageHelp = `this is help
 `
-	messageIdle     = "Good, just send me a like or a message to continue with your studies."
+	messageIdle     = "Good, just send me a \U0001F44D to continue with your studies."
 	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
 	messageWelcome = `Hello %s!
 Slangebrain is here to help you with your language studies.
 Whenever you pick up a new phrase, just add it to your Slangebrain and remember it forever.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
-	messageWelcome2 = `You begin by adding phrases and after Slangbrain will test your memories in a natural schedule.
+	messageWelcome2 = `You begin by adding phrases and after, Slangbrain will test your memories in a natural schedule.
 
 ` + messageStartAdd
 	messageErr              = "Sorry, something went wrong."

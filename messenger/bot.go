@@ -15,6 +15,7 @@ import (
 // for letters or numeric values
 // See: http://www.fileformat.info/info/unicode/category/index.htm
 var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}]`)
+var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
 type replySender func(string, []messenger.QuickReply, error)
 
@@ -254,5 +255,8 @@ func formatDuration(d time.Duration) string {
 	return s
 }
 func normPhrase(s string) string {
-	return specialChars.ReplaceAllString(strings.ToLower(strings.TrimSpace(s)), "")
+	s = inParantheses.ReplaceAllString("", s)
+	s = strings.TrimSpace(s)
+	s = strings.ToLower(s)
+	return specialChars.ReplaceAllString(s, "")
 }
