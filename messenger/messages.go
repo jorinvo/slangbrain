@@ -12,16 +12,23 @@ Separate them with a linebreak.`
 Slangebrain is here to help you with your language studies.
 Whenever you pick up a new phrase, just add it to your Slangebrain and remember it forever.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
-	messageWelcome2 = `You begin by adding phrases and after, Slangbrain will test your memories in a natural schedule.
+	messageWelcome2 = `You begin by adding phrases and later Slangbrain will test your memories in a natural schedule.
 
-` + messageStartAdd
+` + messageStartAdd + `
+If your mother tongue is English and you're studying Spanish, a message would look like this:
+
+Hola
+Hello
+
+Give it a try:
+`
 	messageErr              = "Sorry, something went wrong."
 	messageExplanationEmpty = "The phrase is missing an explanation. Please send it again with explanation."
 	messagePhraseEmpty      = "Please send a phrase."
 	messageStudyDone        = `Congrats, you finished all your studies for now!
 Come back in %s.`
 	messageStudyCorrect = "Nice, your answer was correct!"
-	messageStudyWrong   = `Sorry, the correct version is:
+	messageStudyWrong   = `Sorry, the right version is:
 
 %s
 

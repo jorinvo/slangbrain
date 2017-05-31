@@ -12,8 +12,9 @@ var (
 	// Plus sign emoji
 	buttonAdd = button("\u2795 phrases", payloadStartAdd)
 	// Waving hand emoji
-	buttonDone = button("\u2714 done", payloadIdle)
-	buttonHelp = button("\u2753 help", payloadShowHelp)
+	buttonDone   = button("\u2714 done", payloadIdle)
+	buttonHelp   = button("\u2753 help", payloadShowHelp)
+	buttonDelete = button(iconDelete, payloadDelete)
 )
 
 var (
@@ -35,11 +36,12 @@ var (
 		buttonStudyDone,
 	}
 	buttonsShow = []messenger.QuickReply{
-		button(iconDelete, payloadDelete),
+		buttonDelete,
 		buttonStudyDone,
 		button("\U0001F449 show phrase", payloadShowStudy),
 	}
 	buttonsScore = []messenger.QuickReply{
+		buttonDelete,
 		// Ok thumb down emoji
 		button("\U0001F44E didn't know", payloadScoreBad),
 		button("soso", payloadScoreOk),

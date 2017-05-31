@@ -21,8 +21,6 @@ type replySender func(string, []messenger.QuickReply, error)
 
 // Only handling the Get Started button here
 func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
-	b.log.Println("postback", p.Payload)
-
 	if p.Payload != payloadGetStarted {
 		return
 	}
@@ -31,7 +29,6 @@ func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
 }
 
 func (b bot) ReadHandler(read messenger.Read, res *messenger.Response) {
-	b.log.Printf("read message (%d)", res.To.ID)
 	if err := b.store.SetRead(res.To.ID, read.Watermark()); err != nil {
 		b.log.Println(err)
 	}
@@ -42,7 +39,6 @@ func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
 		return
 	}
 
-	b.logMessage(m)
 	b.trackActivity(m.Sender.ID, m.Time)
 
 	if m.QuickReply != nil {
@@ -174,14 +170,6 @@ func (b bot) handleQuickReplies(id int64, payload string) {
 	default:
 		b.send(b.messageStartMenu(id))
 	}
-}
-
-func (b bot) logMessage(m messenger.Message) {
-	logMsg := "message: "
-	if m.QuickReply != nil {
-		logMsg += "[" + m.QuickReply.Payload + "] "
-	}
-	b.log.Println(logMsg + m.Text)
 }
 
 func (b bot) trackActivity(id int64, t time.Time) {
