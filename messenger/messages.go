@@ -26,7 +26,7 @@ Give it a try:
 	messagePhraseEmpty      = "Please send a phrase."
 	messageStudyDone        = `Congrats, you finished all your studies for now!
 Come back in %s.`
-	messageStudyCorrect = "Nice, your answer was correct!"
+	messageStudyCorrect = "Correct!"
 	messageStudyWrong   = `Sorry, the right version is:
 
 %s
