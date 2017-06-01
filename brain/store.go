@@ -13,7 +13,9 @@ import (
 
 const (
 	// Time to wait for first study in hours
-	startStudytime = 2
+	baseStudytime = 2
+	// Maximum number of new studies per day
+	newPerDay = 20
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 3
 	// Time user has to be inactive before being notified
@@ -105,7 +107,8 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		if err != nil {
 			return err
 		}
-		phraseID := append(itob(chatID), itob(int64(sequence))...)
+		prefix := itob(chatID)
+		phraseID := append(prefix, itob(int64(sequence))...)
 		// Phrase to JSON
 		buf, err := json.Marshal(newPhrase(phrase, explanation))
 		if err != nil {
@@ -115,9 +118,21 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		if err = bp.Put(phraseID, buf); err != nil {
 			return err
 		}
+		// Limit number of new studies per day
+		newPhrases := 0
+		c := tx.Bucket(bucketPhrases).Cursor()
+		var p Phrase
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			if err := json.Unmarshal(v, &p); err != nil {
+				return err
+			}
+			if p.Score == 0 {
+				newPhrases++
+			}
+		}
 		// Save study time
 		bs := tx.Bucket(bucketStudytimes)
-		next := itob(time.Now().Add(startStudytime * time.Hour).Unix())
+		next := itob(time.Now().Add(time.Duration(newPhrases/newPerDay*24+baseStudytime) * time.Hour).Unix())
 		return bs.Put(phraseID, next)
 	})
 
@@ -228,7 +243,7 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 			return err
 		}
 		// Update study time
-		next := itob(now.Add((2 << uint(newScore)) * time.Hour).Unix())
+		next := itob(now.Add((baseStudytime << uint(newScore)) * time.Hour).Unix())
 		if err = bs.Put(key, next); err != nil {
 			return err
 		}
