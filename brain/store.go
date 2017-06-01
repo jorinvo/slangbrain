@@ -21,14 +21,21 @@ const (
 )
 
 var (
-	bucketModes      = []byte("modes")
-	bucketPhrases    = []byte("phrases")
-	bucketStudytimes = []byte("studytimes")
-	// bsl     = []byte("studylogs")
-	bucketReads      = []byte("reads")
-	bucketActivities = []byte("activities")
-	buckets          = [][]byte{bucketModes, bucketPhrases, bucketStudytimes, bucketReads, bucketActivities}
+	bucketModes         = []byte("modes")
+	bucketPhrases       = []byte("phrases")
+	bucketStudytimes    = []byte("studytimes")
+	bucketReads         = []byte("reads")
+	bucketActivities    = []byte("activities")
+	bucketSubscriptions = []byte("subscriptions")
 )
+var buckets = [][]byte{
+	bucketModes,
+	bucketPhrases,
+	bucketStudytimes,
+	bucketReads,
+	bucketActivities,
+	bucketSubscriptions,
+}
 
 // Store ...
 type Store struct {
@@ -330,14 +337,15 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 	err := store.db.View(func(tx *bolt.Tx) error {
 		err := tx.Bucket(bucketStudytimes).ForEach(func(k, v []byte) error {
 			t, err := btoi(v)
-			if err != nil {
+			if err != nil || t > now {
 				return err
-			}
-			if t > now {
-				return nil
 			}
 			chatID, err := btoi(k[:8])
 			if err != nil {
+				return err
+			}
+			isSubscribed, err := store.IsSubscribed(chatID)
+			if err != nil || !isSubscribed {
 				return err
 			}
 			dueStudies[chatID]++
@@ -385,6 +393,41 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 		return dueStudies, fmt.Errorf("failed to get due studies: %v", err)
 	}
 	return dueStudies, nil
+}
+
+// IsSubscribed ...
+func (store Store) IsSubscribed(chatID int64) (bool, error) {
+	var isSubscribed bool
+	err := store.db.View(func(tx *bolt.Tx) error {
+		isSubscribed = tx.Bucket(bucketSubscriptions).Get(itob(chatID)) != nil
+		return nil
+	})
+	if err != nil {
+		return isSubscribed, fmt.Errorf("failed to check subscription for chat %d: %v", chatID, err)
+	}
+	return isSubscribed, nil
+}
+
+// Subscribe ...
+func (store Store) Subscribe(chatID int64) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketSubscriptions).Put(itob(chatID), []byte{'1'})
+	})
+	if err != nil {
+		return fmt.Errorf("failed to subscribe chatID %d: %v", chatID, err)
+	}
+	return nil
+}
+
+// Unsubscribe ...
+func (store Store) Unsubscribe(chatID int64) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketSubscriptions).Delete(itob(chatID))
+	})
+	if err != nil {
+		return fmt.Errorf("failed to unsubscribe chatID %d: %v", chatID, err)
+	}
+	return nil
 }
 
 // Close the underlying database connection.

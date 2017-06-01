@@ -3,6 +3,7 @@ package messenger
 import "github.com/jorinvo/messenger"
 
 var (
+	iconOK     = "\U0001F44C"
 	iconDelete = "\u274C"
 )
 var (
@@ -21,13 +22,16 @@ var (
 	buttonsMenuMode = []messenger.QuickReply{
 		buttonStudy,
 		buttonAdd,
-		// buttonHelp,
+		buttonHelp,
 		buttonDone,
 	}
+	buttonsSubscribe = []messenger.QuickReply{
+		button(iconOK+" sounds good", payloadSubscribe),
+		button("no thanks", payloadNoSubscription),
+	}
 	buttonsHelp = []messenger.QuickReply{
-		buttonStudy,
-		buttonAdd,
-		buttonDone,
+		button("stop notifications", payloadUnsubscribe),
+		button("all good", payloadStartMenu),
 	}
 	buttonsAddMode = []messenger.QuickReply{
 		button("stop adding", payloadStartMenu),
@@ -45,8 +49,7 @@ var (
 		// Ok thumb down emoji
 		button("\U0001F44E didn't know", payloadScoreBad),
 		button("soso", payloadScoreOk),
-		// Ok hand emoji
-		button("\U0001F44C easy", payloadScoreGood),
+		button(iconOK+" easy", payloadScoreGood),
 	}
 	buttonsStudyEmpty = []messenger.QuickReply{
 		buttonAdd,

@@ -131,7 +131,15 @@ func (b bot) handleQuickReplies(id int64, payload string) {
 		b.send(id, messageStartAdd, buttonsAddMode, nil)
 
 	case payloadShowHelp:
-		b.send(id, messageHelp, buttonsHelp, nil)
+		isSubscribed, err := b.store.IsSubscribed(id)
+		if err != nil {
+			b.log.Println(err)
+		}
+		buttons := buttonsHelp
+		if !isSubscribed {
+			buttons = buttons[1:]
+		}
+		b.send(id, messageHelp, buttons, nil)
 
 	case payloadShowStudy:
 		study, err := b.store.GetStudy(id)
@@ -165,6 +173,23 @@ func (b bot) handleQuickReplies(id int64, payload string) {
 		b.send(id, messageCancelDelete, nil, nil)
 		b.send(b.startStudy(id))
 
+	case payloadSubscribe:
+		if err := b.store.Subscribe(id); err != nil {
+			b.send(id, messageErr, nil, nil)
+			return
+		}
+		b.send(id, messageSubscribed, buttonsMenuMode, nil)
+
+	case payloadUnsubscribe:
+		if err := b.store.Unsubscribe(id); err != nil {
+			b.send(id, messageErr, nil, nil)
+			return
+		}
+		b.send(id, messageUnsubscribed, buttonsMenuMode, nil)
+
+	case payloadNoSubscription:
+		b.send(id, messageNoSubscription, buttonsMenuMode, nil)
+
 	case payloadStartMenu:
 		fallthrough
 	default:
@@ -187,10 +212,12 @@ func (b bot) messageStartMenu(id int64) (int64, string, []messenger.QuickReply, 
 
 func (b bot) messageWelcome(id int64) {
 	p, err := b.client.ProfileByID(id)
+	name := p.FirstName
 	if err != nil {
+		name = "there"
 		b.log.Printf("failed to get profile for %d: %v", id, err)
 	}
-	b.send(id, fmt.Sprintf(messageWelcome, p.FirstName), nil, nil)
+	b.send(id, fmt.Sprintf(messageWelcome, name), nil, nil)
 	b.send(id, messageWelcome2, nil, b.store.SetMode(id, brain.ModeAdd))
 }
 
@@ -205,11 +232,21 @@ func (b bot) startStudy(id int64) (int64, string, []messenger.QuickReply, error)
 		if err = b.store.SetMode(id, brain.ModeMenu); err != nil {
 			return id, messageErr, buttonsStudyMode, err
 		}
-		// Display time until next study is ready or there are not studies yet
+		// There are not studies yet
 		if study.Next == 0 {
 			return id, messageStudyEmpty, buttonsStudyEmpty, nil
 		}
-		return id, fmt.Sprintf(messageStudyDone, formatDuration(study.Next)), buttonsMenuMode, nil
+		// Display time until next study is ready
+		msg := fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
+		isSubscribed, err := b.store.IsSubscribed(id)
+		if err != nil {
+			b.log.Println(err)
+		}
+		if isSubscribed || err != nil {
+			return id, msg, buttonsMenuMode, nil
+		}
+		// Ask to subscribe to notifications
+		return id, msg + messageAskToSubscribe, buttonsSubscribe, nil
 	}
 	// Send study to user
 	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil

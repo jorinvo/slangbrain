@@ -3,8 +3,7 @@ package messenger
 const (
 	messageStartMenu = `What would you like to do next?
 Please use the buttons below.`
-	messageHelp = `this is help
-`
+	messageHelp     = "How can I help you?"
 	messageIdle     = "Good, just send me a \U0001F44D to continue with your studies."
 	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
@@ -50,11 +49,23 @@ Please send it again with an explanation you can distinguish from the existing o
 
 With explanation:
 %s`
-	messageAddNext       = "Add next phrase."
-	messageStudiesDue    = `Hey %s, there are %d phrases ready for review!`
-	messageConfirmDelete = "Are you sure, you want to delete this phrase?"
-	messageDeleted       = "The phrase has been deleted. Let's continue studying other phrases."
-	messageCancelDelete  = "Good, let's keep that phrase and continue studying."
-	greeting             = `Slangbrain helps you with our language Studies.
+	messageAddNext        = "Add next phrase."
+	messageStudiesDue     = `Hey %s, you have %d phrases ready for review!`
+	messageConfirmDelete  = "Are you sure, you want to delete this phrase?"
+	messageDeleted        = "The phrase has been deleted. Let's continue studying other phrases."
+	messageCancelDelete   = "Good, let's keep that phrase and continue studying."
+	messageAskToSubscribe = `
+
+Would you like me to send you a message when there are phrases ready for studying?`
+	messageSubscribed = `Good, I will send you a message when your phrases are ready.
+
+` + messageStartMenu
+	messageUnsubscribed = `Sure, you won't receive any more notifications.
+
+` + messageStartMenu
+	messageNoSubscription = `Sure, you won't receive any notifications.
+
+` + messageStartMenu
+	greeting = `Slangbrain helps you with our language Studies.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
 )

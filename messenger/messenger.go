@@ -68,13 +68,14 @@ func Run(config Config) (http.Handler, error) {
 				}
 				now := time.Now()
 				for chatID, count := range dueStudies {
-					profile, err := client.ProfileByID(chatID)
+					p, err := client.ProfileByID(chatID)
+					name := p.FirstName
 					if err != nil {
+						name = "there"
 						config.Log.Printf("Failed to get profile for %d: %v", chatID, err)
-						continue
 					}
 					to := messenger.Recipient{ID: chatID}
-					msg := fmt.Sprintf(messageStudiesDue, profile.FirstName, count)
+					msg := fmt.Sprintf(messageStudiesDue, name, count)
 					if err = client.SendWithReplies(to, msg, buttonsStudiesDue); err != nil {
 						config.Log.Printf("Failed to notify user %d: %v", chatID, err)
 					}
