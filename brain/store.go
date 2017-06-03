@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -13,11 +14,16 @@ import (
 
 const (
 	// Time to wait for first study in hours
-	baseStudytime = 2
+	baseStudytime = 5
+	// Time in minutes
+	// When study times are updated they are randomly placed
+	// somewhere between the new time and new time + studyTimeDiffusion
+	// to mix up the order in which words are studied.
+	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
 	newPerDay = 20
 	// Minimum number of studies needed to be due before notifying user
-	dueMinCount = 3
+	dueMinCount = 5
 	// Time user has to be inactive before being notified
 	dueMinInactive = 10 * time.Minute
 )
@@ -63,6 +69,9 @@ func CreateStore(dbFile string) (Store, error) {
 	if err != nil {
 		return store, fmt.Errorf("failed to initialize buckets: %v", err)
 	}
+
+	rand.Seed(time.Now().UnixNano())
+
 	return store, err
 }
 
@@ -243,7 +252,9 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 			return err
 		}
 		// Update study time
-		next := itob(now.Add((baseStudytime << uint(newScore)) * time.Hour).Unix())
+		// Randomize order by spreading studies over a period of time
+		diffusion := time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
+		next := itob(now.Add((baseStudytime<<uint(newScore))*time.Hour + diffusion).Unix())
 		if err = bs.Put(key, next); err != nil {
 			return err
 		}
