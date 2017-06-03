@@ -44,7 +44,7 @@ func (c Client) Send(id int64, message string, buttons []Button) error {
 	if resp.StatusCode == 200 {
 		return nil
 	}
-	return checkFacebookError(resp.Body)
+	return checkError(resp.Body)
 }
 
 type sendMessage struct {

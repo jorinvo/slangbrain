@@ -42,7 +42,7 @@ func (c Client) postSetting(data interface{}) error {
 		_ = resp.Body.Close()
 	}()
 
-	return checkFacebookError(resp.Body)
+	return checkError(resp.Body)
 }
 
 type greetingSettings struct {

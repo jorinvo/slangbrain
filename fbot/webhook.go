@@ -19,6 +19,8 @@ const (
 	EventPayload
 	// EventRead ...
 	EventRead
+	// EventError ...
+	EventError
 )
 
 // Event ...
@@ -49,8 +51,8 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var rec receive
 	if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
-		fmt.Println("could not decode response:", err)
 		fmt.Fprintln(w, `{status: 'not ok'}`)
+		wh.EventHandler(Event{Type: EventError, Text: err.Error()})
 		return
 	}
 	defer func() {

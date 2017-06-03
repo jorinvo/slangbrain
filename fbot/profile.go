@@ -42,5 +42,5 @@ func (c Client) GetProfile(id int64) (Profile, error) {
 		return p, err
 	}
 
-	return p, checkFacebookError(bytes.NewReader(content))
+	return p, checkError(bytes.NewReader(content))
 }

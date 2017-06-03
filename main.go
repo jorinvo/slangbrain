@@ -62,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	store, err := brain.CreateStore(*db)
+	store, err := brain.New(*db)
 	if err != nil {
 		logger.Fatalln("failed to create store:", err)
 	}

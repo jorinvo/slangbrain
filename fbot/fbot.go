@@ -36,15 +36,12 @@ type Button struct {
 }
 
 // Helper to check for errors in reply
-func checkFacebookError(r io.Reader) error {
-	var err error
-
+func checkError(r io.Reader) error {
 	var qr queryResponse
-	err = json.NewDecoder(r).Decode(&qr)
+	err := json.NewDecoder(r).Decode(&qr)
 	if qr.Error != nil {
 		err = fmt.Errorf("Facebook error : %s", qr.Error.Message)
 	}
-
 	return err
 }
 

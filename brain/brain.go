@@ -2,6 +2,39 @@ package brain
 
 import "time"
 
+const (
+	// Time to wait for first study in hours
+	baseStudytime = 5
+	// Time in minutes
+	// When study times are updated they are randomly placed
+	// somewhere between the new time and new time + studyTimeDiffusion
+	// to mix up the order in which words are studied.
+	studyTimeDiffusion = 30
+	// Maximum number of new studies per day
+	newPerDay = 20
+	// Minimum number of studies needed to be due before notifying user
+	dueMinCount = 5
+	// Time user has to be inactive before being notified
+	dueMinInactive = 10 * time.Minute
+)
+
+var (
+	bucketModes         = []byte("modes")
+	bucketPhrases       = []byte("phrases")
+	bucketStudytimes    = []byte("studytimes")
+	bucketReads         = []byte("reads")
+	bucketActivities    = []byte("activities")
+	bucketSubscriptions = []byte("subscriptions")
+)
+var buckets = [][]byte{
+	bucketModes,
+	bucketPhrases,
+	bucketStudytimes,
+	bucketReads,
+	bucketActivities,
+	bucketSubscriptions,
+}
+
 // Mode is the state of a chat.
 // We need to keep track of the state each chat is in.
 type Mode int
@@ -42,11 +75,4 @@ type Phrase struct {
 	Phrase      string
 	Explanation string
 	Score       Score
-}
-
-func newPhrase(phrase, explanation string) Phrase {
-	return Phrase{
-		Phrase:      phrase,
-		Explanation: explanation,
-	}
 }

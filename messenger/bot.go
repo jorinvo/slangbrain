@@ -18,6 +18,11 @@ var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
 func (b bot) HandleEvent(e fbot.Event) {
+	if e.Type == fbot.EventError {
+		b.log.Println(e.Text)
+		return
+	}
+
 	if e.Type == fbot.EventRead {
 		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
 			b.log.Println(err)
