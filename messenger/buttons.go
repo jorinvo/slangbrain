@@ -1,74 +1,66 @@
 package messenger
 
-import "github.com/jorinvo/messenger"
+import "github.com/jorinvo/slangbrain/fbot"
 
 var (
 	iconOK     = "\U0001F44C"
 	iconDelete = "\u274C"
 )
 var (
-	buttonStudyDone = button("done studying", payloadStartMenu)
+	buttonStudyDone = fbot.Button{Text: "done studying", Payload: payloadStartMenu}
 	// Teacher emoji
-	buttonStudy = button("\U0001F468\u200D\U0001F3EB study", payloadStartStudy)
+	buttonStudy = fbot.Button{Text: "\U0001F468\u200D\U0001F3EB study", Payload: payloadStartStudy}
 	// Plus sign emoji
-	buttonAdd = button("\u2795 phrases", payloadStartAdd)
+	buttonAdd = fbot.Button{Text: "\u2795 phrases", Payload: payloadStartAdd}
 	// Waving hand emoji
-	buttonDone   = button("\u2714 done", payloadIdle)
-	buttonHelp   = button("\u2753 help", payloadShowHelp)
-	buttonDelete = button(iconDelete, payloadDelete)
+	buttonDone   = fbot.Button{Text: "\u2714 done", Payload: payloadIdle}
+	buttonHelp   = fbot.Button{Text: "\u2753 help", Payload: payloadShowHelp}
+	buttonDelete = fbot.Button{Text: iconDelete, Payload: payloadDelete}
 )
 
 var (
-	buttonsMenuMode = []messenger.QuickReply{
+	buttonsMenuMode = []fbot.Button{
 		buttonStudy,
 		buttonAdd,
 		buttonHelp,
 		buttonDone,
 	}
-	buttonsSubscribe = []messenger.QuickReply{
-		button(iconOK+" sounds good", payloadSubscribe),
-		button("no thanks", payloadNoSubscription),
+	buttonsSubscribe = []fbot.Button{
+		fbot.Button{Text: iconOK + " sounds good", Payload: payloadSubscribe},
+		fbot.Button{Text: "no thanks", Payload: payloadNoSubscription},
 	}
-	buttonsHelp = []messenger.QuickReply{
-		button("stop notifications", payloadUnsubscribe),
-		button("all good", payloadStartMenu),
+	buttonsHelp = []fbot.Button{
+		fbot.Button{Text: "stop notifications", Payload: payloadUnsubscribe},
+		fbot.Button{Text: "all good", Payload: payloadStartMenu},
 	}
-	buttonsAddMode = []messenger.QuickReply{
-		button("stop adding", payloadStartMenu),
+	buttonsAddMode = []fbot.Button{
+		fbot.Button{Text: "stop adding", Payload: payloadStartMenu},
 	}
-	buttonsStudyMode = []messenger.QuickReply{
+	buttonsStudyMode = []fbot.Button{
 		buttonStudyDone,
 	}
-	buttonsShow = []messenger.QuickReply{
+	buttonsShow = []fbot.Button{
 		buttonDelete,
 		buttonStudyDone,
-		button("\U0001F449 show phrase", payloadShowStudy),
+		fbot.Button{Text: "\U0001F449 show phrase", Payload: payloadShowStudy},
 	}
-	buttonsScore = []messenger.QuickReply{
+	buttonsScore = []fbot.Button{
 		buttonDelete,
 		// Ok thumb down emoji
-		button("\U0001F44E didn't know", payloadScoreBad),
-		button("soso", payloadScoreOk),
-		button(iconOK+" easy", payloadScoreGood),
+		fbot.Button{Text: "\U0001F44E didn't know", Payload: payloadScoreBad},
+		fbot.Button{Text: "soso", Payload: payloadScoreOk},
+		fbot.Button{Text: iconOK + " easy", Payload: payloadScoreGood},
 	}
-	buttonsStudyEmpty = []messenger.QuickReply{
+	buttonsStudyEmpty = []fbot.Button{
 		buttonAdd,
 		// buttonHelp,
 	}
-	buttonsStudiesDue = []messenger.QuickReply{
+	buttonsStudiesDue = []fbot.Button{
 		buttonStudy,
-		button("not now", payloadStartMenu),
+		fbot.Button{Text: "not now", Payload: payloadStartMenu},
 	}
-	buttonsConfirmDelete = []messenger.QuickReply{
-		button(iconDelete+" delete phrase", payloadConfirmDelete),
-		button("cancel", payloadCancelDelete),
+	buttonsConfirmDelete = []fbot.Button{
+		fbot.Button{Text: iconDelete + " delete phrase", Payload: payloadConfirmDelete},
+		fbot.Button{Text: "cancel", Payload: payloadCancelDelete},
 	}
 )
-
-func button(title, payload string) messenger.QuickReply {
-	return messenger.QuickReply{
-		ContentType: "text",
-		Title:       title,
-		Payload:     payload,
-	}
-}

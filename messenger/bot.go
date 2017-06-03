@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jorinvo/messenger"
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/fbot"
 )
 
 // Everything that is not in the unicode character classes
@@ -17,38 +17,30 @@ import (
 var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}]`)
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
-type replySender func(string, []messenger.QuickReply, error)
-
-// Only handling the Get Started button here
-func (b bot) PostbackHandler(p messenger.PostBack, r *messenger.Response) {
-	if p.Payload != payloadGetStarted {
+func (b bot) HandleEvent(e fbot.Event) {
+	if e.Type == fbot.EventRead {
+		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
+			b.log.Println(err)
+		}
 		return
 	}
 
-	b.messageWelcome(p.Sender.ID)
-}
-
-func (b bot) ReadHandler(read messenger.Read, res *messenger.Response) {
-	if err := b.store.SetRead(res.To.ID, read.Watermark()); err != nil {
-		b.log.Println(err)
-	}
-}
-
-func (b bot) MessageHandler(m messenger.Message, r *messenger.Response) {
-	if m.IsEcho {
+	if e.Type == fbot.EventUnknow {
+		b.log.Println("Received unknown event", e)
 		return
 	}
 
-	b.trackActivity(m.Sender.ID, m.Time)
+	b.trackActivity(e.ChatID, e.Time)
 
-	if m.QuickReply != nil {
-		b.handleQuickReplies(m.Sender.ID, m.QuickReply.Payload)
+	if e.Type == fbot.EventPayload {
+		b.handlePayload(e.ChatID, e.Payload)
 		return
 	}
-	b.handleMessages(m.Sender.ID, m.Text)
+
+	b.handleMessage(e.ChatID, e.Text)
 }
 
-func (b bot) handleMessages(id int64, msg string) {
+func (b bot) handleMessage(id int64, msg string) {
 	mode, err := b.store.GetMode(id)
 	if err != nil {
 		b.send(id, messageErr, buttonsMenuMode, fmt.Errorf("failed to get mode for id %v: %v", id, err))
@@ -111,8 +103,11 @@ func (b bot) handleMessages(id int64, msg string) {
 	}
 }
 
-func (b bot) handleQuickReplies(id int64, payload string) {
+func (b bot) handlePayload(id int64, payload string) {
 	switch payload {
+	case payloadGetStarted:
+		b.messageWelcome(id)
+
 	case payloadIdle:
 		b.send(id, messageIdle, nil, nil)
 
@@ -203,7 +198,7 @@ func (b bot) trackActivity(id int64, t time.Time) {
 	}
 }
 
-func (b bot) messageStartMenu(id int64) (int64, string, []messenger.QuickReply, error) {
+func (b bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
 		return id, messageErr, buttonsMenuMode, err
 	}
@@ -211,7 +206,7 @@ func (b bot) messageStartMenu(id int64) (int64, string, []messenger.QuickReply, 
 }
 
 func (b bot) messageWelcome(id int64) {
-	p, err := b.client.ProfileByID(id)
+	p, err := b.client.GetProfile(id)
 	name := p.FirstName
 	if err != nil {
 		name = "there"
@@ -222,7 +217,7 @@ func (b bot) messageWelcome(id int64) {
 	b.send(id, messageWelcome2, nil, b.store.SetMode(id, brain.ModeAdd))
 }
 
-func (b bot) startStudy(id int64) (int64, string, []messenger.QuickReply, error) {
+func (b bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
 	study, err := b.store.GetStudy(id)
 	if err != nil {
 		return id, messageErr, buttonsStudyMode, err
@@ -253,7 +248,7 @@ func (b bot) startStudy(id int64) (int64, string, []messenger.QuickReply, error)
 	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
 }
 
-func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []messenger.QuickReply, error) {
+func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []fbot.Button, error) {
 	err := b.store.ScoreStudy(id, score)
 	if err != nil {
 		return id, messageErr, buttonsStudyMode, err
@@ -262,11 +257,11 @@ func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []messen
 }
 
 // Send replies and log errors
-func (b bot) send(id int64, reply string, buttons []messenger.QuickReply, err error) {
+func (b bot) send(id int64, reply string, buttons []fbot.Button, err error) {
 	if err != nil {
 		b.log.Println(err)
 	}
-	if err = b.client.SendWithReplies(messenger.Recipient{ID: id}, reply, buttons); err != nil {
+	if err = b.client.Send(id, reply, buttons); err != nil {
 		b.log.Println("failed to send message:", err)
 	}
 }
