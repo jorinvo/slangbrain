@@ -6,10 +6,16 @@ import (
 	"io"
 )
 
+// Can be overwritten for testing
+const defaultAPI = "https://graph.facebook.com/v2.6"
+
 // Client is the client which manages communication with the Messenger Platform API.
 type Client struct {
 	token       string
 	verifyToken string
+	// API URL can be changed for testing.
+	// Must not contain trailing slash.
+	API string
 }
 
 // New ...
@@ -17,6 +23,7 @@ func New(token, verifyToken string) Client {
 	return Client{
 		token:       token,
 		verifyToken: verifyToken,
+		API:         defaultAPI,
 	}
 }
 

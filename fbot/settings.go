@@ -8,7 +8,7 @@ import (
 )
 
 // SettingsURL is API endpoint for saving settings.
-const settingsURL = "https://graph.facebook.com/v2.6/me/messenger_profile?access_token=%s"
+const settingsURL = "%s/me/messenger_profile?access_token=%s"
 
 // SetGreetings sets greetings.
 // Set Locale: "default" for a fallback greeting.
@@ -33,7 +33,7 @@ func (c Client) postSetting(data interface{}) error {
 		return err
 	}
 
-	url := fmt.Sprintf(settingsURL, c.token)
+	url := fmt.Sprintf(settingsURL, c.API, c.token)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(encoded))
 	if err != nil {
 		return err

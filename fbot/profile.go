@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const profileURL = "https://graph.facebook.com/v2.6/%d?fields=first_name,last_name,profile_pic,locale,timezone,gender&access_token=%s"
+const profileURL = "%s/%d?fields=first_name,last_name,profile_pic,locale,timezone,gender&access_token=%s"
 
 // Profile is the public information of a Facebook user
 type Profile struct {
@@ -24,7 +24,7 @@ type Profile struct {
 func (c Client) GetProfile(id int64) (Profile, error) {
 	var p Profile
 
-	url := fmt.Sprintf(profileURL, id, c.token)
+	url := fmt.Sprintf(profileURL, c.API, id, c.token)
 	resp, err := http.Get(url)
 	if err != nil {
 		return p, err

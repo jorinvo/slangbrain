@@ -8,7 +8,7 @@ import (
 )
 
 // SendMessageURL is API endpoint for sending messages.
-const sendMessageURL = "https://graph.facebook.com/v2.6/me/messages?access_token=%s"
+const sendMessageURL = "%s/me/messages?access_token=%s"
 
 // Send ...
 func (c Client) Send(id int64, message string, buttons []Button) error {
@@ -33,7 +33,7 @@ func (c Client) Send(id int64, message string, buttons []Button) error {
 		return err
 	}
 
-	url := fmt.Sprintf(sendMessageURL, c.token)
+	url := fmt.Sprintf(sendMessageURL, c.API, c.token)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
