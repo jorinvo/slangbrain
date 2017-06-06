@@ -19,19 +19,19 @@ var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
 func (b bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
-		b.log.Println(e.Text)
+		b.err.Println(e.Text)
 		return
 	}
 
 	if e.Type == fbot.EventRead {
 		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
-			b.log.Println(err)
+			b.err.Println(err)
 		}
 		return
 	}
 
 	if e.Type == fbot.EventUnknow {
-		b.log.Println("Received unknown event", e)
+		b.err.Println("received unknown event", e)
 		return
 	}
 
@@ -133,7 +133,7 @@ func (b bot) handlePayload(id int64, payload string) {
 	case payloadShowHelp:
 		isSubscribed, err := b.store.IsSubscribed(id)
 		if err != nil {
-			b.log.Println(err)
+			b.err.Println(err)
 		}
 		buttons := buttonsHelp
 		if !isSubscribed {
@@ -199,7 +199,7 @@ func (b bot) handlePayload(id int64, payload string) {
 
 func (b bot) trackActivity(id int64, t time.Time) {
 	if err := b.store.SetActivity(id, t); err != nil {
-		b.log.Println(err)
+		b.err.Println(err)
 	}
 }
 
@@ -215,7 +215,7 @@ func (b bot) messageWelcome(id int64) {
 	name := p.FirstName
 	if err != nil {
 		name = "there"
-		b.log.Printf("failed to get profile for %d: %v", id, err)
+		b.err.Printf("failed to get profile for %d: %v", id, err)
 	}
 	b.send(id, fmt.Sprintf(messageWelcome, name), nil, nil)
 	time.Sleep(6 * time.Second)
@@ -241,7 +241,7 @@ func (b bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
 		msg := fmt.Sprintf(messageStudyDone, formatDuration(study.Next))
 		isSubscribed, err := b.store.IsSubscribed(id)
 		if err != nil {
-			b.log.Println(err)
+			b.err.Println(err)
 		}
 		if isSubscribed || err != nil {
 			return id, msg, buttonsMenuMode, nil
@@ -264,10 +264,10 @@ func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []fbot.B
 // Send replies and log errors
 func (b bot) send(id int64, reply string, buttons []fbot.Button, err error) {
 	if err != nil {
-		b.log.Println(err)
+		b.err.Println(err)
 	}
 	if err = b.client.Send(id, reply, buttons); err != nil {
-		b.log.Println("failed to send message:", err)
+		b.err.Println("failed to send message:", err)
 	}
 }
 
