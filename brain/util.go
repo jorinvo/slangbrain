@@ -3,6 +3,8 @@ package brain
 import (
 	"bytes"
 	"io"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -10,10 +12,17 @@ import (
 )
 
 // BackupTo writes backups to a file.
-func (store *Store) BackupTo(file string) error {
-	return store.db.View(func(tx *bolt.Tx) error {
-		return tx.CopyFile(file, 0600)
+func (store *Store) BackupTo(w http.ResponseWriter) {
+	err := store.db.View(func(tx *bolt.Tx) error {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", `attachment; filename="my.db"`)
+		w.Header().Set("Content-Length", strconv.Itoa(int(tx.Size())))
+		_, err := tx.WriteTo(w)
+		return err
 	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // StudyNow is only for debugging.
