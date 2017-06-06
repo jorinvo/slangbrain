@@ -45,7 +45,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		}
 		// Save study time
 		bs := tx.Bucket(bucketStudytimes)
-		next := itob(time.Now().Add(time.Duration(newPhrases/newPerDay*24+baseStudytime) * time.Hour).Unix())
+		next := itob(time.Now().Add(time.Duration(newPhrases/newPerDay*24+firstStudytime) * time.Hour).Unix())
 		return bs.Put(phraseID, next)
 	})
 

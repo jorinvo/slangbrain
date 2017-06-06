@@ -4,14 +4,16 @@ import "time"
 
 const (
 	// Time to wait for first study in hours
-	baseStudytime = 5
+	firstStudytime = 3
+	// base time in hours to use to calculate next study time
+	baseStudytime = 10
 	// Time in minutes
 	// When study times are updated they are randomly placed
 	// somewhere between the new time and new time + studyTimeDiffusion
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 20
+	newPerDay = 10
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 5
 	// Time user has to be inactive before being notified

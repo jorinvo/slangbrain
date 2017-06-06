@@ -2,6 +2,8 @@ package brain
 
 import (
 	"bytes"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -53,4 +55,34 @@ func (store *Store) DeleteChat(chatID int64) error {
 		}
 		return nil
 	})
+}
+
+// GetChatIDs ...
+func (store *Store) GetChatIDs() ([]int64, error) {
+	var ids []int64
+	err := store.db.View(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketModes).ForEach(func(k, v []byte) error {
+			id, err := btoi(k)
+			if err != nil {
+				return err
+			}
+			ids = append(ids, id)
+			return nil
+		})
+	})
+	return ids, err
+}
+
+// GetPhrasesAsJSON ...
+func (store *Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
+	var phrases string
+	err := store.db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket(bucketPhrases).Cursor()
+		prefix := itob(chatID)
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			phrases += string(v) + "\n"
+		}
+		return nil
+	})
+	return strings.NewReader(phrases), err
 }
