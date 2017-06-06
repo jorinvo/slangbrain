@@ -17,4 +17,5 @@ const (
 	payloadSubscribe      = "PAYLOAD_SUBSCRIBE"
 	payloadUnsubscribe    = "PAYLOAD_UNSUBSCRIBE"
 	payloadNoSubscription = "PAYLOAD_NOSUBSCRIPTION"
+	payloadFeedback       = "PAYLOAD_FEEDBACK"
 )

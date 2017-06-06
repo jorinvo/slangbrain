@@ -103,6 +103,19 @@ func (b bot) handleMessage(id int64, msg string) {
 	case brain.ModeGetStarted:
 		b.messageWelcome(id)
 
+	case brain.ModeFeedback:
+		p, err := b.client.GetProfile(id)
+		name := p.FirstName
+		if err != nil {
+			name = "there"
+			b.err.Printf("failed to get profile for %d: %v", id, err)
+		}
+		if err := b.messageHandler(id, name, msg); err != nil {
+			b.send(id, messageErr, buttonsFeedback, err)
+			return
+		}
+		b.send(id, messageFeedbackDone, buttonsMenuMode, nil)
+
 	default:
 		b.send(b.messageStartMenu(id))
 	}
@@ -189,6 +202,13 @@ func (b bot) handlePayload(id int64, payload string) {
 
 	case payloadNoSubscription:
 		b.send(id, messageNoSubscription, buttonsMenuMode, nil)
+
+	case payloadFeedback:
+		if err := b.store.SetMode(id, brain.ModeFeedback); err != nil {
+			b.send(id, messageErr, buttonsMenuMode, err)
+			return
+		}
+		b.send(id, messageFedback, buttonsFeedback, nil)
 
 	case payloadStartMenu:
 		fallthrough

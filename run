@@ -4,6 +4,7 @@ set -e
 go run main.go \
   -db 'dev.db' \
   -verify 'SmhklHbrVi4MInnC8Fih58TBTIc$jeXTadn%bChS' \
+  -slack 'https://hooks.slack.com/services/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' \
   -token 'EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD' \
   $1
 

@@ -62,7 +62,6 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, e := range rec.Entry {
 		for _, m := range e.Messaging {
 			event := createEvent(m)
-			fmt.Printf("%+v\n", event)
 			if event.Type != EventUnknow {
 				wh.EventHandler(event)
 			}

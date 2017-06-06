@@ -158,7 +158,6 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 		for chatID, count := range dueStudies {
 			// Too little studies due
 			if count < dueMinCount {
-				fmt.Println("too little studies due")
 				delete(dueStudies, chatID)
 				continue
 			}
@@ -169,7 +168,6 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 				return err
 			}
 			if time.Duration(now-activity)*time.Second < dueMinInactive {
-				fmt.Println("user was just active")
 				delete(dueStudies, chatID)
 				continue
 			}
@@ -179,7 +177,6 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 				return err
 			}
 			if read < activity {
-				fmt.Println("user hasn't read last message")
 				delete(dueStudies, chatID)
 				continue
 			}

@@ -14,36 +14,36 @@ import (
 type Config struct {
 	ErrorLogger    *log.Logger
 	InfoLogger     *log.Logger
-	Token          string
-	VerifyToken    string
 	Store          brain.Store
+	Client         fbot.Client
 	NotifyInterval time.Duration
+	MessageHandler func(int64, string, string) error
 }
 
 type bot struct {
-	store  brain.Store
-	err    *log.Logger
-	info   *log.Logger
-	client fbot.Client
+	store          brain.Store
+	err            *log.Logger
+	info           *log.Logger
+	client         fbot.Client
+	messageHandler func(int64, string, string) error
 }
 
 // Run ...
 func Run(config Config) (http.Handler, error) {
-	client := fbot.New(config.Token, config.VerifyToken)
-
 	b := bot{
-		store:  config.Store,
-		err:    config.ErrorLogger,
-		info:   config.InfoLogger,
-		client: client,
+		store:          config.Store,
+		err:            config.ErrorLogger,
+		info:           config.InfoLogger,
+		client:         config.Client,
+		messageHandler: config.MessageHandler,
 	}
 
-	if err := client.SetGreetings(map[string]string{"default": greeting}); err != nil {
+	if err := config.Client.SetGreetings(map[string]string{"default": greeting}); err != nil {
 		return nil, fmt.Errorf("failed to set greeting: %v", err)
 	}
 	config.InfoLogger.Println("Greeting set")
 
-	if err := client.SetGetStartedPayload(payloadGetStarted); err != nil {
+	if err := config.Client.SetGetStartedPayload(payloadGetStarted); err != nil {
 		return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
 	}
 	config.InfoLogger.Printf("Get Started button activated")
@@ -60,14 +60,14 @@ func Run(config Config) (http.Handler, error) {
 				}
 				now := time.Now()
 				for chatID, count := range dueStudies {
-					p, err := client.GetProfile(chatID)
+					p, err := config.Client.GetProfile(chatID)
 					name := p.FirstName
 					if err != nil {
 						name = "there"
 						config.ErrorLogger.Printf("failed to get profile for %d: %v", chatID, err)
 					}
 					msg := fmt.Sprintf(messageStudiesDue, name, count)
-					if err = client.Send(chatID, msg, buttonsStudiesDue); err != nil {
+					if err = config.Client.Send(chatID, msg, buttonsStudiesDue); err != nil {
 						config.ErrorLogger.Printf("failed to notify user %d: %v", chatID, err)
 					}
 					b.trackActivity(chatID, now)
@@ -76,5 +76,5 @@ func Run(config Config) (http.Handler, error) {
 		}()
 	}
 
-	return client.Webhook(b.HandleEvent), nil
+	return config.Client.Webhook(b.HandleEvent), nil
 }

@@ -31,7 +31,11 @@ var (
 	}
 	buttonsHelp = []fbot.Button{
 		fbot.Button{Text: "stop notifications", Payload: payloadUnsubscribe},
+		fbot.Button{Text: "talk to a human", Payload: payloadFeedback},
 		fbot.Button{Text: "all good", Payload: payloadStartMenu},
+	}
+	buttonsFeedback = []fbot.Button{
+		fbot.Button{Text: iconDelete + " cancel", Payload: payloadStartMenu},
 	}
 	buttonsAddMode = []fbot.Button{
 		fbot.Button{Text: "stop adding", Payload: payloadStartMenu},

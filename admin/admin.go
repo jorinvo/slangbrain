@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,19 +12,29 @@ import (
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/fbot"
 )
 
 // New ...
-func New(store brain.Store, errorLogger *log.Logger) http.Handler {
-	return admin{store, errorLogger}
+func New(store brain.Store, slackHook string, errorLogger *log.Logger, client fbot.Client) Admin {
+	return Admin{store, errorLogger, slackHook, client}
 }
 
-type admin struct {
-	store brain.Store
-	err   *log.Logger
+// Admin ...
+type Admin struct {
+	store     brain.Store
+	err       *log.Logger
+	slackHook string
+	client    fbot.Client
 }
 
-func (a admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			a.err.Println(err)
+		}
+	}()
+
 	switch r.URL.Path {
 	case "/backup":
 		if r.Method != "GET" {
@@ -39,7 +50,50 @@ func (a admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprintln(w, "studies updated")
+	case "/slack":
+		if r.FormValue("bot_id") != "" {
+			return
+		}
+		parts := strings.SplitN(r.FormValue("text"), " ", 2)
+		if len(parts) != 2 {
+			slackError(w, fmt.Errorf("missing ID"))
+			return
+		}
+		id, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		if err != nil {
+			slackError(w, fmt.Errorf("failed parsing ID: %v", err))
+			return
+		}
+		msg := strings.TrimSpace(parts[1])
+		if err := a.client.Send(int64(id), msg, nil); err != nil {
+			slackError(w, err)
+			return
+		}
 	}
+}
+
+func slackError(w http.ResponseWriter, err error) {
+	fmt.Fprint(w, fmt.Sprintf(`{ "text": "Error sending message: %s." }`, err))
+}
+
+// HandleMessage ...
+func (a Admin) HandleMessage(id int64, name, msg string) error {
+	tmpl := `{
+		"username": "%s",
+		"text": "%d\n\n%s"
+	}`
+	resp, err := http.Post(a.slackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("HTTP status code is not OK: %s", body)
+	}
+	return nil
 }
 
 func csvImport(store brain.Store, errLogger, infoLogger *log.Logger, toImport string) {
