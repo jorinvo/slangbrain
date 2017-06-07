@@ -31,7 +31,8 @@ func main() {
 	port := flag.Int("port", 8080, "")
 	verifyToken := flag.String("verify", "", "required unless import")
 	token := flag.String("token", "", "required unless import")
-	slackHook := flag.String("slack", "", "")
+	slackHook := flag.String("slackhook", "", "")
+	slackToken := flag.String("slacktoken", "", "")
 	adminPort := flag.Int("admin", 8081, "")
 	notifyInterval := flag.Duration("notify", 0, "")
 
@@ -75,7 +76,7 @@ func main() {
 	client := fbot.New(*token, *verifyToken)
 
 	// Start admin server
-	adminHandler := admin.New(store, *slackHook, errorLogger, client)
+	adminHandler := admin.New(store, *slackHook, *slackToken, errorLogger, client)
 	aAddr := "localhost:" + strconv.Itoa(*adminPort)
 	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
 	go func() {

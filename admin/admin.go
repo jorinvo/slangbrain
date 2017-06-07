@@ -16,16 +16,17 @@ import (
 )
 
 // New ...
-func New(store brain.Store, slackHook string, errorLogger *log.Logger, client fbot.Client) Admin {
-	return Admin{store, errorLogger, slackHook, client}
+func New(store brain.Store, slackHook, slackToken string, errorLogger *log.Logger, client fbot.Client) Admin {
+	return Admin{store, errorLogger, slackHook, slackToken, client}
 }
 
 // Admin ...
 type Admin struct {
-	store     brain.Store
-	err       *log.Logger
-	slackHook string
-	client    fbot.Client
+	store      brain.Store
+	err        *log.Logger
+	slackHook  string
+	slackToken string
+	client     fbot.Client
 }
 
 func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,20 +52,26 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintln(w, "studies updated")
 	case "/slack":
+		if r.FormValue("token") != a.slackToken {
+			slackError(w, fmt.Errorf("invalid token"))
+			return
+		}
 		if r.FormValue("bot_id") != "" {
 			return
 		}
-		parts := strings.SplitN(r.FormValue("text"), " ", 2)
-		if len(parts) != 2 {
+		text := strings.TrimSpace(r.FormValue("text"))
+		fields := strings.Fields(text)
+		if len(fields) < 2 {
 			slackError(w, fmt.Errorf("missing ID"))
 			return
 		}
-		id, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		firstField := fields[0]
+		id, err := strconv.Atoi(firstField)
 		if err != nil {
 			slackError(w, fmt.Errorf("failed parsing ID: %v", err))
 			return
 		}
-		msg := strings.TrimSpace(parts[1])
+		msg := strings.TrimSpace(strings.TrimPrefix(text, firstField))
 		if err := a.client.Send(int64(id), msg, nil); err != nil {
 			slackError(w, err)
 			return
