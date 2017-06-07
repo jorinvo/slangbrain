@@ -2,6 +2,7 @@ package brain
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -94,4 +95,35 @@ func (store *Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
 		return nil
 	})
 	return strings.NewReader(phrases), err
+}
+
+// DeletePhrases removes all phrases fn matches.
+func (store *Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
+	deleted := 0
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		bp := tx.Bucket(bucketPhrases)
+		bs := tx.Bucket(bucketStudytimes)
+		return bp.ForEach(func(k, v []byte) error {
+			id, err := btoi(k[:8])
+			if err != nil {
+				return err
+			}
+			var p Phrase
+			if err := json.Unmarshal(v, &p); err != nil {
+				return err
+			}
+			if !fn(int64(id), p) {
+				return nil
+			}
+			if err := bs.Delete(k); err != nil {
+				return err
+			}
+			if err := bp.Delete(k); err != nil {
+				return err
+			}
+			deleted++
+			return nil
+		})
+	})
+	return deleted, err
 }

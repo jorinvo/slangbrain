@@ -114,7 +114,8 @@ func (b bot) handleMessage(id int64, msg string) {
 			b.send(id, messageErr, buttonsFeedback, err)
 			return
 		}
-		b.send(id, messageFeedbackDone, buttonsMenuMode, nil)
+		b.send(id, messageFeedbackDone, nil, nil)
+		b.send(b.messageStartMenu(id))
 
 	default:
 		b.send(b.messageStartMenu(id))

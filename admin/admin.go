@@ -42,6 +42,53 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		a.store.BackupTo(w)
+
+	case "/phrase":
+		if r.Method != "DELETE" {
+			return
+		}
+		qChatID := r.URL.Query().Get("chatid")
+		hasChatID := qChatID != ""
+		phrase := r.URL.Query().Get("phrase")
+		hasPhrase := phrase != ""
+		explanation := r.URL.Query().Get("explanation")
+		hasExplanation := explanation != ""
+		score := r.URL.Query().Get("score")
+		hasScore := score != ""
+		if !(hasChatID || hasPhrase || hasExplanation || hasScore) {
+			http.Error(w, "no query specified", 400)
+			return
+		}
+		var chatID int64
+		var err error
+		if hasChatID {
+			chatID, err = strconv.ParseInt(qChatID, 10, 64)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("invalid chatid: '%s'", qChatID), 400)
+				return
+			}
+		}
+		count, err := a.store.DeletePhrases(func(id int64, p brain.Phrase) bool {
+			if hasChatID && id != chatID {
+				return false
+			}
+			if hasPhrase && !strings.Contains(p.Phrase, phrase) {
+				return false
+			}
+			if hasExplanation && !strings.Contains(p.Explanation, explanation) {
+				return false
+			}
+			if hasScore && strconv.Itoa(int(p.Score)) != score {
+				return false
+			}
+			return true
+		})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed deleting phrases: %v", err), 500)
+			return
+		}
+		fmt.Fprintf(w, "Deleted %d phrases.", count)
+
 	case "/studynow":
 		if r.Method != "GET" {
 			return
@@ -51,6 +98,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprintln(w, "studies updated")
+
 	case "/slack":
 		if r.FormValue("token") != a.slackToken {
 			slackError(w, fmt.Errorf("invalid token"))
