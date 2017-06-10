@@ -1,5 +1,5 @@
 // Package fbot can be used to communicate with a Facebook Messenger bot.
-// The supported API is limited the only the required use cases
+// The supported API is limited to only the required use cases
 // and the data format is abstracted accordingly.
 package fbot
 

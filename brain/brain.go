@@ -1,3 +1,6 @@
+// Package brain handles all business logic of Slangbrain.
+// It handles data storage, retrieving and updating.
+// It's independent from the used bot platform and user interaction.
 package brain
 
 import "time"

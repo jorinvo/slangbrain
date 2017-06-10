@@ -1,3 +1,5 @@
+// Package messenger implements the Messenger bot
+// and handles all the user interaction.
 package messenger
 
 import (
@@ -32,7 +34,7 @@ type bot struct {
 // Greetings and Getting started messages are set
 // and notfication sending is run in an interval.
 // It returns the HTTP handler for the webhook.
-func Run(config Config) (http.Handler, error) {
+func Run(config Config) (http.Handler, func(int64, string) error, error) {
 	b := bot{
 		store:          config.Store,
 		err:            config.ErrorLogger,
@@ -42,12 +44,12 @@ func Run(config Config) (http.Handler, error) {
 	}
 
 	if err := config.Client.SetGreetings(map[string]string{"default": greeting}); err != nil {
-		return nil, fmt.Errorf("failed to set greeting: %v", err)
+		return nil, nil, fmt.Errorf("failed to set greeting: %v", err)
 	}
 	config.InfoLogger.Println("Greeting set")
 
 	if err := config.Client.SetGetStartedPayload(payloadGetStarted); err != nil {
-		return nil, fmt.Errorf("failed to enable Get Started button: %v", err)
+		return nil, nil, fmt.Errorf("failed to enable Get Started button: %v", err)
 	}
 	config.InfoLogger.Printf("Get Started button activated")
 
@@ -79,5 +81,13 @@ func Run(config Config) (http.Handler, error) {
 		}()
 	}
 
-	return config.Client.Webhook(b.HandleEvent), nil
+	sendMessage := func(id int64, msg string) error {
+		if err := config.Client.Send(id, msg, nil); err != nil {
+			return err
+		}
+		b.send(b.messageStartMenu(id))
+		return nil
+	}
+
+	return config.Client.Webhook(b.HandleEvent), sendMessage, nil
 }

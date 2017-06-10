@@ -1,3 +1,5 @@
+// Package admin provides an admin server that can be used to make backups
+// and to communicate with users via Slack.
 package admin
 
 import (
@@ -12,29 +14,23 @@ import (
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/fbot"
 )
-
-// New returns a new admin server.
-func New(store brain.Store, slackHook, slackToken string, errorLogger *log.Logger, client fbot.Client) Admin {
-	return Admin{store, errorLogger, slackHook, slackToken, client}
-}
 
 // Admin is a HTTP handler that can be used for backups
 // and to communicate with users via Slack.
 type Admin struct {
-	store      brain.Store
-	err        *log.Logger
-	slackHook  string
-	slackToken string
-	client     fbot.Client
+	Store        brain.Store
+	Err          *log.Logger
+	SlackHook    string
+	SlackToken   string
+	ReplyHandler func(int64, string) error
 }
 
 // ServeHTTP serves the different endpoints the admin server provides.
 func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := r.Body.Close(); err != nil {
-			a.err.Println(err)
+			a.Err.Println(err)
 		}
 	}()
 
@@ -43,7 +39,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			return
 		}
-		a.store.BackupTo(w)
+		a.Store.BackupTo(w)
 
 	case "/phrase":
 		if r.Method != "DELETE" {
@@ -70,7 +66,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		count, err := a.store.DeletePhrases(func(id int64, p brain.Phrase) bool {
+		count, err := a.Store.DeletePhrases(func(id int64, p brain.Phrase) bool {
 			if hasChatID && id != chatID {
 				return false
 			}
@@ -95,14 +91,14 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			return
 		}
-		if err := a.store.StudyNow(); err != nil {
+		if err := a.Store.StudyNow(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		fmt.Fprintln(w, "studies updated")
 
 	case "/slack":
-		if r.FormValue("token") != a.slackToken {
+		if r.FormValue("token") != a.SlackToken {
 			slackError(w, fmt.Errorf("invalid token"))
 			return
 		}
@@ -122,7 +118,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg := strings.TrimSpace(strings.TrimPrefix(text, firstField))
-		if err := a.client.Send(int64(id), msg, nil); err != nil {
+		if err := a.ReplyHandler(int64(id), msg); err != nil {
 			slackError(w, err)
 			return
 		}
@@ -139,7 +135,7 @@ func (a Admin) HandleMessage(id int64, name, msg string) error {
 		"username": "%s",
 		"text": "%d\n\n%s"
 	}`
-	resp, err := http.Post(a.slackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
+	resp, err := http.Post(a.SlackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
 	if err != nil {
 		return err
 	}

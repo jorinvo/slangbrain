@@ -97,19 +97,15 @@ func main() {
 	shutdownSignals := make(chan os.Signal)
 	signal.Notify(shutdownSignals, os.Interrupt)
 
-	// Start admin server
-	adminHandler := admin.New(store, *slackHook, *slackToken, errorLogger, client)
-	aAddr := "localhost:" + strconv.Itoa(*adminPort)
-	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
-	go func() {
-		infoLogger.Printf("Admin server running at %s", aAddr)
-		if err := adminServer.ListenAndServe(); err != nil {
-			errorLogger.Fatalln("failed to start server:", err)
-		}
-	}()
-
+	// Setup adminHandler
+	adminHandler := admin.Admin{
+		Store:      store,
+		Err:        errorLogger,
+		SlackHook:  *slackHook,
+		SlackToken: *slackToken,
+	}
 	// Start Facebook webhook server
-	handler, err := messenger.Run(messenger.Config{
+	messengerHandler, sendMessage, err := messenger.Run(messenger.Config{
 		ErrorLogger:    errorLogger,
 		InfoLogger:     infoLogger,
 		Client:         client,
@@ -121,10 +117,21 @@ func main() {
 		log.Fatalln("failed to start messenger:", err)
 	}
 	mAddr := "localhost:" + strconv.Itoa(*port)
-	messengerServer := &http.Server{Addr: mAddr, Handler: handler}
+	messengerServer := &http.Server{Addr: mAddr, Handler: messengerHandler}
 	go func() {
 		infoLogger.Printf("Messenger webhook server running at %s", mAddr)
 		if err := messengerServer.ListenAndServe(); err != nil {
+			errorLogger.Fatalln("failed to start server:", err)
+		}
+	}()
+
+	// Start admin server
+	adminHandler.ReplyHandler = sendMessage
+	aAddr := "localhost:" + strconv.Itoa(*adminPort)
+	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
+	go func() {
+		infoLogger.Printf("Admin server running at %s", aAddr)
+		if err := adminServer.ListenAndServe(); err != nil {
 			errorLogger.Fatalln("failed to start server:", err)
 		}
 	}()
