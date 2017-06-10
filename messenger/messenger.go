@@ -10,7 +10,7 @@ import (
 	"github.com/jorinvo/slangbrain/fbot"
 )
 
-// Config ...
+// Config contains all information the messenger bot needs.
 type Config struct {
 	ErrorLogger    *log.Logger
 	InfoLogger     *log.Logger
@@ -28,7 +28,10 @@ type bot struct {
 	messageHandler func(int64, string, string) error
 }
 
-// Run ...
+// Run sets up and starts a messenger bot.
+// Greetings and Getting started messages are set
+// and notfication sending is run in an interval.
+// It returns the HTTP handler for the webhook.
 func Run(config Config) (http.Handler, error) {
 	b := bot{
 		store:          config.Store,
@@ -61,7 +64,7 @@ func Run(config Config) (http.Handler, error) {
 				now := time.Now()
 				for chatID, count := range dueStudies {
 					p, err := config.Client.GetProfile(chatID)
-					name := p.FirstName
+					name := p.Name
 					if err != nil {
 						name = "there"
 						config.ErrorLogger.Printf("failed to get profile for %d: %v", chatID, err)

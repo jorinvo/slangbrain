@@ -15,12 +15,13 @@ import (
 	"github.com/jorinvo/slangbrain/fbot"
 )
 
-// New ...
+// New returns a new admin server.
 func New(store brain.Store, slackHook, slackToken string, errorLogger *log.Logger, client fbot.Client) Admin {
 	return Admin{store, errorLogger, slackHook, slackToken, client}
 }
 
-// Admin ...
+// Admin is a HTTP handler that can be used for backups
+// and to communicate with users via Slack.
 type Admin struct {
 	store      brain.Store
 	err        *log.Logger
@@ -29,6 +30,7 @@ type Admin struct {
 	client     fbot.Client
 }
 
+// ServeHTTP serves the different endpoints the admin server provides.
 func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := r.Body.Close(); err != nil {
@@ -131,7 +133,7 @@ func slackError(w http.ResponseWriter, err error) {
 	fmt.Fprint(w, fmt.Sprintf(`{ "text": "Error sending message: %s." }`, err))
 }
 
-// HandleMessage ...
+// HandleMessage can be called to send user message to Slack.
 func (a Admin) HandleMessage(id int64, name, msg string) error {
 	tmpl := `{
 		"username": "%s",

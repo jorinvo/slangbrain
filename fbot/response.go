@@ -7,10 +7,11 @@ import (
 	"net/http"
 )
 
-// SendMessageURL is API endpoint for sending messages.
+// URL to send messages to;
+// is relative to the API URL.
 const sendMessageURL = "%s/me/messages?access_token=%s"
 
-// Send ...
+// Send a text message with a set of quick reply buttons to a user.
 func (c Client) Send(id int64, message string, buttons []Button) error {
 	var replies []quickReply
 	for _, b := range buttons {

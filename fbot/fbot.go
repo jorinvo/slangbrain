@@ -1,3 +1,6 @@
+// Package fbot can be used to communicate with a Facebook Messenger bot.
+// The supported API is limited the only the required use cases
+// and the data format is abstracted accordingly.
 package fbot
 
 import (
@@ -6,10 +9,9 @@ import (
 	"io"
 )
 
-// Can be overwritten for testing
 const defaultAPI = "https://graph.facebook.com/v2.6"
 
-// Client is the client which manages communication with the Messenger Platform API.
+// Client can be used to communicate with a Messenger bot.
 type Client struct {
 	token       string
 	verifyToken string
@@ -18,7 +20,7 @@ type Client struct {
 	API string
 }
 
-// New ...
+// New rerturns a new client with credentials set up.
 func New(token, verifyToken string) Client {
 	return Client{
 		token:       token,
@@ -29,9 +31,9 @@ func New(token, verifyToken string) Client {
 
 // Button describes a text quick reply.
 type Button struct {
-	// Text is the reply title
+	// Text is the text on the button visible to the user
 	Text string
-	// Payload is the reply information
+	// Payload is a string to identify the quick reply event internally in your application.
 	Payload string
 }
 

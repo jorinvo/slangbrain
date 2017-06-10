@@ -10,7 +10,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// Store ...
+// Store provides functions to interact with the underlying database.
 type Store struct {
 	db *bolt.DB
 }
@@ -48,7 +48,7 @@ func (store *Store) Close() error {
 	return nil
 }
 
-// SetActivity ...
+// SetActivity sets the last time a message was sent to a user.
 func (store Store) SetActivity(chatID int64, t time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketActivities).Put(itob(chatID), itob(t.Unix()))
@@ -59,7 +59,7 @@ func (store Store) SetActivity(chatID int64, t time.Time) error {
 	return nil
 }
 
-// SetRead ...
+// SetRead sets the last time the user read a message.
 func (store Store) SetRead(chatID int64, t time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketReads).Put(itob(chatID), itob(t.Unix()))
@@ -73,9 +73,12 @@ func (store Store) SetRead(chatID int64, t time.Time) error {
 func itob(v int64) []byte {
 	b := make([]byte, 8)
 	binary.PutVarint(b, int64(v))
+	// Use big endianess to make byte slices sortable
+	// binary.BigEndian.PutUint64(b, int64(v))
 	return b
 }
 
 func btoi(b []byte) (int64, error) {
 	return binary.ReadVarint(bytes.NewBuffer(b))
+	// return binary.BigEndian.Uint64(bytes.NewBuffer(b))
 }

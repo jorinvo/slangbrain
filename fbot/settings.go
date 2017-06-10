@@ -7,11 +7,13 @@ import (
 	"net/http"
 )
 
-// SettingsURL is API endpoint for saving settings.
+// URL to send settings to;
+// is relative to the API URL.
 const settingsURL = "%s/me/messenger_profile?access_token=%s"
 
-// SetGreetings sets greetings.
-// Set Locale: "default" for a fallback greeting.
+// SetGreetings sets the text displayed in the bot description.
+// Pass a map of locale to greeting text.
+// Include "default" locale as fallback for missing locales.
 func (c Client) SetGreetings(greetings map[string]string) error {
 	g := []greeting{}
 	for k, v := range greetings {
@@ -24,9 +26,9 @@ func (c Client) SetGreetings(greetings map[string]string) error {
 // When a users pushes the button, a postback with the given payload is triggered.
 func (c Client) SetGetStartedPayload(p string) error {
 	return c.postSetting(getStartedSettings{GetStarted: getStartedPayload{p}})
-
 }
 
+// Helper to send settings to the settings endpoint.
 func (c Client) postSetting(data interface{}) error {
 	encoded, err := json.Marshal(data)
 	if err != nil {

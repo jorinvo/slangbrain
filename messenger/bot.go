@@ -15,8 +15,10 @@ import (
 // for letters or numeric values
 // See: http://www.fileformat.info/info/unicode/category/index.htm
 var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}]`)
+
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
+// Handles a Messenger event
 func (b bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
 		b.err.Println(e.Text)
@@ -30,7 +32,7 @@ func (b bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	if e.Type == fbot.EventUnknow {
+	if e.Type == fbot.EventUnknown {
 		b.err.Println("received unknown event", e)
 		return
 	}
@@ -59,10 +61,10 @@ func (b bot) handleMessage(id int64, msg string) {
 			return
 		}
 		// Score user unput and pick appropriate reply
-		var score brain.Score = brain.ScoreGood
+		var score = 1
 		m1 := messageStudyCorrect
 		if normPhrase(msg) != normPhrase(study.Phrase) {
-			score = brain.ScoreBad
+			score = -1
 			m1 = fmt.Sprintf(messageStudyWrong, study.Phrase)
 		}
 		b.send(id, m1, nil, nil)
@@ -105,7 +107,7 @@ func (b bot) handleMessage(id int64, msg string) {
 
 	case brain.ModeFeedback:
 		p, err := b.client.GetProfile(id)
-		name := p.FirstName
+		name := p.Name
 		if err != nil {
 			name = "there"
 			b.err.Printf("failed to get profile for %d: %v", id, err)
@@ -164,13 +166,13 @@ func (b bot) handlePayload(id int64, payload string) {
 		b.send(id, study.Phrase, buttonsScore, nil)
 
 	case payloadScoreBad:
-		b.send(b.scoreAndStudy(id, brain.ScoreBad))
+		b.send(b.scoreAndStudy(id, -1))
 
 	case payloadScoreOk:
-		b.send(b.scoreAndStudy(id, brain.ScoreOK))
+		b.send(b.scoreAndStudy(id, 0))
 
 	case payloadScoreGood:
-		b.send(b.scoreAndStudy(id, brain.ScoreGood))
+		b.send(b.scoreAndStudy(id, 1))
 
 	case payloadDelete:
 		b.send(id, messageConfirmDelete, buttonsConfirmDelete, nil)
@@ -233,7 +235,7 @@ func (b bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
 
 func (b bot) messageWelcome(id int64) {
 	p, err := b.client.GetProfile(id)
-	name := p.FirstName
+	name := p.Name
 	if err != nil {
 		name = "there"
 		b.err.Printf("failed to get profile for %d: %v", id, err)
@@ -274,7 +276,7 @@ func (b bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
 	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
 }
 
-func (b bot) scoreAndStudy(id int64, score brain.Score) (int64, string, []fbot.Button, error) {
+func (b bot) scoreAndStudy(id int64, score int) (int64, string, []fbot.Button, error) {
 	err := b.store.ScoreStudy(id, score)
 	if err != nil {
 		return id, messageErr, buttonsStudyMode, err

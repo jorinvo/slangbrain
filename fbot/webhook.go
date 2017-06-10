@@ -7,33 +7,39 @@ import (
 	"time"
 )
 
-// EventType ...
+// EventType helps to distinguish the different type of events.
 type EventType int
 
 const (
-	// EventUnknow ...
-	EventUnknow EventType = iota
-	// EventMessage ...
+	// EventUnknown is the default and will be used if none of the other types match.
+	EventUnknown EventType = iota
+	// EventMessage is triggered when a user sends Text, stickers or other content.
+	// Only text is available at the moment.
 	EventMessage
-	// EventPayload ...
+	// EventPayload is triggered when a quickReply or postback Payload is sent.
 	EventPayload
-	// EventRead ...
+	// EventRead is triggered when a user read a message.
 	EventRead
-	// EventError ...
+	// EventError is triggered when the webhook is called with invalid JSON content.
 	EventError
 )
 
-// Event ...
+// Event contains information about a user action.
 type Event struct {
-	Type    EventType
-	ChatID  int64
-	Time    time.Time
-	Seq     int
-	Text    string
+	// Type helps to decide how to react to an event.
+	Type EventType
+	// ChatID identifies the user. It's a Facebook user ID.
+	ChatID int64
+	// Time describes when the event occured.
+	Time time.Time
+	// Text is a message a user send for EventMessage and and error description for EventError.
+	Text string
+	// Payload is a predefined payload for a quick reply or postback sent with EventPayload.
 	Payload string
 }
 
-// Webhook ...
+// Webhook returns a handler for HTTP requests that can be registered with Facebook.
+// The passt event handler will be called with all received events.
 func (c Client) Webhook(handler func(Event)) http.Handler {
 	return webhook{EventHandler: handler, VerifyToken: c.verifyToken}
 }
@@ -43,6 +49,9 @@ type webhook struct {
 	VerifyToken  string
 }
 
+// ServeHTTP handles Facebook webhook requests.
+// It responds to verify requests by checking the verify token;
+// and it parses events send via POST requests.
 func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		wh.verifyHandler(w, r)
@@ -62,7 +71,7 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, e := range rec.Entry {
 		for _, m := range e.Messaging {
 			event := createEvent(m)
-			if event.Type != EventUnknow {
+			if event.Type != EventUnknown {
 				wh.EventHandler(event)
 			}
 		}
@@ -89,7 +98,6 @@ func createEvent(m messageInfo) Event {
 				Type:    EventPayload,
 				ChatID:  m.Sender.ID,
 				Time:    msToTime(m.Timestamp),
-				Seq:     m.Message.Seq,
 				Payload: m.Message.QuickReply.Payload,
 			}
 		}
@@ -97,7 +105,6 @@ func createEvent(m messageInfo) Event {
 			Type:   EventMessage,
 			ChatID: m.Sender.ID,
 			Time:   msToTime(m.Timestamp),
-			Seq:    m.Message.Seq,
 			Text:   m.Message.Text,
 		}
 	}
@@ -114,7 +121,6 @@ func createEvent(m messageInfo) Event {
 			Type:   EventRead,
 			ChatID: m.Sender.ID,
 			Time:   msToTime(m.Read.Watermark),
-			Seq:    m.Read.Seq,
 		}
 	}
 	return Event{}
@@ -146,14 +152,12 @@ type sender struct {
 
 type message struct {
 	IsEcho     bool        `json:"is_echo,omitempty"`
-	Seq        int         `json:"seq"`
 	Text       string      `json:"text"`
 	QuickReply *quickReply `json:"quick_reply,omitempty"`
 }
 
 type read struct {
 	Watermark int64 `json:"watermark"`
-	Seq       int   `json:"seq"`
 }
 
 type postback struct {

@@ -12,7 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// BackupTo writes backups to a file.
+// BackupTo streams backup as an HTTP response.
 func (store *Store) BackupTo(w http.ResponseWriter) {
 	err := store.db.View(func(tx *bolt.Tx) error {
 		w.Header().Set("Content-Type", "application/octet-stream")
@@ -26,8 +26,7 @@ func (store *Store) BackupTo(w http.ResponseWriter) {
 	}
 }
 
-// StudyNow is only for debugging.
-// Resets all study times to now.
+// StudyNow resets all study times of all users to now.
 func (store *Store) StudyNow() error {
 	return store.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketStudytimes)
@@ -38,8 +37,7 @@ func (store *Store) StudyNow() error {
 	})
 }
 
-// DeleteChat is only for debugging.
-// Removes all records of a given chat.
+// DeleteChat removes all records of a given chat.
 func (store *Store) DeleteChat(chatID int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
 		key := itob(chatID)
@@ -67,7 +65,7 @@ func (store *Store) DeleteChat(chatID int64) error {
 	})
 }
 
-// GetChatIDs ...
+// GetChatIDs returns chatIDs of all users.
 func (store *Store) GetChatIDs() ([]int64, error) {
 	var ids []int64
 	err := store.db.View(func(tx *bolt.Tx) error {

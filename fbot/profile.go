@@ -8,19 +8,19 @@ import (
 	"net/http"
 )
 
-const profileURL = "%s/%d?fields=first_name,last_name,profile_pic,locale,timezone,gender&access_token=%s"
+// URL to fetch the profile from;
+// is relative to the API URL.
+const profileURL = "%s/%d?fields=first_name,locale,timezone&access_token=%s"
 
-// Profile is the public information of a Facebook user
+// Profile has all public user information we need;
+// needs to be in sync with the URL abouve.
 type Profile struct {
-	FirstName  string  `json:"first_name"`
-	LastName   string  `json:"last_name"`
-	PictureURL string  `json:"profile_pic"`
-	Gender     string  `json:"gender"`
-	Locale     string  `json:"locale"`
-	Timezone   float64 `json:"timezone"`
+	Name     string  `json:"first_name"`
+	Locale   string  `json:"locale"`
+	Timezone float64 `json:"timezone"`
 }
 
-// GetProfile retrieves the Facebook user associated with that ID
+// GetProfile fetches a user profile for an ID.
 func (c Client) GetProfile(id int64) (Profile, error) {
 	var p Profile
 

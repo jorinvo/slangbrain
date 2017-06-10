@@ -14,6 +14,7 @@ import (
 func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
+
 		// Get phrase id
 		sequence, err := bp.NextSequence()
 		if err != nil {
@@ -21,16 +22,18 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		}
 		prefix := itob(chatID)
 		phraseID := append(prefix, itob(int64(sequence))...)
-		// Phrase to JSON
 
+		// Phrase to JSON
 		buf, err := json.Marshal(Phrase{Phrase: phrase, Explanation: explanation})
 		if err != nil {
 			return err
 		}
+
 		// Save Phrase
 		if err = bp.Put(phraseID, buf); err != nil {
 			return err
 		}
+
 		// Limit number of new studies per day
 		newPhrases := 0
 		c := tx.Bucket(bucketPhrases).Cursor()
@@ -43,6 +46,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 				newPhrases++
 			}
 		}
+
 		// Save study time
 		bs := tx.Bucket(bucketStudytimes)
 		next := itob(time.Now().Add(time.Duration(newPhrases/newPerDay*24+firstStudytime) * time.Hour).Unix())
@@ -55,7 +59,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 	return nil
 }
 
-// FindPhrase ...
+// FindPhrase returns a phrase belonging to the passed user that matches the passed function.
 func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {
 	var p Phrase
 	err := store.db.View(func(tx *bolt.Tx) error {
@@ -80,7 +84,7 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 	return p, nil
 }
 
-// DeleteStudyPhrase ...
+// DeleteStudyPhrase deletes the phrase the passed user currently has to study.
 func (store Store) DeleteStudyPhrase(chatID int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
@@ -103,14 +107,17 @@ func (store Store) DeleteStudyPhrase(chatID int64) error {
 				key = k
 			}
 		}
+
 		// No studies found
 		if key == nil {
 			return errors.New("no study found")
 		}
+
 		// Delete study time
 		if err := bs.Delete(key); err != nil {
 			return err
 		}
+
 		// Delete phrase
 		return tx.Bucket(bucketPhrases).Delete(key)
 	})

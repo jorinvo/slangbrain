@@ -2,6 +2,8 @@
 
 ## Development
 
-1. `go run main.go` to run project
-2. `dep ensure -update` to update dependencies (requires [dep](https://github.com/golang/dep))
+1. See `go run main.go -help` for more
+2. `./run` to start development version locally
+3. `dep ensure -update` to update dependencies (requires [dep](https://github.com/golang/dep))
+4. `./deploy` to push latest version to server
 

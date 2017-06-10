@@ -11,7 +11,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// GetStudy ...
+// GetStudy returns the current study the user needs to do.
 func (store Store) GetStudy(chatID int64) (Study, error) {
 	var study Study
 	err := store.db.View(func(tx *bolt.Tx) error {
@@ -35,6 +35,7 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 				total++
 			}
 		}
+
 		// No studies found
 		if total == 0 {
 			var next time.Duration
@@ -44,6 +45,7 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 			study = Study{Next: next}
 			return nil
 		}
+
 		// Get study from phrase
 		var p Phrase
 		if err := json.Unmarshal(tx.Bucket(bucketPhrases).Get(key), &p); err != nil {
@@ -63,8 +65,8 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 	return study, nil
 }
 
-// ScoreStudy ...
-func (store Store) ScoreStudy(chatID int64, score Score) error {
+// ScoreStudy sets the score of the current study and moves to the next study.
+func (store Store) ScoreStudy(chatID int64, score int) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
 		c := bs.Cursor()
@@ -87,22 +89,26 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 				key = k
 			}
 		}
+
 		// No studies found
 		if key == nil {
 			return errors.New("no study found")
 		}
+
 		// Get phrase
 		var p Phrase
 		bp := tx.Bucket(bucketPhrases)
 		if err := json.Unmarshal(bp.Get(key), &p); err != nil {
 			return err
 		}
+
 		// Update score
 		p.Score += score
 		newScore := p.Score
 		if newScore < 0 {
 			newScore = 0
 		}
+
 		// Save phrase
 		buf, err := json.Marshal(p)
 		if err != nil {
@@ -111,6 +117,7 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 		if err = bp.Put(key, buf); err != nil {
 			return err
 		}
+
 		// Update study time
 		// Randomize order by spreading studies over a period of time
 		diffusion := time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
@@ -128,7 +135,8 @@ func (store Store) ScoreStudy(chatID int64, score Score) error {
 	return nil
 }
 
-// GetDueStudies ...
+// GetDueStudies returns a map of chatID to count of studies
+// with the due studies of all users.
 func (store Store) GetDueStudies() (map[int64]uint, error) {
 	dueStudies := map[int64]uint{}
 	now := time.Now().Unix()
@@ -152,6 +160,7 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 		if err != nil {
 			return err
 		}
+
 		// Check if user should be notified
 		ba := tx.Bucket(bucketActivities)
 		br := tx.Bucket(bucketReads)
@@ -181,6 +190,7 @@ func (store Store) GetDueStudies() (map[int64]uint, error) {
 				continue
 			}
 		}
+
 		return nil
 	})
 
