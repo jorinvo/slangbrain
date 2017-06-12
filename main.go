@@ -12,7 +12,6 @@ import (
 
 	"github.com/jorinvo/slangbrain/admin"
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/messenger"
 )
 
@@ -90,34 +89,26 @@ func main() {
 	}()
 	infoLogger.Printf("Database initialized: %s", *db)
 
-	// Setup Facebook API client
-	client := fbot.New(*token, *verifyToken)
-
 	// Listen to system events for graceful shutdown
 	shutdownSignals := make(chan os.Signal)
 	signal.Notify(shutdownSignals, os.Interrupt)
 
-	// Setup adminHandler
-	adminHandler := admin.Admin{
-		Store:      store,
-		Err:        errorLogger,
-		SlackHook:  *slackHook,
-		SlackToken: *slackToken,
-	}
 	// Start Facebook webhook server
-	messengerHandler, sendMessage, err := messenger.Run(messenger.Config{
-		ErrorLogger:    errorLogger,
-		InfoLogger:     infoLogger,
-		Client:         client,
-		Store:          store,
-		NotifyInterval: *notifyInterval,
-		MessageHandler: adminHandler.HandleMessage,
-	})
+	feedback := make(chan messenger.Feedback)
+	bot, err := messenger.New(
+		store,
+		*token,
+		*verifyToken,
+		messenger.LogInfo(infoLogger),
+		messenger.LogErr(errorLogger),
+		messenger.Notify(*notifyInterval),
+		messenger.GetFeedback(feedback),
+	)
 	if err != nil {
 		log.Fatalln("failed to start messenger:", err)
 	}
 	mAddr := "localhost:" + strconv.Itoa(*port)
-	messengerServer := &http.Server{Addr: mAddr, Handler: messengerHandler}
+	messengerServer := &http.Server{Addr: mAddr, Handler: bot}
 	go func() {
 		infoLogger.Printf("Messenger webhook server running at %s", mAddr)
 		if err := messengerServer.ListenAndServe(); err != nil {
@@ -125,14 +116,25 @@ func main() {
 		}
 	}()
 
-	// Start admin server
-	adminHandler.ReplyHandler = sendMessage
+	// Setup admin
+	adminHandler := admin.New(
+		store,
+		*slackHook,
+		admin.SlackReply(*slackToken, bot.SendMessage),
+		admin.LogErr(errorLogger),
+	)
 	aAddr := "localhost:" + strconv.Itoa(*adminPort)
 	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
 	go func() {
 		infoLogger.Printf("Admin server running at %s", aAddr)
 		if err := adminServer.ListenAndServe(); err != nil {
 			errorLogger.Fatalln("failed to start server:", err)
+		}
+	}()
+
+	go func() {
+		for f := range feedback {
+			adminHandler.HandleMessage(f.ChatID, f.Username, f.Message)
 		}
 	}()
 

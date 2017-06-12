@@ -19,18 +19,50 @@ import (
 // Admin is a HTTP handler that can be used for backups
 // and to communicate with users via Slack.
 type Admin struct {
-	Store        brain.Store
-	Err          *log.Logger
-	SlackHook    string
-	SlackToken   string
-	ReplyHandler func(int64, string) error
+	store        brain.Store
+	err          *log.Logger
+	slackHook    string
+	slackToken   string
+	replyHandler func(int64, string) error
+}
+
+// SlackReply isa n option to enable /slack to receive replies from Slack.
+// token is used to validate posts to the webhook.
+// fn is called with a chatID and a message.
+func SlackReply(token string, fn func(int64, string) error) func(*Admin) {
+	return func(a *Admin) {
+		a.slackToken = token
+		a.replyHandler = fn
+	}
+}
+
+// LogErr is an option to set the error logger.
+func LogErr(l *log.Logger) func(*Admin) {
+	return func(a *Admin) {
+		a.err = l
+	}
+}
+
+// New returns a new Admin which can be used as an http.Handler.
+func New(store brain.Store, slackHook string, options ...func(*Admin)) Admin {
+	a := Admin{
+		store:     store,
+		slackHook: slackHook,
+	}
+	for _, option := range options {
+		option(&a)
+	}
+	if a.err == nil {
+		a.err = log.New(ioutil.Discard, "", 0)
+	}
+	return a
 }
 
 // ServeHTTP serves the different endpoints the admin server provides.
 func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := r.Body.Close(); err != nil {
-			a.Err.Println(err)
+			a.err.Println(err)
 		}
 	}()
 
@@ -39,7 +71,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			return
 		}
-		a.Store.BackupTo(w)
+		a.store.BackupTo(w)
 
 	case "/phrase":
 		if r.Method != "DELETE" {
@@ -66,7 +98,7 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		count, err := a.Store.DeletePhrases(func(id int64, p brain.Phrase) bool {
+		count, err := a.store.DeletePhrases(func(id int64, p brain.Phrase) bool {
 			if hasChatID && id != chatID {
 				return false
 			}
@@ -91,14 +123,17 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			return
 		}
-		if err := a.Store.StudyNow(); err != nil {
+		if err := a.store.StudyNow(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		fmt.Fprintln(w, "studies updated")
 
 	case "/slack":
-		if r.FormValue("token") != a.SlackToken {
+		if a.slackToken == "" {
+			slackError(w, fmt.Errorf("webhook is disabled"))
+		}
+		if r.FormValue("token") != a.slackToken {
 			slackError(w, fmt.Errorf("invalid token"))
 			return
 		}
@@ -118,10 +153,32 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg := strings.TrimSpace(strings.TrimPrefix(text, firstField))
-		if err := a.ReplyHandler(int64(id), msg); err != nil {
+		if err := a.replyHandler(int64(id), msg); err != nil {
 			slackError(w, err)
 			return
 		}
+	}
+}
+
+// HandleMessage can be called to send a user message to Slack.
+func (a Admin) HandleMessage(id int64, name, msg string) {
+	tmpl := `{
+		"username": "%s",
+		"text": "%d\n\n%s"
+	}`
+	resp, err := http.Post(a.slackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
+	if err != nil {
+		a.err.Printf("failed to post message from %s (%d) to Slack: %s", name, id, msg)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			a.err.Printf("failed to read response for Slack message '%s' from %s (%d): %v", msg, name, id, err)
+			return
+		}
+		a.err.Printf("HTTP status code is not OK for Slack message '%s' from %s (%d): %s", msg, name, id, body)
+		return
 	}
 }
 
@@ -129,26 +186,7 @@ func slackError(w http.ResponseWriter, err error) {
 	fmt.Fprint(w, fmt.Sprintf(`{ "text": "Error sending message: %s." }`, err))
 }
 
-// HandleMessage can be called to send user message to Slack.
-func (a Admin) HandleMessage(id int64, name, msg string) error {
-	tmpl := `{
-		"username": "%s",
-		"text": "%d\n\n%s"
-	}`
-	resp, err := http.Post(a.SlackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("HTTP status code is not OK: %s", body)
-	}
-	return nil
-}
-
+// Currently not in use
 func csvImport(store brain.Store, errLogger, infoLogger *log.Logger, toImport string) {
 	// CSV import
 	parts := strings.Split(toImport, ":")

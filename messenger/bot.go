@@ -19,7 +19,7 @@ var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
 // Handles a Messenger event
-func (b bot) HandleEvent(e fbot.Event) {
+func (b Bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
 		b.err.Println(e.Text)
 		return
@@ -47,7 +47,7 @@ func (b bot) HandleEvent(e fbot.Event) {
 	b.handleMessage(e.ChatID, e.Text)
 }
 
-func (b bot) handleMessage(id int64, msg string) {
+func (b Bot) handleMessage(id int64, msg string) {
 	mode, err := b.store.GetMode(id)
 	if err != nil {
 		b.send(id, messageErr, buttonsMenuMode, fmt.Errorf("failed to get mode for id %v: %v", id, err))
@@ -112,9 +112,10 @@ func (b bot) handleMessage(id int64, msg string) {
 			name = "there"
 			b.err.Printf("failed to get profile for %d: %v", id, err)
 		}
-		if err := b.messageHandler(id, name, msg); err != nil {
-			b.send(id, messageErr, buttonsFeedback, err)
-			return
+		if b.feedback != nil {
+			b.feedback <- Feedback{ChatID: id, Username: name, Message: msg}
+		} else {
+			b.err.Printf("got unhandled feedback from %s (%d): %s", name, id, msg)
 		}
 		b.send(id, messageFeedbackDone, nil, nil)
 		b.send(b.messageStartMenu(id))
@@ -124,7 +125,7 @@ func (b bot) handleMessage(id int64, msg string) {
 	}
 }
 
-func (b bot) handlePayload(id int64, payload string) {
+func (b Bot) handlePayload(id int64, payload string) {
 	switch payload {
 	case payloadGetStarted:
 		b.messageWelcome(id)
@@ -220,20 +221,20 @@ func (b bot) handlePayload(id int64, payload string) {
 	}
 }
 
-func (b bot) trackActivity(id int64, t time.Time) {
+func (b Bot) trackActivity(id int64, t time.Time) {
 	if err := b.store.SetActivity(id, t); err != nil {
 		b.err.Println(err)
 	}
 }
 
-func (b bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
+func (b Bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
 		return id, messageErr, buttonsMenuMode, err
 	}
 	return id, messageStartMenu, buttonsMenuMode, nil
 }
 
-func (b bot) messageWelcome(id int64) {
+func (b Bot) messageWelcome(id int64) {
 	p, err := b.client.GetProfile(id)
 	name := p.Name
 	if err != nil {
@@ -245,7 +246,7 @@ func (b bot) messageWelcome(id int64) {
 	b.send(id, messageWelcome2, nil, b.store.SetMode(id, brain.ModeAdd))
 }
 
-func (b bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
+func (b Bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
 	study, err := b.store.GetStudy(id)
 	if err != nil {
 		return id, messageErr, buttonsStudyMode, err
@@ -276,7 +277,7 @@ func (b bot) startStudy(id int64) (int64, string, []fbot.Button, error) {
 	return id, fmt.Sprintf(messageStudyQuestion, study.Total, study.Explanation), buttonsShow, nil
 }
 
-func (b bot) scoreAndStudy(id int64, score int) (int64, string, []fbot.Button, error) {
+func (b Bot) scoreAndStudy(id int64, score int) (int64, string, []fbot.Button, error) {
 	err := b.store.ScoreStudy(id, score)
 	if err != nil {
 		return id, messageErr, buttonsStudyMode, err
@@ -285,7 +286,7 @@ func (b bot) scoreAndStudy(id int64, score int) (int64, string, []fbot.Button, e
 }
 
 // Send replies and log errors
-func (b bot) send(id int64, reply string, buttons []fbot.Button, err error) {
+func (b Bot) send(id int64, reply string, buttons []fbot.Button, err error) {
 	if err != nil {
 		b.err.Println(err)
 	}
