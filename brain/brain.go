@@ -16,7 +16,7 @@ const (
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 14
+	newPerDay = 22
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 9
 	// Time user has to be inactive before being notified
@@ -31,14 +31,6 @@ var (
 	bucketActivities    = []byte("activities")
 	bucketSubscriptions = []byte("subscriptions")
 )
-var buckets = [][]byte{
-	bucketModes,
-	bucketPhrases,
-	bucketStudytimes,
-	bucketReads,
-	bucketActivities,
-	bucketSubscriptions,
-}
 
 // Mode is the state of a chat.
 // We need to keep track of the state each chat is in.

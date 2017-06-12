@@ -2,10 +2,11 @@ package messenger
 
 import "github.com/jorinvo/slangbrain/fbot"
 
-var (
+const (
 	iconOK     = "\U0001F44C"
 	iconDelete = "\u274C"
 )
+
 var (
 	buttonStudyDone = fbot.Button{Text: "done studying", Payload: payloadStartMenu}
 	// Teacher emoji

@@ -103,6 +103,7 @@ func main() {
 		messenger.LogErr(errorLogger),
 		messenger.Notify(*notifyInterval),
 		messenger.GetFeedback(feedback),
+		messenger.Setup,
 	)
 	if err != nil {
 		log.Fatalln("failed to start messenger:", err)

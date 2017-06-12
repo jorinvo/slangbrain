@@ -22,6 +22,14 @@ func New(dbFile string) (Store, error) {
 	if err != nil {
 		return store, fmt.Errorf("failed to open database: %v", err)
 	}
+	var buckets = [][]byte{
+		bucketModes,
+		bucketPhrases,
+		bucketStudytimes,
+		bucketReads,
+		bucketActivities,
+		bucketSubscriptions,
+	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		for _, bucket := range buckets {
 			_, err = tx.CreateBucketIfNotExists(bucket)
