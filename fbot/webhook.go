@@ -39,14 +39,14 @@ type Event struct {
 }
 
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
-// The passt event handler will be called with all received events.
-func (c Client) Webhook(handler func(Event)) http.Handler {
-	return webhook{EventHandler: handler, VerifyToken: c.verifyToken}
+// The passed event handler will be called with all received events.
+func (c Client) Webhook(handler func(Event), verifyToken string) http.Handler {
+	return webhook{handler: handler, token: verifyToken}
 }
 
 type webhook struct {
-	EventHandler func(Event)
-	VerifyToken  string
+	handler func(Event)
+	token   string
 }
 
 // ServeHTTP handles Facebook webhook requests.
@@ -61,7 +61,7 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var rec receive
 	if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
 		fmt.Fprintln(w, `{status: 'not ok'}`)
-		wh.EventHandler(Event{Type: EventError, Text: err.Error()})
+		wh.handler(Event{Type: EventError, Text: err.Error()})
 		return
 	}
 	defer func() {
@@ -72,7 +72,7 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, m := range e.Messaging {
 			event := createEvent(m)
 			if event.Type != EventUnknown {
-				wh.EventHandler(event)
+				wh.handler(event)
 			}
 		}
 	}
@@ -81,7 +81,7 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wh webhook) verifyHandler(w http.ResponseWriter, r *http.Request) {
-	if r.FormValue("hub.verify_token") == wh.VerifyToken {
+	if r.FormValue("hub.verify_token") == wh.token {
 		fmt.Fprintln(w, r.FormValue("hub.challenge"))
 		return
 	}

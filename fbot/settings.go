@@ -35,7 +35,7 @@ func (c Client) postSetting(data interface{}) error {
 		return err
 	}
 
-	url := fmt.Sprintf(settingsURL, c.API, c.token)
+	url := fmt.Sprintf(settingsURL, c.api, c.token)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(encoded))
 	if err != nil {
 		return err

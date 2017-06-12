@@ -28,6 +28,7 @@ type Bot struct {
 	err            *log.Logger
 	info           *log.Logger
 	client         fbot.Client
+	verifyToken    string
 	feedback       chan<- Feedback
 	notifyInterval time.Duration
 	http.Handler
@@ -52,6 +53,13 @@ func LogErr(l *log.Logger) func(*Bot) {
 	}
 }
 
+// Verify is an option to enable verification of the webhook.
+func Verify(token string) func(*Bot) {
+	return func(b *Bot) {
+		b.verifyToken = token
+	}
+}
+
 // GetFeedback sets up user feedback to be sent to the given channel.
 func GetFeedback(f chan<- Feedback) func(*Bot) {
 	return func(b *Bot) {
@@ -61,14 +69,13 @@ func GetFeedback(f chan<- Feedback) func(*Bot) {
 
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
-// The options Setup, LogInfo, LogErr, Notify, GetFeedback can be used.
-func New(store brain.Store, token, verifyToken string, options ...func(*Bot)) (Bot, error) {
-	client := fbot.New(token, verifyToken)
+// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback can be used.
+func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
+	client := fbot.New(token)
 	b := Bot{
 		store:  store,
 		client: client,
 	}
-	b.Handler = client.Webhook(b.HandleEvent)
 
 	for _, option := range options {
 		option(&b)
@@ -79,6 +86,7 @@ func New(store brain.Store, token, verifyToken string, options ...func(*Bot)) (B
 	if b.err == nil {
 		b.err = log.New(ioutil.Discard, "", 0)
 	}
+	b.Handler = client.Webhook(b.HandleEvent, b.verifyToken)
 
 	if b.setup {
 		if err := b.client.SetGreetings(map[string]string{"default": greeting}); err != nil {

@@ -13,20 +13,28 @@ const defaultAPI = "https://graph.facebook.com/v2.6"
 
 // Client can be used to communicate with a Messenger bot.
 type Client struct {
-	token       string
-	verifyToken string
-	// API URL can be changed for testing.
-	// Must not contain trailing slash.
-	API string
+	token string
+	api   string
+}
+
+// API can be passed to New for sending requests to a different URL.
+// Must not contain trailing slash.
+func API(url string) func(*Client) {
+	return func(c *Client) {
+		c.api = url
+	}
 }
 
 // New rerturns a new client with credentials set up.
-func New(token, verifyToken string) Client {
-	return Client{
-		token:       token,
-		verifyToken: verifyToken,
-		API:         defaultAPI,
+func New(token string, options ...func(*Client)) Client {
+	c := Client{
+		token: token,
+		api:   defaultAPI,
 	}
+	for _, option := range options {
+		option(&c)
+	}
+	return c
 }
 
 // Button describes a text quick reply.

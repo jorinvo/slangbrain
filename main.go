@@ -98,7 +98,7 @@ func main() {
 	bot, err := messenger.New(
 		store,
 		*token,
-		*verifyToken,
+		messenger.Verify(*verifyToken),
 		messenger.LogInfo(infoLogger),
 		messenger.LogErr(errorLogger),
 		messenger.Notify(*notifyInterval),

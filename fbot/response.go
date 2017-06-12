@@ -34,7 +34,7 @@ func (c Client) Send(id int64, message string, buttons []Button) error {
 		return err
 	}
 
-	url := fmt.Sprintf(sendMessageURL, c.API, c.token)
+	url := fmt.Sprintf(sendMessageURL, c.api, c.token)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err

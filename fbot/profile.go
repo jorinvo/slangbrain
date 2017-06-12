@@ -24,7 +24,7 @@ type Profile struct {
 func (c Client) GetProfile(id int64) (Profile, error) {
 	var p Profile
 
-	url := fmt.Sprintf(profileURL, c.API, id, c.token)
+	url := fmt.Sprintf(profileURL, c.api, id, c.token)
 	resp, err := http.Get(url)
 	if err != nil {
 		return p, err
