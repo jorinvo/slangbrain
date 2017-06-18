@@ -3,7 +3,9 @@
 package admin
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -162,11 +164,19 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // HandleMessage can be called to send a user message to Slack.
 func (a Admin) HandleMessage(id int64, name, msg string) {
-	tmpl := `{
-		"username": "%s",
-		"text": "%d\n\n%s"
-	}`
-	resp, err := http.Post(a.slackHook, "application/json", strings.NewReader(fmt.Sprintf(tmpl, name, id, msg)))
+	slackMsg := struct {
+		Username string `json:"username"`
+		Text     string `json:"text"`
+	}{
+		Username: name,
+		Text:     fmt.Sprintf("%d\n\n%s", id, msg),
+	}
+	buf, err := json.Marshal(slackMsg)
+	if err != nil {
+		a.err.Printf("failed to marshal slack message (%v): %v", slackMsg, err)
+		return
+	}
+	resp, err := http.Post(a.slackHook, "application/json", bytes.NewBuffer(buf))
 	if err != nil {
 		a.err.Printf("failed to post message from %s (%d) to Slack: %s", name, id, msg)
 		return
@@ -177,7 +187,7 @@ func (a Admin) HandleMessage(id int64, name, msg string) {
 			a.err.Printf("failed to read response for Slack message '%s' from %s (%d): %v", msg, name, id, err)
 			return
 		}
-		a.err.Printf("HTTP status code is not OK for Slack message '%s' from %s (%d): %s", msg, name, id, body)
+		a.err.Printf("HTTP status code is not OK (%d) for Slack message '%s' from %s (%d): %s", resp.StatusCode, msg, name, id, body)
 		return
 	}
 }
