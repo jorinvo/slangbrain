@@ -16,7 +16,7 @@ const (
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 22
+	newPerDay = 35
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 9
 	// Time user has to be inactive before being notified

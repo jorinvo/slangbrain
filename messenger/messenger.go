@@ -23,14 +23,14 @@ type Feedback struct {
 // Bot is a messenger bot handling webhook events and notifications.
 // Use New to setup and use register Bot as a http.Handler.
 type Bot struct {
-	store          brain.Store
-	setup          bool
-	err            *log.Logger
-	info           *log.Logger
-	client         fbot.Client
-	verifyToken    string
-	feedback       chan<- Feedback
-	notifyInterval time.Duration
+	store        brain.Store
+	setup        bool
+	err          *log.Logger
+	info         *log.Logger
+	client       fbot.Client
+	verifyToken  string
+	feedback     chan<- Feedback
+	notifyTimers map[int64]*time.Timer
 	http.Handler
 }
 
@@ -67,6 +67,11 @@ func GetFeedback(f chan<- Feedback) func(*Bot) {
 	}
 }
 
+// Notify enables sending notifications when studies are ready.
+func Notify(b *Bot) {
+	b.notifyTimers = map[int64]*time.Timer{}
+}
+
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
 // The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback can be used.
@@ -99,42 +104,14 @@ func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
 		b.info.Printf("Get Started button activated")
 	}
 
-	if b.notifyInterval > 0 {
-		go func() {
-			for range time.Tick(b.notifyInterval) {
-				b.info.Println("Sending notifications")
-				dueStudies, err := b.store.GetDueStudies()
-				if err != nil {
-					b.err.Println(err)
-					return
-				}
-				now := time.Now()
-				for chatID, count := range dueStudies {
-					p, err := b.client.GetProfile(chatID)
-					name := p.Name
-					if err != nil {
-						name = "there"
-						b.err.Printf("failed to get profile for %d: %v", chatID, err)
-					}
-					msg := fmt.Sprintf(messageStudiesDue, name, count)
-					if err = b.client.Send(chatID, msg, buttonsStudiesDue); err != nil {
-						b.err.Printf("failed to notify user %d: %v", chatID, err)
-					}
-					b.trackActivity(chatID, now)
-				}
-			}
-		}()
+	if b.notifyTimers != nil {
+		if err := b.store.EachActiveChat(b.scheduleNotify); err != nil {
+			return b, err
+		}
 		b.info.Println("Notifications enabled")
 	}
 
 	return b, nil
-}
-
-// Notify starts sending notifications in a given interval.
-func Notify(interval time.Duration) func(*Bot) {
-	return func(b *Bot) {
-		b.notifyInterval = interval
-	}
 }
 
 // SendMessage sends a message to a specific user.

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -135,67 +136,94 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 	return nil
 }
 
-// GetDueStudies returns a map of chatID to count of studies
-// with the due studies of all users.
-func (store Store) GetDueStudies() (map[int64]uint, error) {
-	dueStudies := map[int64]uint{}
-	now := time.Now().Unix()
+// GetNotifyTime gets the time until the user should be notified to study.
+// Returns the time until the next studies are ready and a count of the ready studies.
+// The returned duration is always at least dueMinInactive.
+// The count is 0 if the chat has no phrases yet.
+func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
+	due := 0
+	now := time.Now()
+	minTime := now.Add(dueMinInactive).Unix()
+	var x sortableInts
+
 	err := store.db.View(func(tx *bolt.Tx) error {
-		err := tx.Bucket(bucketStudytimes).ForEach(func(k, v []byte) error {
-			t, err := btoi(v)
-			if err != nil || t > now {
-				return err
-			}
-			chatID, err := btoi(k[:8])
+		c := tx.Bucket(bucketStudytimes).Cursor()
+		prefix := itob(chatID)
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			timestamp, err := btoi(v)
 			if err != nil {
 				return err
 			}
-			isSubscribed, err := store.IsSubscribed(chatID)
-			if err != nil || !isSubscribed {
-				return err
+			if timestamp < minTime {
+				due++
 			}
-			dueStudies[chatID]++
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
-		// Check if user should be notified
-		ba := tx.Bucket(bucketActivities)
-		br := tx.Bucket(bucketReads)
-		for chatID, count := range dueStudies {
-			// Too little studies due
-			if count < dueMinCount {
-				delete(dueStudies, chatID)
-				continue
-			}
-			key := itob(chatID)
-			// User was active just now
-			activity, err := btoi(ba.Get(key))
-			if err != nil {
-				return err
-			}
-			if time.Duration(now-activity)*time.Second < dueMinInactive {
-				delete(dueStudies, chatID)
-				continue
-			}
-			// User hasn't read last message
-			read, err := btoi(br.Get(key))
-			if err != nil {
-				return err
-			}
-			if read < activity {
-				delete(dueStudies, chatID)
-				continue
+			if due < dueMinCount {
+				l := len(x)
+				if l < dueMinCount {
+					x = append(x, timestamp)
+					sort.Sort(x)
+				} else if timestamp > x[l-1] {
+					x = append(x[:l-1], timestamp)
+					sort.Sort(x)
+				}
 			}
 		}
-
 		return nil
 	})
 
 	if err != nil {
-		return dueStudies, fmt.Errorf("failed to get due studies: %v", err)
+		return 0, 0, fmt.Errorf("failed to get next studies for chat %d: %v", chatID, err)
 	}
-	return dueStudies, nil
+
+	minCount := dueMinCount
+	l := len(x)
+	if minCount > l {
+		minCount = l
+	}
+	if due >= minCount {
+		return dueMinInactive, due, nil
+	}
+	return time.Unix(x[l-1], 0).Sub(now), l, nil
+}
+
+// EachActiveChat runs a function for each chat
+// where the user has been active since the last notification has been sent.
+func (store Store) EachActiveChat(fn func(int64)) error {
+	return store.db.View(func(tx *bolt.Tx) error {
+		active := tx.Bucket(bucketActivities)
+		return tx.Bucket(bucketReads).ForEach(func(k, v []byte) error {
+			if a := active.Get(k); a != nil {
+				timeActive, err := btoi(a)
+				if err != nil {
+					return err
+				}
+				timeRead, err := btoi(v)
+				if err != nil {
+					return err
+				}
+				if timeRead > timeActive {
+					chatID, err := btoi(k)
+					if err != nil {
+						return err
+					}
+					fn(chatID)
+				}
+			}
+			return nil
+		})
+	})
+}
+
+type sortableInts []int64
+
+func (b sortableInts) Len() int {
+	return len(b)
+}
+
+func (b sortableInts) Less(i, j int) bool {
+	return b[i] < b[j]
+}
+
+func (b sortableInts) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
 }

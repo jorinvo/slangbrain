@@ -18,10 +18,15 @@ var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{
 
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
-// Handles a Messenger event
+// HandleEvent handles a Messenger event.
 func (b Bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
 		b.err.Println(e.Text)
+		return
+	}
+
+	if e.Type == fbot.EventUnknown {
+		b.err.Println("received unknown event", e)
 		return
 	}
 
@@ -32,12 +37,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	if e.Type == fbot.EventUnknown {
-		b.err.Println("received unknown event", e)
-		return
-	}
-
-	b.trackActivity(e.ChatID, e.Time)
+	b.scheduleNotify(e.ChatID)
 
 	if e.Type == fbot.EventPayload {
 		b.handlePayload(e.ChatID, e.Payload)
@@ -218,12 +218,6 @@ func (b Bot) handlePayload(id int64, payload string) {
 		fallthrough
 	default:
 		b.send(b.messageStartMenu(id))
-	}
-}
-
-func (b Bot) trackActivity(id int64, t time.Time) {
-	if err := b.store.SetActivity(id, t); err != nil {
-		b.err.Println(err)
 	}
 }
 

@@ -81,12 +81,9 @@ func (store Store) SetRead(chatID int64, t time.Time) error {
 func itob(v int64) []byte {
 	b := make([]byte, 8)
 	binary.PutVarint(b, int64(v))
-	// Use big endianess to make byte slices sortable
-	// binary.BigEndian.PutUint64(b, int64(v))
 	return b
 }
 
 func btoi(b []byte) (int64, error) {
 	return binary.ReadVarint(bytes.NewBuffer(b))
-	// return binary.BigEndian.Uint64(bytes.NewBuffer(b))
 }

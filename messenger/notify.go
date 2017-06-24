@@ -1,0 +1,60 @@
+package messenger
+
+import (
+	"fmt"
+	"time"
+)
+
+// Start a timer to notify the given chat.
+// Only works when chat has notifications enabled
+// and has added some phrases already.
+func (b Bot) scheduleNotify(id int64) {
+	if b.notifyTimers == nil {
+		return
+	}
+
+	isSubscribed, err := b.store.IsSubscribed(id)
+	if err != nil {
+		b.err.Println(err)
+		return
+	}
+	if !isSubscribed {
+		return
+	}
+
+	if timer := b.notifyTimers[id]; timer != nil {
+		// Don't care if timer is active or not
+		_ = timer.Stop()
+	}
+	d, count, err := b.store.GetNotifyTime(id)
+	if err != nil {
+		b.err.Println(err)
+		return
+	}
+	if count == 0 {
+		return
+	}
+
+	b.notifyTimers[id] = time.AfterFunc(d, func() {
+		b.notify(id, count)
+	})
+}
+
+func (b Bot) notify(id int64, count int) {
+	p, err := b.client.GetProfile(id)
+	name := p.Name
+	if err != nil {
+		name = "there"
+		b.err.Printf("failed to get profile for %d: %v", id, err)
+	}
+	msg := fmt.Sprintf(messageStudiesDue, name, count)
+	if err = b.client.Send(id, msg, buttonsStudiesDue); err != nil {
+		b.err.Printf("failed to notify user %d: %v", id, err)
+	}
+	// Track last sending of a notification
+	// to stop sending notifications
+	// when user hasn't read the last notification.
+	if err := b.store.SetActivity(id, time.Now()); err != nil {
+		b.err.Println(err)
+	}
+}

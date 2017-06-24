@@ -69,6 +69,16 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	switch r.URL.Path {
+	case "/":
+		_, err := w.Write([]byte(`
+GET     /backup    Stream a backup of the current state of the database.
+DELETE  /phrase    Delete phrases. Combine query parameters 'chatid', 'phrase', 'explanation' and 'score' to select phrases.
+GET     /studynow  Reset all study times to now. Note that this doesn't reset the notification timers.
+POST    /slack     Register in Slack as Outgoing Webhook to send responses back to users.
+`))
+		if err != nil {
+			a.err.Println("failed to send '/' response")
+		}
 	case "/backup":
 		if r.Method != "GET" {
 			return
@@ -132,6 +142,9 @@ func (a Admin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "studies updated")
 
 	case "/slack":
+		if r.Method != "POST" {
+			return
+		}
 		if a.slackToken == "" {
 			slackError(w, fmt.Errorf("webhook is disabled"))
 		}

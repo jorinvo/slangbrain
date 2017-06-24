@@ -50,7 +50,6 @@ func main() {
 	slackHook := flag.String("slackhook", "", "Required. URL of Slack Incoming Webhook. Used to send user messages to admin.")
 	slackToken := flag.String("slacktoken", "", "Token for Slack Outgoing Webhook. Used to send admin answers to user messages.")
 	adminPort := flag.Int("admin", 8081, "Port admin interface listens on.")
-	notifyInterval := flag.Duration("notify", 0, "Interval of sending user notifications.")
 
 	// Parse and validate flags
 	flag.Usage = func() {
@@ -90,7 +89,7 @@ func main() {
 	infoLogger.Printf("Database initialized: %s", *db)
 
 	// Listen to system events for graceful shutdown
-	shutdownSignals := make(chan os.Signal)
+	shutdownSignals := make(chan os.Signal, 1)
 	signal.Notify(shutdownSignals, os.Interrupt)
 
 	// Start Facebook webhook server
@@ -101,9 +100,9 @@ func main() {
 		messenger.Verify(*verifyToken),
 		messenger.LogInfo(infoLogger),
 		messenger.LogErr(errorLogger),
-		messenger.Notify(*notifyInterval),
 		messenger.GetFeedback(feedback),
 		messenger.Setup,
+		messenger.Notify,
 	)
 	if err != nil {
 		log.Fatalln("failed to start messenger:", err)
