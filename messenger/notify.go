@@ -35,6 +35,7 @@ func (b Bot) scheduleNotify(id int64) {
 		return
 	}
 
+	b.info.Printf("Notify %d in %s", id, d.String())
 	b.notifyTimers[id] = time.AfterFunc(d, func() {
 		b.notify(id, count)
 	})
@@ -51,6 +52,7 @@ func (b Bot) notify(id int64, count int) {
 	if err = b.client.Send(id, msg, buttonsStudiesDue); err != nil {
 		b.err.Printf("failed to notify user %d: %v", id, err)
 	}
+	b.info.Printf("Notified %s (%d) with %d due studies", name, id, count)
 	// Track last sending of a notification
 	// to stop sending notifications
 	// when user hasn't read the last notification.

@@ -9,14 +9,14 @@ const (
 	// Time to wait for first study in hours
 	firstStudytime = 2
 	// base time in hours to use to calculate next study time
-	baseStudytime = 5
+	baseStudytime = 6
 	// Time in minutes
 	// When study times are updated they are randomly placed
 	// somewhere between the new time and new time + studyTimeDiffusion
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 35
+	newPerDay = 20
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 9
 	// Time user has to be inactive before being notified
