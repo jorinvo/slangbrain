@@ -35,7 +35,7 @@ func (b Bot) scheduleNotify(id int64) {
 		return
 	}
 
-	b.info.Printf("Notify %d in %s", id, d.String())
+	b.info.Printf("Notify %d in %s with %d due studies", id, d.String(), count)
 	b.notifyTimers[id] = time.AfterFunc(d, func() {
 		b.notify(id, count)
 	})

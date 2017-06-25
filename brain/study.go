@@ -39,11 +39,9 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 
 		// No studies found
 		if total == 0 {
-			var next time.Duration
 			if keyTime > 0 {
-				next = time.Second * time.Duration(keyTime-now)
+				study = Study{Next: time.Second * time.Duration(keyTime-now)}
 			}
-			study = Study{Next: next}
 			return nil
 		}
 
@@ -144,7 +142,7 @@ func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
 	due := 0
 	now := time.Now()
 	minTime := now.Add(dueMinInactive).Unix()
-	var x sortableInts
+	var next sortableInts
 
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketStudytimes).Cursor()
@@ -157,15 +155,18 @@ func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
 			if timestamp < minTime {
 				due++
 			}
-			if due < dueMinCount {
-				l := len(x)
-				if l < dueMinCount {
-					x = append(x, timestamp)
-					sort.Sort(x)
-				} else if timestamp > x[l-1] {
-					x = append(x[:l-1], timestamp)
-					sort.Sort(x)
-				}
+			if due >= dueMinCount {
+				continue
+			}
+			l := len(next)
+			if l < dueMinCount {
+				next = append(next, timestamp)
+				sort.Sort(next)
+				continue
+			}
+			if timestamp < next[l-1] {
+				next = append(next[:l-1], timestamp)
+				sort.Sort(next)
 			}
 		}
 		return nil
@@ -176,14 +177,14 @@ func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
 	}
 
 	minCount := dueMinCount
-	l := len(x)
+	l := len(next)
 	if minCount > l {
 		minCount = l
 	}
 	if due >= minCount {
 		return dueMinInactive, due, nil
 	}
-	return time.Unix(x[l-1], 0).Sub(now), l, nil
+	return time.Unix(next[l-1], 0).Sub(now), l, nil
 }
 
 // EachActiveChat runs a function for each chat
