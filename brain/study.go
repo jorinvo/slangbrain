@@ -193,22 +193,24 @@ func (store Store) EachActiveChat(fn func(int64)) error {
 	return store.db.View(func(tx *bolt.Tx) error {
 		active := tx.Bucket(bucketActivities)
 		return tx.Bucket(bucketReads).ForEach(func(k, v []byte) error {
-			if a := active.Get(k); a != nil {
-				timeActive, err := btoi(a)
+			timeRead, err := btoi(v)
+			if err != nil {
+				return err
+			}
+			a := active.Get(k)
+			if a == nil {
+				a = itob(0)
+			}
+			timeActive, err := btoi(a)
+			if err != nil {
+				return err
+			}
+			if timeRead > timeActive {
+				chatID, err := btoi(k)
 				if err != nil {
 					return err
 				}
-				timeRead, err := btoi(v)
-				if err != nil {
-					return err
-				}
-				if timeRead > timeActive {
-					chatID, err := btoi(k)
-					if err != nil {
-						return err
-					}
-					fn(chatID)
-				}
+				fn(chatID)
 			}
 			return nil
 		})

@@ -61,13 +61,18 @@ func (b Bot) handleMessage(id int64, msg string) {
 			return
 		}
 		// Score user unput and pick appropriate reply
-		var score = 1
-		m1 := messageStudyCorrect
-		if normPhrase(msg) != normPhrase(study.Phrase) {
-			score = -1
-			m1 = fmt.Sprintf(messageStudyWrong, study.Phrase)
+		msgNormalized := normPhrase(msg)
+		if msgNormalized == "" {
+			b.send(id, messageStudyMissing, nil, nil)
+			return
 		}
-		b.send(id, m1, nil, nil)
+		var score = 1
+		reply := messageStudyCorrect
+		if msgNormalized != normPhrase(study.Phrase) {
+			score = -1
+			reply = fmt.Sprintf(messageStudyWrong, study.Phrase)
+		}
+		b.send(id, reply, nil, nil)
 		b.send(b.scoreAndStudy(id, score))
 
 	case brain.ModeAdd:

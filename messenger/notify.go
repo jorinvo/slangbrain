@@ -3,6 +3,8 @@ package messenger
 import (
 	"fmt"
 	"time"
+
+	"github.com/jorinvo/slangbrain/brain"
 )
 
 // Start a timer to notify the given chat.
@@ -49,6 +51,9 @@ func (b Bot) notify(id int64, count int) {
 		b.err.Printf("failed to get profile for %d: %v", id, err)
 	}
 	msg := fmt.Sprintf(messageStudiesDue, name, count)
+	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
+		b.err.Printf("failed to activate menu mode while notifying %d: %v", id, err)
+	}
 	if err = b.client.Send(id, msg, buttonsStudiesDue); err != nil {
 		b.err.Printf("failed to notify user %d: %v", id, err)
 	}

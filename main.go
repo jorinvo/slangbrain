@@ -15,7 +15,7 @@ import (
 	"github.com/jorinvo/slangbrain/messenger"
 )
 
-const cliUsage = `Slangebrain Messenger bot
+const cliUsage = `Slangbrain Messenger bot
 
 Usage: %s [flags]
 

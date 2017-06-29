@@ -9,8 +9,8 @@ const (
 
 var (
 	buttonStudyDone = fbot.Button{Text: "done studying", Payload: payloadStartMenu}
-	// Teacher emoji
-	buttonStudy = fbot.Button{Text: "\U0001F468\u200D\U0001F3EB study", Payload: payloadStartStudy}
+	// School emoji
+	buttonStudy = fbot.Button{Text: "\U0001F3EB study", Payload: payloadStartStudy}
 	// Plus sign emoji
 	buttonAdd = fbot.Button{Text: "\u2795 phrases", Payload: payloadStartAdd}
 	// Waving hand emoji
@@ -51,10 +51,11 @@ var (
 	}
 	buttonsScore = []fbot.Button{
 		buttonDelete,
-		// Ok thumb down emoji
+		// Thumb down emoji
 		fbot.Button{Text: "\U0001F44E didn't know", Payload: payloadScoreBad},
-		fbot.Button{Text: "soso", Payload: payloadScoreOk},
-		fbot.Button{Text: iconOK + " easy", Payload: payloadScoreGood},
+		// Thinking face emoji
+		fbot.Button{Text: "\U0001F914", Payload: payloadScoreOk},
+		fbot.Button{Text: iconOK + " got it", Payload: payloadScoreGood},
 	}
 	buttonsStudyEmpty = []fbot.Button{
 		buttonAdd,

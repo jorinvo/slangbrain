@@ -13,7 +13,7 @@ import (
 )
 
 // BackupTo streams backup as an HTTP response.
-func (store *Store) BackupTo(w http.ResponseWriter) {
+func (store Store) BackupTo(w http.ResponseWriter) {
 	err := store.db.View(func(tx *bolt.Tx) error {
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", `attachment; filename="my.db"`)
@@ -27,7 +27,7 @@ func (store *Store) BackupTo(w http.ResponseWriter) {
 }
 
 // StudyNow resets all study times of all users to now.
-func (store *Store) StudyNow() error {
+func (store Store) StudyNow() error {
 	return store.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketStudytimes)
 		now := itob(time.Now().Unix())
@@ -38,7 +38,7 @@ func (store *Store) StudyNow() error {
 }
 
 // DeleteChat removes all records of a given chat.
-func (store *Store) DeleteChat(chatID int64) error {
+func (store Store) DeleteChat(chatID int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
 		key := itob(chatID)
 		// Remove mode
@@ -66,7 +66,7 @@ func (store *Store) DeleteChat(chatID int64) error {
 }
 
 // GetChatIDs returns chatIDs of all users.
-func (store *Store) GetChatIDs() ([]int64, error) {
+func (store Store) GetChatIDs() ([]int64, error) {
 	var ids []int64
 	err := store.db.View(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketModes).ForEach(func(k, v []byte) error {
@@ -82,7 +82,7 @@ func (store *Store) GetChatIDs() ([]int64, error) {
 }
 
 // GetPhrasesAsJSON ...
-func (store *Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
+func (store Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
 	var phrases string
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
@@ -96,7 +96,7 @@ func (store *Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
 }
 
 // DeletePhrases removes all phrases fn matches.
-func (store *Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
+func (store Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
 	deleted := 0
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)

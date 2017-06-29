@@ -8,19 +8,19 @@ Please use the buttons below.`
 	messageStartAdd = `Please send me a phrase and its explanation.
 Separate them with a linebreak.`
 	messageWelcome = `Hello %s!
-Slangebrain is here to help you with your language studies.
-Whenever you pick up a new phrase, just add it to your Slangebrain and remember it forever.
-Master the language you encounter in your every day life instead of being limited to a textbook.`
-	messageWelcome2 = `You begin by adding phrases and later Slangbrain will test your memories in a natural schedule.
 
-` + messageStartAdd + `
+Whenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.
+
+You begin by adding phrases and later Slangbrain will test your memories in a natural schedule.`
+	messageWelcome2 = messageStartAdd + `
+Don't worry if you send something wrong. You can delete phrases later.
+
 If your mother tongue is English and you're studying Spanish, a message would look like this:
 
 Hola
 Hello
 
-Give it a try:
-`
+Give it a try:`
 	messageErr              = "Sorry, something went wrong."
 	messageExplanationEmpty = "The phrase is missing an explanation. Please send it again with explanation."
 	messagePhraseEmpty      = "Please send a phrase."
@@ -29,10 +29,9 @@ Come back in %s.`
 	messageStudyCorrect = "Correct!"
 	messageStudyWrong   = `Sorry, the right version is:
 
-%s
-
-`
-	messageStudyEmpty = `You have added no phrases yet.
+%s`
+	messageStudyMissing = "Please send the phrase you guess is right."
+	messageStudyEmpty   = `You have added no phrases yet.
 Click the button below and get started.`
 	messageStudyQuestion = `%d. Do you remember how to say this?
 
@@ -68,6 +67,6 @@ Would you like me to send you a message when there are phrases ready for studyin
 ` + messageStartMenu
 	messageFedback      = "If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible."
 	messageFeedbackDone = "Thanks, you will hear from us soon."
-	greeting            = `Slangbrain helps you with our language Studies.
+	greeting            = `Slangbrain helps you with our language studies.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
 )
