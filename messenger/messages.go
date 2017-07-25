@@ -30,8 +30,7 @@ Come back in %s.`
 	messageStudyWrong   = `Sorry, the right version is:
 
 %s`
-	messageStudyMissing = "Please send the phrase you guess is right."
-	messageStudyEmpty   = `You have added no phrases yet.
+	messageStudyEmpty = `You have added no phrases yet.
 Click the button below and get started.`
 	messageStudyQuestion = `%d. Do you remember how to say this?
 

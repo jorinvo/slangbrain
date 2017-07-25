@@ -63,7 +63,12 @@ func (b Bot) handleMessage(id int64, msg string) {
 		// Score user unput and pick appropriate reply
 		msgNormalized := normPhrase(msg)
 		if msgNormalized == "" {
-			b.send(id, messageStudyMissing, nil, nil)
+			study, err := b.store.GetStudy(id)
+			if err != nil {
+				b.send(id, messageErr, buttonsShow, fmt.Errorf("failed to get study: %v", err))
+				return
+			}
+			b.send(id, study.Phrase, buttonsScore, nil)
 			return
 		}
 		var score = 1
