@@ -39,10 +39,13 @@ and admin replies in Slack are send back to the users.
 Flags:
 `
 
+var version = "development"
+
 func main() {
 	errorLogger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 	infoLogger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
 
+	versionFlag := flag.Bool("version", false, "Print the version of the binary.")
 	db := flag.String("db", "", "Required. Path to BoltDB file. Will be created if non-existent.")
 	port := flag.Int("port", 8080, "Port Facebook webhook listens on.")
 	verifyToken := flag.String("verify", "", "Required. Messenger bot verify token.")
@@ -57,6 +60,11 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if *versionFlag {
+		infoLogger.Println("Slangbrain", version)
+		os.Exit(0)
+	}
 
 	if *db == "" {
 		errorLogger.Println("Flag -db is required.")
