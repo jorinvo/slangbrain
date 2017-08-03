@@ -26,7 +26,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 	}
 
 	if e.Type == fbot.EventUnknown {
-		b.err.Println("received unknown event", e)
+		b.err.Println("received unknown event:", e)
 		return
 	}
 
@@ -41,6 +41,15 @@ func (b Bot) HandleEvent(e fbot.Event) {
 
 	if e.Type == fbot.EventPayload {
 		b.handlePayload(e.ChatID, e.Payload)
+		return
+	}
+
+	if err := b.store.ProcessMessage(e.MessageID); err != nil {
+		if err == b.store.ErrExists {
+			b.info.Printf("Message already processed: %v", e.MessageID)
+			return
+		}
+		b.err.Println("failed to save message ID:", err)
 		return
 	}
 

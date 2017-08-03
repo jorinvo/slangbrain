@@ -32,10 +32,12 @@ type Event struct {
 	ChatID int64
 	// Time describes when the event occured.
 	Time time.Time
-	// Text is a message a user send for EventMessage and and error description for EventError.
+	// Text is a message a user send for EventMessage and error description for EventError.
 	Text string
 	// Payload is a predefined payload for a quick reply or postback sent with EventPayload.
 	Payload string
+	// MessageID is a unique ID for each message.
+	MessageID string
 }
 
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
@@ -102,10 +104,11 @@ func createEvent(m messageInfo) Event {
 			}
 		}
 		return Event{
-			Type:   EventMessage,
-			ChatID: m.Sender.ID,
-			Time:   msToTime(m.Timestamp),
-			Text:   m.Message.Text,
+			Type:      EventMessage,
+			ChatID:    m.Sender.ID,
+			Time:      msToTime(m.Timestamp),
+			Text:      m.Message.Text,
+			MessageID: m.Message.MID,
 		}
 	}
 	if m.Postback != nil {
@@ -154,6 +157,7 @@ type message struct {
 	IsEcho     bool        `json:"is_echo,omitempty"`
 	Text       string      `json:"text"`
 	QuickReply *quickReply `json:"quick_reply,omitempty"`
+	MID        string      `json:"mid,omitempty"`
 }
 
 type read struct {

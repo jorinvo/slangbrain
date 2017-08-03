@@ -30,6 +30,7 @@ var (
 	bucketReads         = []byte("reads")
 	bucketActivities    = []byte("activities")
 	bucketSubscriptions = []byte("subscriptions")
+	bucketMessageIDs    = []byte("messageids")
 )
 
 // Mode is the state of a chat.

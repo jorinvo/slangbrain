@@ -3,6 +3,7 @@ package brain
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -13,12 +14,14 @@ import (
 // Store provides functions to interact with the underlying database.
 type Store struct {
 	db *bolt.DB
+	// ErrExists signals that the thing to be added has been added already.
+	ErrExists error
 }
 
 // New returns a new Store with a database already setup.
 func New(dbFile string) (Store, error) {
 	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	store := Store{db}
+	store := Store{db, errors.New("already exists")}
 	if err != nil {
 		return store, fmt.Errorf("failed to open database: %v", err)
 	}
@@ -29,6 +32,7 @@ func New(dbFile string) (Store, error) {
 		bucketReads,
 		bucketActivities,
 		bucketSubscriptions,
+		bucketMessageIDs,
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		for _, bucket := range buckets {
@@ -74,6 +78,30 @@ func (store Store) SetRead(chatID int64, t time.Time) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set read for chatID %d: %v: %v", chatID, t, err)
+	}
+	return nil
+}
+
+// ProcessMessage marks a messageID as being processed.
+// This ensures each message is only handled once,
+// even if the messaging platforms delivers them multiple times.
+// Should only be called with each messageID once.
+// Otherwise returns store.ErrExists.
+func (store Store) ProcessMessage(messageID string) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketMessageIDs)
+		key := []byte(messageID)
+		if b.Get(key) != nil {
+			return store.ErrExists
+		}
+		b.Put(key, []byte{})
+		return nil
+	})
+	if err != nil {
+		if err == store.ErrExists {
+			return err
+		}
+		return fmt.Errorf("failed to add message ID: %s: %v", messageID, err)
 	}
 	return nil
 }
