@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/kyokomi/emoji"
 )
 
 // Admin is a HTTP handler that can be used for backups
@@ -167,7 +168,7 @@ POST    /slack     Register in Slack as Outgoing Webhook to send responses back 
 			slackError(w, fmt.Errorf("failed parsing ID: %v", err))
 			return
 		}
-		msg := strings.TrimSpace(strings.TrimPrefix(text, firstField))
+		msg := emoji.Sprint(strings.TrimSpace(strings.TrimPrefix(text, firstField)))
 		if err := a.replyHandler(int64(id), msg); err != nil {
 			slackError(w, err)
 			return

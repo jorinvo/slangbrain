@@ -1,4 +1,4 @@
-// Package brain handles all business logic of Slangbrain.
+// Package brain handles all business logic.
 // It handles data storage, retrieving and updating.
 // It's independent from the used bot platform and user interaction.
 package brain
@@ -16,11 +16,11 @@ const (
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 20
+	newPerDay = 50
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 9
 	// Time user has to be inactive before being notified
-	dueMinInactive = 10 * time.Minute
+	dueMinInactive = 5 * time.Minute
 )
 
 var (
