@@ -61,8 +61,8 @@ func (b Bot) handleMessage(id int64, msg string) {
 			return
 		}
 		// Score user unput and pick appropriate reply
-		msgNormalized := normPhrase(msg)
-		if msgNormalized == "" {
+		msgNormalizedA, msgNormalizedB := normPhrases(msg)
+		if msgNormalizedA == "" {
 			study, err := b.store.GetStudy(id)
 			if err != nil {
 				b.send(id, messageErr, buttonsShow, fmt.Errorf("failed to get study: %v", err))
@@ -73,7 +73,8 @@ func (b Bot) handleMessage(id int64, msg string) {
 		}
 		var score = 1
 		reply := messageStudyCorrect
-		if msgNormalized != normPhrase(study.Phrase) {
+		phraseNormalizedA, phraseNormalizedB := normPhrases(study.Phrase)
+		if msgNormalizedA != phraseNormalizedA && msgNormalizedB != phraseNormalizedB {
 			score = -1
 			reply = fmt.Sprintf(messageStudyWrong, study.Phrase)
 		}
@@ -322,9 +323,12 @@ func formatDuration(d time.Duration) string {
 	}
 	return s
 }
+
+// Normalize two forms so user can choose add parts in paranthesis or not.
+// Case, space and punctuation are ignored.
+func normPhrases(s string) (string, string) {
+	return normPhrase(inParantheses.ReplaceAllString(s, "")), normPhrase(s)
+}
 func normPhrase(s string) string {
-	s = inParantheses.ReplaceAllString(s, "")
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-	return specialChars.ReplaceAllString(s, "")
+	return specialChars.ReplaceAllString(strings.ToLower(strings.TrimSpace(s)), "")
 }
