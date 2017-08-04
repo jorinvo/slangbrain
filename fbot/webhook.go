@@ -66,9 +66,12 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		wh.handler(Event{Type: EventError, Text: err.Error()})
 		return
 	}
-	defer func() {
-		_ = r.Body.Close()
-	}()
+	_ = r.Body.Close()
+
+	// Return response as soon as possible.
+	// Facebook doesn't care about the event handling.
+	// Responses are sent separatly.
+	fmt.Fprintln(w, `{status: 'ok'}`)
 
 	for _, e := range rec.Entry {
 		for _, m := range e.Messaging {
@@ -78,8 +81,6 @@ func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
-	fmt.Fprintln(w, `{status: 'ok'}`)
 }
 
 func (wh webhook) verifyHandler(w http.ResponseWriter, r *http.Request) {
