@@ -32,6 +32,8 @@ type Bot struct {
 	feedback     chan<- Feedback
 	notifyTimers map[int64]*time.Timer
 	http.Handler
+	welcomeWait time.Duration
+	furl        string
 }
 
 // Setup sends greetings and the getting started message to Facebook.
@@ -72,16 +74,27 @@ func Notify(b *Bot) {
 	b.notifyTimers = map[int64]*time.Timer{}
 }
 
+// FAPI overwrites the default URL of the Facebook API.
+// This is used for testing.
+func FAPI(url string) func(*Bot) {
+	return func(b *Bot) {
+		b.furl = url
+	}
+}
+
+// WelcomeWait sets a time for which to wait before sending the second welcome message.
+func WelcomeWait(t time.Duration) func(*Bot) {
+	return func(b *Bot) {
+		b.welcomeWait = t
+	}
+}
+
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
-// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback can be used.
+// A store and a Facebook API token are required.
+// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait can be used.
 func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
-	client := fbot.New(token)
-	b := Bot{
-		store:  store,
-		client: client,
-	}
-
+	b := Bot{store: store}
 	for _, option := range options {
 		option(&b)
 	}
@@ -91,7 +104,12 @@ func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
 	if b.err == nil {
 		b.err = log.New(ioutil.Discard, "", 0)
 	}
-	b.Handler = client.Webhook(b.HandleEvent, b.verifyToken)
+	if b.furl == "" {
+		b.client = fbot.New(token)
+	} else {
+		b.client = fbot.New(token, fbot.API(b.furl))
+	}
+	b.Handler = b.client.Webhook(b.HandleEvent, b.verifyToken)
 
 	if b.setup {
 		if err := b.client.SetGreetings(map[string]string{"default": greeting}); err != nil {

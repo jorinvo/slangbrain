@@ -256,7 +256,7 @@ func (b Bot) messageWelcome(id int64) {
 		b.err.Printf("failed to get profile for %d: %v", id, err)
 	}
 	b.send(id, fmt.Sprintf(messageWelcome, name), nil, nil)
-	time.Sleep(6 * time.Second)
+	time.Sleep(b.welcomeWait)
 	b.send(id, messageWelcome2, nil, b.store.SetMode(id, brain.ModeAdd))
 }
 

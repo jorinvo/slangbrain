@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"time"
 
 	"github.com/jorinvo/slangbrain/admin"
 	"github.com/jorinvo/slangbrain/brain"
@@ -89,8 +90,7 @@ func main() {
 		errorLogger.Fatalln("failed to create store:", err)
 	}
 	defer func() {
-		err := store.Close()
-		if err != nil {
+		if err := store.Close(); err != nil {
 			errorLogger.Println(err)
 		}
 	}()
@@ -111,9 +111,10 @@ func main() {
 		messenger.GetFeedback(feedback),
 		messenger.Setup,
 		messenger.Notify,
+		messenger.WelcomeWait(6*time.Second),
 	)
 	if err != nil {
-		log.Fatalln("failed to start messenger:", err)
+		errorLogger.Fatalln("failed to start messenger:", err)
 	}
 	mAddr := "localhost:" + strconv.Itoa(*port)
 	messengerServer := &http.Server{Addr: mAddr, Handler: bot}
