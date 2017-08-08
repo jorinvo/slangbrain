@@ -26,6 +26,7 @@ func API(url string) func(*Client) {
 }
 
 // New rerturns a new client with credentials set up.
+// Optionally pass API to overwrite the default API URL.
 func New(token string, options ...func(*Client)) Client {
 	c := Client{
 		token: token,

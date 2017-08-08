@@ -43,52 +43,43 @@ type Event struct {
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
 // The passed event handler will be called with all received events.
 func (c Client) Webhook(handler func(Event), verifyToken string) http.Handler {
-	return webhook{handler: handler, token: verifyToken}
-}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			if r.FormValue("hub.verify_token") == verifyToken {
+				fmt.Fprintln(w, r.FormValue("hub.challenge"))
+				return
+			}
+			fmt.Fprintln(w, "Incorrect verify token.")
+			return
+		}
 
-type webhook struct {
-	handler func(Event)
-	token   string
-}
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-// ServeHTTP handles Facebook webhook requests.
-// It responds to verify requests by checking the verify token;
-// and it parses events send via POST requests.
-func (wh webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		wh.verifyHandler(w, r)
-		return
-	}
+		var rec receive
+		if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
+			http.Error(w, "JSON invalid", http.StatusBadRequest)
+			handler(Event{Type: EventError, Text: err.Error()})
+			return
+		}
+		_ = r.Body.Close()
 
-	var rec receive
-	if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
-		fmt.Fprintln(w, `{status: 'not ok'}`)
-		wh.handler(Event{Type: EventError, Text: err.Error()})
-		return
-	}
-	_ = r.Body.Close()
+		// Return response as soon as possible.
+		// Facebook doesn't care about the event handling.
+		// Responses are sent separatly.
+		fmt.Fprintln(w, `{"status":"ok"}`)
 
-	// Return response as soon as possible.
-	// Facebook doesn't care about the event handling.
-	// Responses are sent separatly.
-	fmt.Fprintln(w, `{status: 'ok'}`)
-
-	for _, e := range rec.Entry {
-		for _, m := range e.Messaging {
-			event := createEvent(m)
-			if event.Type != EventUnknown {
-				wh.handler(event)
+		for _, e := range rec.Entry {
+			for _, m := range e.Messaging {
+				event := createEvent(m)
+				if event.Type != EventUnknown {
+					handler(event)
+				}
 			}
 		}
-	}
-}
-
-func (wh webhook) verifyHandler(w http.ResponseWriter, r *http.Request) {
-	if r.FormValue("hub.verify_token") == wh.token {
-		fmt.Fprintln(w, r.FormValue("hub.challenge"))
-		return
-	}
-	fmt.Fprintln(w, "Incorrect verify token.")
+	})
 }
 
 func createEvent(m messageInfo) Event {
