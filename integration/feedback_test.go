@@ -56,12 +56,6 @@ func TestFeedback(t *testing.T) {
 			send:   fmt.Sprintf(formatMessage, "3", "I like you."),
 		},
 		{
-			name:     "get profile",
-			method:   "GET",
-			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
-			response: `{ "first_name": "Smith", "locale": "us" }`,
-		},
-		{
 			name:   "done",
 			expect: `{"recipient":{"id":"123"},"message":{"text":"Thanks Smith, you will hear from us soon."}}`,
 		},

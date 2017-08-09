@@ -3,7 +3,10 @@
 // It's independent from the used bot platform and user interaction.
 package brain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 const (
 	// Time to wait for first study in hours
@@ -24,6 +27,13 @@ const (
 )
 
 var (
+	// ErrExists signals that the thing to be added has been added already.
+	ErrExists = errors.New("already exists")
+	// ErrNotFound signals that the requested entry couldn't be found.
+	ErrNotFound = errors.New("not found")
+)
+
+var (
 	bucketModes         = []byte("modes")
 	bucketPhrases       = []byte("phrases")
 	bucketStudytimes    = []byte("studytimes")
@@ -31,7 +41,19 @@ var (
 	bucketActivities    = []byte("activities")
 	bucketSubscriptions = []byte("subscriptions")
 	bucketMessageIDs    = []byte("messageids")
+	bucketProfiles      = []byte("profiles")
 )
+
+var allBuckets = [][]byte{
+	bucketModes,
+	bucketPhrases,
+	bucketStudytimes,
+	bucketReads,
+	bucketActivities,
+	bucketSubscriptions,
+	bucketMessageIDs,
+	bucketProfiles,
+}
 
 // Mode is the state of a chat.
 // We need to keep track of the state each chat is in.

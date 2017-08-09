@@ -10,8 +10,8 @@ import (
 func (store Store) GetMode(chatID int64) (Mode, error) {
 	var mode Mode
 	err := store.db.View(func(tx *bolt.Tx) error {
-		if bm := tx.Bucket(bucketModes).Get(itob(chatID)); bm != nil {
-			iMode, err := btoi(bm)
+		if v := tx.Bucket(bucketModes).Get(itob(chatID)); v != nil {
+			iMode, err := btoi(v)
 			if err != nil {
 				return err
 			}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/common"
 	"github.com/jorinvo/slangbrain/fbot"
 )
 
@@ -45,7 +46,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 	}
 
 	if err := b.store.QueueMessage(e.MessageID); err != nil {
-		if err == b.store.ErrExists {
+		if err == brain.ErrExists {
 			b.info.Printf("Message already processed: %v", e.MessageID)
 			return
 		}
@@ -126,8 +127,8 @@ func (b Bot) handleMessage(id int64, msg string) {
 		b.messageWelcome(id)
 
 	case brain.ModeFeedback:
-		p, err := b.client.GetProfile(id)
-		name := p.Name
+		p, err := b.getProfile(id)
+		name := p.Name()
 		if err != nil {
 			name = "there"
 			b.err.Printf("failed to get profile for %d: %v", id, err)
@@ -249,8 +250,8 @@ func (b Bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
 }
 
 func (b Bot) messageWelcome(id int64) {
-	p, err := b.client.GetProfile(id)
-	name := p.Name
+	p, err := b.getProfile(id)
+	name := p.Name()
 	if err != nil {
 		name = "there"
 		b.err.Printf("failed to get profile for %d: %v", id, err)
@@ -307,6 +308,28 @@ func (b Bot) send(id int64, reply string, buttons []fbot.Button, err error) {
 	if err = b.client.Send(id, reply, buttons); err != nil {
 		b.err.Println("failed to send message:", err)
 	}
+}
+
+// Get profile from cache or fetch and update cache.
+func (b Bot) getProfile(id int64) (common.Profile, error) {
+	// Try cache
+	p, err := b.store.GetProfile(id)
+	if err == nil {
+		return p, nil
+	}
+	if err != brain.ErrNotFound {
+		b.err.Println(err)
+	}
+	// Fetch from Facebook
+	p, err = b.client.GetProfile(id)
+	if err != nil {
+		return p, err
+	}
+	// Update cache
+	if err := b.store.SetProfile(id, p); err != nil {
+		b.err.Println(err)
+	}
+	return p, nil
 }
 
 // Format like "X hour[s] X minute[s]".

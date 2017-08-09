@@ -3,7 +3,6 @@ package brain
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -14,28 +13,17 @@ import (
 // Store provides functions to interact with the underlying database.
 type Store struct {
 	db *bolt.DB
-	// ErrExists signals that the thing to be added has been added already.
-	ErrExists error
 }
 
 // New returns a new Store with a database already setup.
 func New(dbFile string) (Store, error) {
 	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	store := Store{db, errors.New("already exists")}
+	store := Store{db}
 	if err != nil {
 		return store, fmt.Errorf("failed to open database: %v", err)
 	}
-	var buckets = [][]byte{
-		bucketModes,
-		bucketPhrases,
-		bucketStudytimes,
-		bucketReads,
-		bucketActivities,
-		bucketSubscriptions,
-		bucketMessageIDs,
-	}
 	err = db.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range buckets {
+		for _, bucket := range allBuckets {
 			_, err = tx.CreateBucketIfNotExists(bucket)
 			if err != nil {
 				return fmt.Errorf("failed to create bucket '%s': %v", bucket, err)
@@ -92,13 +80,13 @@ func (store Store) QueueMessage(messageID string) error {
 		b := tx.Bucket(bucketMessageIDs)
 		key := []byte(messageID)
 		if b.Get(key) != nil {
-			return store.ErrExists
+			return ErrExists
 		}
 		b.Put(key, []byte{})
 		return nil
 	})
 	if err != nil {
-		if err == store.ErrExists {
+		if err == ErrExists {
 			return err
 		}
 		return fmt.Errorf("failed to add message ID: %s: %v", messageID, err)

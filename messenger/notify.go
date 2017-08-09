@@ -44,8 +44,8 @@ func (b Bot) scheduleNotify(id int64) {
 }
 
 func (b Bot) notify(id int64, count int) {
-	p, err := b.client.GetProfile(id)
-	name := p.Name
+	p, err := b.getProfile(id)
+	name := p.Name()
 	if err != nil {
 		name = "there"
 		b.err.Printf("failed to get profile for %d: %v", id, err)
