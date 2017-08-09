@@ -52,7 +52,7 @@ func TestWelcome(t *testing.T) {
 	)
 	fatal(t, err)
 
-	send(t, bot, fmt.Sprintf(formatMessage, "1", "hi"))
+	send(t, bot, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
 
 	if state != len(tt) {
 		t.Errorf("expected state to be %d; got %d", len(tt), state)

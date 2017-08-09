@@ -137,7 +137,7 @@ func (b Bot) handleMessage(id int64, msg string) {
 		} else {
 			b.err.Printf("got unhandled feedback from %s (%d): %s", name, id, msg)
 		}
-		b.send(id, messageFeedbackDone, nil, nil)
+		b.send(id, fmt.Sprintf(messageFeedbackDone, name), nil, nil)
 		b.send(b.messageStartMenu(id))
 
 	default:

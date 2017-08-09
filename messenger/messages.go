@@ -65,7 +65,7 @@ Would you like me to send you a message when there are phrases ready for studyin
 
 ` + messageStartMenu
 	messageFedback      = "If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible."
-	messageFeedbackDone = "Thanks, you will hear from us soon."
+	messageFeedbackDone = "Thanks %s, you will hear from us soon."
 	greeting            = `Slangbrain helps you with our language studies.
 Master the language you encounter in your every day life instead of being limited to a textbook.`
 )
