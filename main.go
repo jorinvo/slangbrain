@@ -90,7 +90,7 @@ func main() {
 		errorLogger.Fatalln("failed to create store:", err)
 	}
 	defer func() {
-		if err := store.Close(); err != nil {
+		if err = store.Close(); err != nil {
 			errorLogger.Println(err)
 		}
 	}()
@@ -120,7 +120,7 @@ func main() {
 	messengerServer := &http.Server{Addr: mAddr, Handler: bot}
 	go func() {
 		infoLogger.Printf("Messenger webhook server running at %s", mAddr)
-		if err := messengerServer.ListenAndServe(); err != nil {
+		if err = messengerServer.ListenAndServe(); err != nil {
 			errorLogger.Fatalln("failed to start server:", err)
 		}
 	}()
@@ -136,7 +136,7 @@ func main() {
 	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
 	go func() {
 		infoLogger.Printf("Admin server running at %s", aAddr)
-		if err := adminServer.ListenAndServe(); err != nil {
+		if err = adminServer.ListenAndServe(); err != nil {
 			errorLogger.Fatalln("failed to start server:", err)
 		}
 	}()

@@ -82,12 +82,12 @@ func (store Store) SetRead(chatID int64, t time.Time) error {
 	return nil
 }
 
-// ProcessMessage marks a messageID as being processed.
+// QueueMessage marks a messageID as being processed.
 // This ensures each message is only handled once,
 // even if the messaging platforms delivers them multiple times.
 // Should only be called with each messageID once.
 // Otherwise returns store.ErrExists.
-func (store Store) ProcessMessage(messageID string) error {
+func (store Store) QueueMessage(messageID string) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketMessageIDs)
 		key := []byte(messageID)

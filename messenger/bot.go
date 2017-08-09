@@ -44,7 +44,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	if err := b.store.ProcessMessage(e.MessageID); err != nil {
+	if err := b.store.QueueMessage(e.MessageID); err != nil {
 		if err == b.store.ErrExists {
 			b.info.Printf("Message already processed: %v", e.MessageID)
 			return
