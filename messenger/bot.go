@@ -250,6 +250,9 @@ func (b Bot) messageStartMenu(id int64) (int64, string, []fbot.Button, error) {
 }
 
 func (b Bot) messageWelcome(id int64) {
+	if err := b.store.Register(id); err != nil {
+		b.err.Printf("failed to register user %d: %v", id, err)
+	}
 	p, err := b.getProfile(id)
 	name := p.Name()
 	if err != nil {

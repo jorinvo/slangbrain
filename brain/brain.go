@@ -42,6 +42,7 @@ var (
 	bucketSubscriptions = []byte("subscriptions")
 	bucketMessageIDs    = []byte("messageids")
 	bucketProfiles      = []byte("profiles")
+	bucketRegisterDates = []byte("registerdates")
 )
 
 var allBuckets = [][]byte{
@@ -53,6 +54,7 @@ var allBuckets = [][]byte{
 	bucketSubscriptions,
 	bucketMessageIDs,
 	bucketProfiles,
+	bucketRegisterDates,
 }
 
 // Mode is the state of a chat.

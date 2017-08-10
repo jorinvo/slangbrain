@@ -70,6 +70,14 @@ func (store Store) SetRead(chatID int64, t time.Time) error {
 	return nil
 }
 
+// Register saves the date a user first started using the chatbot.
+// This is later on used for statistics.
+func (store Store) Register(chatID int64) error {
+	return store.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bucketRegisterDates).Put(itob(chatID), itob(time.Now().Unix()))
+	})
+}
+
 // QueueMessage marks a messageID as being processed.
 // This ensures each message is only handled once,
 // even if the messaging platforms delivers them multiple times.
