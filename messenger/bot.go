@@ -116,7 +116,7 @@ func (b Bot) handleMessage(id int64, msg string) {
 			return
 		}
 		// Save phrase
-		if err = b.store.AddPhrase(id, phrase, explanation); err != nil {
+		if err = b.store.AddPhrase(id, phrase, explanation, time.Now()); err != nil {
 			b.send(id, messageErr, buttonsAddMode, fmt.Errorf("failed to save phrase: %v", err))
 			return
 		}

@@ -14,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/kyokomi/emoji"
@@ -242,7 +243,7 @@ func csvImport(store brain.Store, errLogger, infoLogger *log.Logger, toImport st
 			count++
 			p := strings.TrimSpace(row[0])
 			e := strings.TrimSpace(row[1])
-			if err = store.AddPhrase(chatID, p, e); err != nil {
+			if err = store.AddPhrase(chatID, p, e, time.Now()); err != nil {
 				errLogger.Fatalln(err)
 			}
 		}

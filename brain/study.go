@@ -2,7 +2,7 @@ package brain
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -47,7 +47,8 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 
 		// Get study from phrase
 		var p Phrase
-		if err := json.Unmarshal(tx.Bucket(bucketPhrases).Get(key), &p); err != nil {
+		v := bytes.NewReader(tx.Bucket(bucketPhrases).Get(key))
+		if err := gob.NewDecoder(v).Decode(&p); err != nil {
 			return err
 		}
 		study = Study{
@@ -97,7 +98,7 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 		// Get phrase
 		var p Phrase
 		bp := tx.Bucket(bucketPhrases)
-		if err := json.Unmarshal(bp.Get(key), &p); err != nil {
+		if err := gob.NewDecoder(bytes.NewReader(bp.Get(key))).Decode(&p); err != nil {
 			return err
 		}
 
@@ -109,11 +110,11 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 		}
 
 		// Save phrase
-		buf, err := json.Marshal(p)
-		if err != nil {
+		var buf bytes.Buffer
+		if err := gob.NewEncoder(&buf).Encode(p); err != nil {
 			return err
 		}
-		if err = bp.Put(key, buf); err != nil {
+		if err := bp.Put(key, buf.Bytes()); err != nil {
 			return err
 		}
 
@@ -121,7 +122,7 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 		// Randomize order by spreading studies over a period of time
 		diffusion := time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
 		next := itob(now.Add((baseStudytime<<uint(newScore))*time.Hour + diffusion).Unix())
-		if err = bs.Put(key, next); err != nil {
+		if err := bs.Put(key, next); err != nil {
 			return err
 		}
 
@@ -129,7 +130,7 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to study with chatID %d: %v", chatID, err)
+		return fmt.Errorf("failed to score study with chatID %d: %v", chatID, err)
 	}
 	return nil
 }

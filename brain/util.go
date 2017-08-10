@@ -2,11 +2,9 @@ package brain
 
 import (
 	"bytes"
-	"encoding/json"
-	"io"
+	"encoding/gob"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -81,20 +79,6 @@ func (store Store) GetChatIDs() ([]int64, error) {
 	return ids, err
 }
 
-// GetPhrasesAsJSON ...
-func (store Store) GetPhrasesAsJSON(chatID int64) (io.Reader, error) {
-	var phrases string
-	err := store.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketPhrases).Cursor()
-		prefix := itob(chatID)
-		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			phrases += string(v) + "\n"
-		}
-		return nil
-	})
-	return strings.NewReader(phrases), err
-}
-
 // DeletePhrases removes all phrases fn matches.
 func (store Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
 	deleted := 0
@@ -107,7 +91,7 @@ func (store Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
 				return err
 			}
 			var p Phrase
-			if err := json.Unmarshal(v, &p); err != nil {
+			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}
 			if !fn(int64(id), p) {

@@ -66,13 +66,13 @@ func TestFeedback(t *testing.T) {
 	}
 
 	state := 0
-	done := make(chan string)
+	msg := make(chan string)
 
 	// Fake the Facebook server.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tc := tt[state]
 		checkCase(t, w, r, tc)
-		done <- tc.send
+		msg <- tc.send
 	}))
 	defer ts.Close()
 
@@ -88,13 +88,13 @@ func TestFeedback(t *testing.T) {
 
 	go send(t, bot, fmt.Sprintf(formatMessage, "1", "hi"))
 
-	for s := range done {
+	for s := range msg {
 		if s != "" {
 			go send(t, bot, s)
 		}
 		state++
 		if state >= len(tt) {
-			close(done)
+			close(msg)
 		}
 	}
 	if f := <-feedback; f.ChatID != 123 || f.Username != "Smith" || f.Message != "I like you." {

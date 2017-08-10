@@ -2,7 +2,7 @@ package brain
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"time"
@@ -11,7 +11,8 @@ import (
 )
 
 // AddPhrase stores a new phrase.
-func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
+// Pass time the phrase should be created at.
+func (store Store) AddPhrase(chatID int64, phrase, explanation string, createdAt time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
 
@@ -23,14 +24,15 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		prefix := itob(chatID)
 		phraseID := append(prefix, itob(int64(sequence))...)
 
-		// Phrase to JSON
-		buf, err := json.Marshal(Phrase{Phrase: phrase, Explanation: explanation})
-		if err != nil {
+		// Phrase to GOB
+		var buf bytes.Buffer
+		tmp := Phrase{Phrase: phrase, Explanation: explanation}
+		if err := gob.NewEncoder(&buf).Encode(tmp); err != nil {
 			return err
 		}
 
 		// Save Phrase
-		if err = bp.Put(phraseID, buf); err != nil {
+		if err = bp.Put(phraseID, buf.Bytes()); err != nil {
 			return err
 		}
 
@@ -39,7 +41,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
 		var p Phrase
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			if err := json.Unmarshal(v, &p); err != nil {
+			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}
 			if p.Score == 0 {
@@ -49,7 +51,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string) error {
 
 		// Save study time
 		bs := tx.Bucket(bucketStudytimes)
-		next := itob(time.Now().Add(time.Duration(newPhrases/newPerDay*24+firstStudytime) * time.Hour).Unix())
+		next := itob(createdAt.Add(time.Duration(newPhrases/newPerDay*24+firstStudytime) * time.Hour).Unix())
 		return bs.Put(phraseID, next)
 	})
 
@@ -67,7 +69,7 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 		prefix := itob(chatID)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var tmp Phrase
-			if err := json.Unmarshal(v, &tmp); err != nil {
+			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
 				return err
 			}
 			if fn(tmp) {
