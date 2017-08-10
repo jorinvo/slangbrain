@@ -23,9 +23,14 @@ func TestAdd(t *testing.T) {
 			expect: `{"recipient":{"id":"123"},"message":{"text":"Saved phrase:\nHola\n\nWith explanation:\nHello/Hi"}}`,
 		},
 		{
-			name:   "add next",
+			name:   "add existing",
 			expect: `{"recipient":{"id":"123"},"message":{"text":"Add next phrase.","quick_replies":[{"content_type":"text","title":"stop adding","payload":"PAYLOAD_STARTMENU"}]}}`,
-			send:   fmt.Sprintf(formatMessage, "2", `Gracias\n\nThank you`),
+			send:   fmt.Sprintf(formatMessage, "2", `Hola\n\nHello/Hi`),
+		},
+		{
+			name:   "phrase exists",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"You already saved a phrase with the same explanation:\nHola\nHello/Hi\n\nPlease send it again with an explanation you can distinguish from the existing one.","quick_replies":[{"content_type":"text","title":"stop adding","payload":"PAYLOAD_STARTMENU"}]}}`,
+			send:   fmt.Sprintf(formatMessage, "3", `Gracias\n\nThank you`),
 		},
 		{
 			name:   "save phrase 2",
