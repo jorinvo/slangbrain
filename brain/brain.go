@@ -33,6 +33,7 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+// For docs see allBuckets
 var (
 	bucketModes         = []byte("modes")
 	bucketPhrases       = []byte("phrases")
@@ -42,27 +43,34 @@ var (
 	bucketSubscriptions = []byte("subscriptions")
 	bucketProfiles      = []byte("profiles")
 	bucketRegisterDates = []byte("registerdates")
+	bucketStudies       = []byte("studies")
 	bucketMessageIDs    = []byte("messageids")
 )
 
+// id is a chat id as int64
+// time is an unix timestamp in seconds as int64
+// phrase is a bucket sequence as uint64
+// score is an int64
 var allBuckets = [][]byte{
-	// id -> mode of study
+	// id -> Mode
 	bucketModes,
-	// id+seq -> gob(Phrase)
+	// id+phrase -> gob(Phrase)
 	bucketPhrases,
-	// id+seq -> int unix timestamp
+	// id+phrase -> time
 	bucketStudytimes,
-	// id -> int unix timestamp
+	// id -> time
 	bucketReads,
-	// id -> int unix timestamp
+	// id -> time
 	bucketActivities,
 	// id -> '1'
 	bucketSubscriptions,
 	// id -> gob(profile)
 	bucketProfiles,
-	// id -> int unix timestamp
+	// id -> time
 	bucketRegisterDates,
-	// string -> empty []byte{}
+	// id+time -> phrase+score
+	bucketStudies,
+	// string -> []byte{}
 	bucketMessageIDs,
 }
 

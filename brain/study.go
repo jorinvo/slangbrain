@@ -120,6 +120,13 @@ func (store Store) ScoreStudy(id int64, score int) error {
 			return err
 		}
 
+		// Save study
+		idAndTime := append(prefix, itob(uNow)...)
+		seqAndScore := append(key[8:], itob(int64(score))...)
+		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScore); err != nil {
+			return err
+		}
+
 		return nil
 	})
 
