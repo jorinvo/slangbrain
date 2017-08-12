@@ -1,5 +1,7 @@
 package translate
 
+import "sort"
+
 const defaultLang = "en_US"
 
 // Translator is a service to get content in multiple languages.
@@ -18,6 +20,8 @@ type Content struct {
 func New() Translator {
 	langs := map[string]func() (Msg, buttonLabels){
 		defaultLang: en,
+		"en_GB":     en,
+		"de_DE":     de,
 	}
 
 	t := Translator{map[string]Content{}}
@@ -47,5 +51,6 @@ func (t Translator) Langs() []string {
 	for lang, _ := range t.data {
 		langs = append(langs, lang)
 	}
+	sort.Strings(langs)
 	return langs
 }

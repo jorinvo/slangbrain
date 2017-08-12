@@ -20,48 +20,56 @@ func TestFeedback(t *testing.T) {
 			name:     "get profile",
 			method:   "GET",
 			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
-			response: `{ "first_name": "Smith", "locale": "us" }`,
+			response: `{ "first_name": "Max", "locale": "de_DE" }`,
 		},
 		{
-			name:   "first welcome message",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Hello Smith!\n\nWhenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.\n\nYou begin by adding phrases and later Slangbrain will test your memories in a natural schedule."}}`,
+			name:   "welcome 1",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Hallo Max!\n\nJedes Mal wenn du ein neues Wort im Alltag lernst, füge es einfach zu Slangbrain hinzu und vergesse es nie wieder.\n\nNachdem du Vokabeln gespeichert hast, wird Slangbrain dich automatisch in sinnvollen Abständen abfragen und du wirst dich immer an die Wörter erinnern."}}`,
 		},
 		{
-			name:   "second welcome message",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Please send me a phrase and its explanation.\nSeparate them with a linebreak.\nDon't worry if you send something wrong. You can delete phrases later.\n\nIf your mother tongue is English and you're studying Spanish, a message would look like this:\n\nHola\nHello\n\nGive it a try:"}}`,
-			send:   fmt.Sprintf(formatMessage, "2", `Hola\nHello/Hi`),
+			name:   "welcome 2",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Bitte schicke jetzt einen Satz in der Sprache die du lernst und nach einer leeren Zeile kannst du eine Erklärung in Deutsch hinzufügen.\n\nEin Beispiel wäre, wenn du Französisch lernst, dann könntest du folgende Nachricht schicken:"}}`,
+		},
+		{
+			name:   "welcome 3",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Bonjour !\nGuten Tag!"}}`,
+		},
+		{
+			name:   "welcome 4",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Jetzt bist du dran:"}}`,
+			send:   fmt.Sprintf(formatMessage, "2", `Hola\nHallo/Hi`),
 		},
 		{
 			name:   "save phrase",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Saved phrase:\nHola\n\nWith explanation:\nHello/Hi"}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Gespeichert:\nHola\n\nMit Erklärung:\nHallo/Hi"}}`,
 		},
 		{
 			name:   "add next",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Add next phrase.","quick_replies":[{"content_type":"text","title":"stop adding","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Schicke die nächste Vokabel.","quick_replies":[{"content_type":"text","title":"stop","payload":"PAYLOAD_STARTMENU"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_STARTMENU"),
 		},
 		{
 			name:   "menu",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"What would you like to do next?\nPlease use the buttons below.","quick_replies":[{"content_type":"text","title":"🏫 study","payload":"PAYLOAD_STARTSTUDY"},{"content_type":"text","title":"➕ phrases","payload":"PAYLOAD_STARTADD"},{"content_type":"text","title":"❓ help","payload":"PAYLOAD_SHOWHELP"},{"content_type":"text","title":"✔ done","payload":"PAYLOAD_IDLE"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Was willst du als nächstes machen?","quick_replies":[{"content_type":"text","title":"🏫 lernen","payload":"PAYLOAD_STARTSTUDY"},{"content_type":"text","title":"➕ neu","payload":"PAYLOAD_STARTADD"},{"content_type":"text","title":"❓ Hilfe","payload":"PAYLOAD_SHOWHELP"},{"content_type":"text","title":"✔ fertig","payload":"PAYLOAD_IDLE"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_SHOWHELP"),
 		},
 		{
 			name:   "help",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"How can I help you?","quick_replies":[{"content_type":"text","title":"send feedback","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"all good","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_FEEDBACK"),
 		},
 		{
 			name:   "feedback",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible.","quick_replies":[{"content_type":"text","title":"❌ cancel","payload":"PAYLOAD_STARTMENU"}]}}`,
-			send:   fmt.Sprintf(formatMessage, "3", "I like you."),
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Ein Problem ist aufgetreten, du hast einen Verbesserungsvorschlag für uns oder du willst einfach nur hallo sagen? Sende jetzt eine Nachricht und sie wird weitergeleitet an die Menschen die Slangbrain entschickeln.","quick_replies":[{"content_type":"text","title":"❌ abbrechen","payload":"PAYLOAD_STARTMENU"}]}}`,
+			send:   fmt.Sprintf(formatMessage, "3", "Ich mag dich."),
 		},
 		{
 			name:   "done",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Thanks Smith, you will hear from us soon."}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Danke Max, wir melden uns bei dir sobald wie möglich."}}`,
 		},
 		{
 			name:   "menu 2",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"What would you like to do next?\nPlease use the buttons below.","quick_replies":[{"content_type":"text","title":"🏫 study","payload":"PAYLOAD_STARTSTUDY"},{"content_type":"text","title":"➕ phrases","payload":"PAYLOAD_STARTADD"},{"content_type":"text","title":"❓ help","payload":"PAYLOAD_SHOWHELP"},{"content_type":"text","title":"✔ done","payload":"PAYLOAD_IDLE"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Was willst du als nächstes machen?","quick_replies":[{"content_type":"text","title":"🏫 lernen","payload":"PAYLOAD_STARTSTUDY"},{"content_type":"text","title":"➕ neu","payload":"PAYLOAD_STARTADD"},{"content_type":"text","title":"❓ Hilfe","payload":"PAYLOAD_SHOWHELP"},{"content_type":"text","title":"✔ fertig","payload":"PAYLOAD_IDLE"}]}}`,
 		},
 	}
 
@@ -97,7 +105,7 @@ func TestFeedback(t *testing.T) {
 			close(msg)
 		}
 	}
-	if f := <-feedback; f.ChatID != 123 || f.Username != "Smith" || f.Message != "I like you." {
+	if f := <-feedback; f.ChatID != 123 || f.Username != "Max" || f.Message != "Ich mag dich." {
 		t.Errorf("unexpected feedback: %v", f)
 	}
 }

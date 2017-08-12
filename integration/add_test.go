@@ -22,7 +22,7 @@ func TestAdd(t *testing.T) {
 			name:     "get profile",
 			method:   "GET",
 			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
-			response: `{ "first_name": "Smith", "locale": "us" }`,
+			response: `{ "locale": "en_GB" }`,
 		},
 		{
 			name:   "save phrase",

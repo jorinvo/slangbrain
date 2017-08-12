@@ -77,24 +77,24 @@ func (b Bot) handlePayload(u user, p string) {
 			b.send(u.ID, u.Msg.Error, nil, nil)
 			return
 		}
-		b.send(u.ID, u.Msg.Subscribed, u.Btn.MenuMode, nil)
+		b.send(u.ID, u.Msg.Subscribed+"\n\n"+u.Msg.Menu, u.Btn.MenuMode, nil)
 
 	case payload.Unsubscribe:
 		if err := b.store.Unsubscribe(u.ID); err != nil {
 			b.send(u.ID, u.Msg.Error, nil, nil)
 			return
 		}
-		b.send(u.ID, u.Msg.ConfirmUnsubscribe, u.Btn.MenuMode, nil)
+		b.send(u.ID, u.Msg.ConfirmUnsubscribe+"\n\n"+u.Msg.Menu, u.Btn.MenuMode, nil)
 
 	case payload.NoSubscription:
-		b.send(u.ID, u.Msg.Unsubscribed, u.Btn.MenuMode, nil)
+		b.send(u.ID, u.Msg.DenySubscribe+"\n\n"+u.Msg.Menu, u.Btn.MenuMode, nil)
 
 	case payload.Feedback:
 		if err := b.store.SetMode(u.ID, brain.ModeFeedback); err != nil {
 			b.send(u.ID, u.Msg.Error, u.Btn.MenuMode, err)
 			return
 		}
-		b.send(u.ID, u.Msg.Fedback, u.Btn.Feedback, nil)
+		b.send(u.ID, u.Msg.Feedback, u.Btn.Feedback, nil)
 
 	case payload.StartMenu:
 		fallthrough

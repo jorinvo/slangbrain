@@ -31,7 +31,7 @@ func TestStudy(t *testing.T) {
 			name:     "get profile",
 			method:   "GET",
 			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
-			response: `{ "first_name": "Smith", "locale": "us" }`,
+			response: `{ "first_name": "Chris", "locale": "en_US" }`,
 		},
 		{
 			name:   "correct",

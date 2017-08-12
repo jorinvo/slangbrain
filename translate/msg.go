@@ -10,6 +10,8 @@ type Msg struct {
 	Add,
 	Welcome1,
 	Welcome2,
+	Welcome3,
+	Welcome4,
 	Error,
 	ExplanationMissing,
 	PhraseMissing,
@@ -28,7 +30,11 @@ type Msg struct {
 	AskToSubscribe,
 	Subscribed,
 	ConfirmUnsubscribe,
-	Unsubscribed,
-	Fedback,
-	FeedbackDone string
+	DenySubscribe,
+	Feedback,
+	FeedbackDone,
+	AnHour,
+	Hours,
+	AMinute,
+	Minutes string
 }

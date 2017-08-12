@@ -20,14 +20,11 @@ Whenever you pick up a new phrase, just add it to your Slangbrain and remember i
 You begin by adding phrases and later Slangbrain will test your memories in a natural schedule.`,
 		Welcome2: `Please send me a phrase and its explanation.
 Separate them with a linebreak.
-Don't worry if you send something wrong. You can delete phrases later.
 
-If your mother tongue is English and you're studying Spanish, a message would look like this:
-
-Hola
-Hello
-
-Give it a try:`,
+If your mother tongue is English and you're studying Spanish, a message would look like this:`,
+		Welcome3: `Hola
+Hello`,
+		Welcome4:           "Now it's your turn:",
 		Error:              "Sorry, something went wrong.",
 		ExplanationMissing: "The phrase is missing an explanation. Please send it again with explanation.",
 		PhraseMissing:      "Please send a phrase.",
@@ -62,20 +59,15 @@ With explanation:
 		AskToSubscribe: `
 
 Would you like me to send you a message when there are phrases ready for studying?`,
-		Subscribed: `Good, I will send you a message when your phrases are ready.
-
-What would you like to do next?
-Please use the buttons below.`,
-		ConfirmUnsubscribe: `Sure, you won't receive any more notifications.
-
-What would you like to do next?
-Please use the buttons below.`,
-		Unsubscribed: `Sure, you won't receive any notifications.
-
-What would you like to do next?
-Please use the buttons below.`,
-		Fedback:      "If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible.",
-		FeedbackDone: "Thanks %s, you will hear from us soon.",
+		Subscribed:         `Good, I will send you a message when your phrases are ready.`,
+		ConfirmUnsubscribe: `Sure, you won't receive any more notifications.`,
+		DenySubscribe:      `Sure, you won't receive any notifications.`,
+		Feedback:           "If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible.",
+		FeedbackDone:       "Thanks %s, you will hear from us soon.",
+		AnHour:             "an hour",
+		Hours:              "hours",
+		AMinute:            "a minute",
+		Minutes:            "minutes",
 	}
 
 	b := buttonLabels{

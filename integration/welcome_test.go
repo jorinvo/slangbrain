@@ -21,7 +21,7 @@ func TestWelcome(t *testing.T) {
 		{
 			name:     "greeting",
 			url:      "/me/messenger_profile?access_token=some-test-token",
-			expect:   `{"greeting":[{"locale":"default","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"en_US","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."}]}`,
+			expect:   `{"greeting":[{"locale":"default","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"de_DE","text":"Hi {{user_first_name}}! Mit Slangbrain kannst du Sprache lernen wie sie dir im Alltag begegnet statt ein Schulbuch auswendig zu lernen."},{"locale":"en_GB","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"en_US","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."}]}`,
 			response: `{"result":"success"}`,
 		},
 		{
@@ -34,15 +34,23 @@ func TestWelcome(t *testing.T) {
 			name:     "get profile",
 			method:   "GET",
 			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
-			response: `{ "first_name": "Smith", "locale": "us" }`,
+			response: `{ "first_name": "Martin" }`,
 		},
 		{
-			name:   "first welcome message",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Hello Smith!\n\nWhenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.\n\nYou begin by adding phrases and later Slangbrain will test your memories in a natural schedule."}}`,
+			name:   "welcome 1",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Hello Martin!\n\nWhenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.\n\nYou begin by adding phrases and later Slangbrain will test your memories in a natural schedule."}}`,
 		},
 		{
-			name:   "second welcome message",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Please send me a phrase and its explanation.\nSeparate them with a linebreak.\nDon't worry if you send something wrong. You can delete phrases later.\n\nIf your mother tongue is English and you're studying Spanish, a message would look like this:\n\nHola\nHello\n\nGive it a try:"}}`,
+			name:   "welcome 2",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Please send me a phrase and its explanation.\nSeparate them with a linebreak.\n\nIf your mother tongue is English and you're studying Spanish, a message would look like this:"}}`,
+		},
+		{
+			name:   "welcome 3",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Hola\nHello"}}`,
+		},
+		{
+			name:   "welcome 3",
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Now it's your turn:"}}`,
 		},
 	}
 

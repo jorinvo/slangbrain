@@ -9,6 +9,7 @@ import (
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/common"
 	"github.com/jorinvo/slangbrain/fbot"
+	"github.com/jorinvo/slangbrain/translate"
 )
 
 // Change to menu mode.
@@ -27,7 +28,11 @@ func (b Bot) messageWelcome(u user) {
 	}
 	b.send(u.ID, fmt.Sprintf(u.Msg.Welcome1, u.Name()), nil, nil)
 	time.Sleep(b.welcomeWait)
-	b.send(u.ID, u.Msg.Welcome2, nil, b.store.SetMode(u.ID, brain.ModeAdd))
+	b.send(u.ID, u.Msg.Welcome2, nil, nil)
+	time.Sleep(b.welcomeWait)
+	b.send(u.ID, u.Msg.Welcome3, nil, nil)
+	time.Sleep(b.welcomeWait)
+	b.send(u.ID, u.Msg.Welcome4, nil, b.store.SetMode(u.ID, brain.ModeAdd))
 }
 
 // Change to study mode and find correct message.
@@ -48,7 +53,7 @@ func (b Bot) startStudy(u user) (int64, string, []fbot.Button, error) {
 			return u.ID, u.Msg.StudyEmpty, u.Btn.StudyEmpty, nil
 		}
 		// Display time until next study is ready
-		msg := fmt.Sprintf(u.Msg.StudyDone, formatDuration(study.Next))
+		msg := fmt.Sprintf(u.Msg.StudyDone, formatDuration(u.Msg, study.Next))
 		isSubscribed, err := b.store.IsSubscribed(u.ID)
 		if err != nil {
 			b.err.Println(err)
@@ -118,26 +123,26 @@ func (b Bot) getProfile(id int64) (common.Profile, error) {
 	return p, nil
 }
 
-// Format like "X hour[s] X minute[s]".
+// Format like "X hour[s], X minute[s]".
 // Returns empty string for negativ durations.
-func formatDuration(d time.Duration) string {
+func formatDuration(msg translate.Msg, d time.Duration) string {
 	// Precision in minutes
 	d = time.Duration(math.Ceil(float64(d)/float64(time.Minute))) * time.Minute
 	s := ""
 	h := d / time.Hour
 	m := (d - h*time.Hour) / time.Minute
 	if h > 1 {
-		s += fmt.Sprintf("%d", h) + " hours "
+		s += fmt.Sprintf("%d %s, ", h, msg.Hours)
 	} else if h == 1 {
-		s += "1 hour "
+		s += msg.AnHour + ", "
 	}
 	if m > 1 {
-		s += fmt.Sprintf("%d", m) + " minutes"
+		s += fmt.Sprintf("%d %s", m, msg.Minutes)
 	} else if m > 0 {
-		s += "1 minute"
+		s += msg.AMinute
 	} else if s != "" {
-		// No minutes, only hours, remove trailing space
-		s = s[:len(s)-1]
+		// No minutes, only hours, remove trailing comma and space
+		s = s[:len(s)-2]
 	}
 	return s
 }

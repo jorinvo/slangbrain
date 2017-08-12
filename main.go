@@ -111,7 +111,7 @@ func main() {
 		messenger.GetFeedback(feedback),
 		messenger.Setup,
 		messenger.Notify,
-		messenger.WelcomeWait(6*time.Second),
+		messenger.WelcomeWait(2*time.Second),
 	)
 	if err != nil {
 		errorLogger.Fatalln("failed to start messenger:", err)
