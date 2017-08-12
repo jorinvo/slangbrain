@@ -37,6 +37,7 @@ var (
 var (
 	bucketModes          = []byte("modes")
 	bucketPhrases        = []byte("phrases")
+	bucketDeletedPhrases = []byte("deletedphrases")
 	bucketStudytimes     = []byte("studytimes")
 	bucketPhraseAddTimes = []byte("phraseaddtimes")
 	bucketReads          = []byte("reads")
@@ -57,6 +58,8 @@ var allBuckets = [][]byte{
 	bucketModes,
 	// id+phrase -> gob(Phrase)
 	bucketPhrases,
+	// id+phrase -> gob(Phrase)
+	bucketDeletedPhrases,
 	// id+phrase -> time
 	bucketStudytimes,
 	// id+phrase -> time

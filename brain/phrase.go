@@ -94,6 +94,8 @@ func (store Store) FindPhrase(id int64, fn func(Phrase) bool) (Phrase, error) {
 func (store Store) DeleteStudyPhrase(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
+		bp := tx.Bucket(bucketPhrases)
+		bd := tx.Bucket(bucketDeletedPhrases)
 		c := bs.Cursor()
 		now := time.Now().Unix()
 		prefix := itob(id)
@@ -121,8 +123,11 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 			return err
 		}
 
+		// Backup deleted phrases for now
+		if err := bd.Put(key, bp.Get(key)); err != nil {
+		}
 		// Delete phrase
-		return tx.Bucket(bucketPhrases).Delete(key)
+		return bp.Delete(key)
 	})
 
 	if err != nil {
