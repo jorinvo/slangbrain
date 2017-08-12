@@ -35,16 +35,17 @@ var (
 
 // For docs see allBuckets
 var (
-	bucketModes         = []byte("modes")
-	bucketPhrases       = []byte("phrases")
-	bucketStudytimes    = []byte("studytimes")
-	bucketReads         = []byte("reads")
-	bucketActivities    = []byte("activities")
-	bucketSubscriptions = []byte("subscriptions")
-	bucketProfiles      = []byte("profiles")
-	bucketRegisterDates = []byte("registerdates")
-	bucketStudies       = []byte("studies")
-	bucketMessageIDs    = []byte("messageids")
+	bucketModes          = []byte("modes")
+	bucketPhrases        = []byte("phrases")
+	bucketStudytimes     = []byte("studytimes")
+	bucketPhraseAddTimes = []byte("phraseaddtimes")
+	bucketReads          = []byte("reads")
+	bucketActivities     = []byte("activities")
+	bucketSubscriptions  = []byte("subscriptions")
+	bucketProfiles       = []byte("profiles")
+	bucketRegisterDates  = []byte("registerdates")
+	bucketStudies        = []byte("studies")
+	bucketMessageIDs     = []byte("messageids")
 )
 
 // id is a chat id as int64
@@ -58,6 +59,8 @@ var allBuckets = [][]byte{
 	bucketPhrases,
 	// id+phrase -> time
 	bucketStudytimes,
+	// id+phrase -> time
+	bucketPhraseAddTimes,
 	// id -> time
 	bucketReads,
 	// id -> time

@@ -31,8 +31,8 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 			return err
 		}
 
-		// Save Phrase
-		if err = bp.Put(phraseID, buf.Bytes()); err != nil {
+		// Save phrase
+		if err := bp.Put(phraseID, buf.Bytes()); err != nil {
 			return err
 		}
 
@@ -50,9 +50,13 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 		}
 
 		// Save study time
-		bs := tx.Bucket(bucketStudytimes)
 		next := itob(createdAt.Add(time.Duration(newPhrases/newPerDay*24+firstStudytime) * time.Hour).Unix())
-		return bs.Put(phraseID, next)
+		if err := tx.Bucket(bucketStudytimes).Put(phraseID, next); err != nil {
+			return err
+		}
+
+		// Save time phrase has been added
+		return tx.Bucket(bucketPhraseAddTimes).Put(phraseID, itob(createdAt.Unix()))
 	})
 
 	if err != nil {
