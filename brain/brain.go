@@ -40,21 +40,30 @@ var (
 	bucketReads         = []byte("reads")
 	bucketActivities    = []byte("activities")
 	bucketSubscriptions = []byte("subscriptions")
-	bucketMessageIDs    = []byte("messageids")
 	bucketProfiles      = []byte("profiles")
 	bucketRegisterDates = []byte("registerdates")
+	bucketMessageIDs    = []byte("messageids")
 )
 
 var allBuckets = [][]byte{
+	// id -> mode of study
 	bucketModes,
+	// id+seq -> gob(Phrase)
 	bucketPhrases,
+	// id+seq -> int unix timestamp
 	bucketStudytimes,
+	// id -> int unix timestamp
 	bucketReads,
+	// id -> int unix timestamp
 	bucketActivities,
+	// id -> '1'
 	bucketSubscriptions,
-	bucketMessageIDs,
+	// id -> gob(profile)
 	bucketProfiles,
+	// id -> int unix timestamp
 	bucketRegisterDates,
+	// string -> empty []byte{}
+	bucketMessageIDs,
 }
 
 // Mode is the state of a chat.

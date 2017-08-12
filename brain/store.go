@@ -1,8 +1,6 @@
 package brain
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"time"
@@ -49,32 +47,32 @@ func (store *Store) Close() error {
 }
 
 // SetActivity sets the last time a message was sent to a user.
-func (store Store) SetActivity(chatID int64, t time.Time) error {
+func (store Store) SetActivity(id int64, t time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketActivities).Put(itob(chatID), itob(t.Unix()))
+		return tx.Bucket(bucketActivities).Put(itob(id), itob(t.Unix()))
 	})
 	if err != nil {
-		return fmt.Errorf("failed to set activity for chatID %d: %v: %v", chatID, t, err)
+		return fmt.Errorf("failed to set activity for id %d: %v: %v", id, t, err)
 	}
 	return nil
 }
 
 // SetRead sets the last time the user read a message.
-func (store Store) SetRead(chatID int64, t time.Time) error {
+func (store Store) SetRead(id int64, t time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketReads).Put(itob(chatID), itob(t.Unix()))
+		return tx.Bucket(bucketReads).Put(itob(id), itob(t.Unix()))
 	})
 	if err != nil {
-		return fmt.Errorf("failed to set read for chatID %d: %v: %v", chatID, t, err)
+		return fmt.Errorf("failed to set read for id %d: %v: %v", id, t, err)
 	}
 	return nil
 }
 
 // Register saves the date a user first started using the chatbot.
 // This is later on used for statistics.
-func (store Store) Register(chatID int64) error {
+func (store Store) Register(id int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketRegisterDates).Put(itob(chatID), itob(time.Now().Unix()))
+		return tx.Bucket(bucketRegisterDates).Put(itob(id), itob(time.Now().Unix()))
 	})
 }
 
@@ -100,14 +98,4 @@ func (store Store) QueueMessage(messageID string) error {
 		return fmt.Errorf("failed to add message ID: %s: %v", messageID, err)
 	}
 	return nil
-}
-
-func itob(v int64) []byte {
-	b := make([]byte, 8)
-	binary.PutVarint(b, int64(v))
-	return b
-}
-
-func btoi(b []byte) (int64, error) {
-	return binary.ReadVarint(bytes.NewBuffer(b))
 }

@@ -2,6 +2,7 @@ package brain
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"net/http"
 	"strconv"
@@ -9,6 +10,16 @@ import (
 
 	"github.com/boltdb/bolt"
 )
+
+func itob(v int64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
+}
+
+func btoi(b []byte) int64 {
+	return int64(binary.BigEndian.Uint64(b))
+}
 
 // BackupTo streams backup as an HTTP response.
 func (store Store) BackupTo(w http.ResponseWriter) {
@@ -36,9 +47,9 @@ func (store Store) StudyNow() error {
 }
 
 // DeleteChat removes all records of a given chat.
-func (store Store) DeleteChat(chatID int64) error {
+func (store Store) DeleteChat(id int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
-		key := itob(chatID)
+		key := itob(id)
 		// Remove mode
 		if err := tx.Bucket(bucketModes).Delete(key); err != nil {
 			return err
@@ -68,11 +79,7 @@ func (store Store) GetChatIDs() ([]int64, error) {
 	var ids []int64
 	err := store.db.View(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketModes).ForEach(func(k, v []byte) error {
-			id, err := btoi(k)
-			if err != nil {
-				return err
-			}
-			ids = append(ids, id)
+			ids = append(ids, btoi(k))
 			return nil
 		})
 	})
@@ -86,15 +93,12 @@ func (store Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
 		bp := tx.Bucket(bucketPhrases)
 		bs := tx.Bucket(bucketStudytimes)
 		return bp.ForEach(func(k, v []byte) error {
-			id, err := btoi(k[:8])
-			if err != nil {
-				return err
-			}
+			id := btoi(k[:8])
 			var p Phrase
 			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}
-			if !fn(int64(id), p) {
+			if !fn(id, p) {
 				return nil
 			}
 			if err := bs.Delete(k); err != nil {

@@ -13,21 +13,18 @@ import (
 )
 
 // GetStudy returns the current study the user needs to do.
-func (store Store) GetStudy(chatID int64) (Study, error) {
+func (store Store) GetStudy(id int64) (Study, error) {
 	var study Study
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketStudytimes).Cursor()
 		now := time.Now().Unix()
-		prefix := itob(chatID)
+		prefix := itob(id)
 		total := 0
 		var keyTime int64
 		var key []byte
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp, err := btoi(v)
-			if err != nil {
-				return err
-			}
+			timestamp := btoi(v)
 			if timestamp < keyTime || keyTime == 0 {
 				keyTime = timestamp
 				key = k
@@ -60,27 +57,24 @@ func (store Store) GetStudy(chatID int64) (Study, error) {
 	})
 
 	if err != nil {
-		return study, fmt.Errorf("failed to study with chatID %d: %v", chatID, err)
+		return study, fmt.Errorf("failed to study with id %d: %v", id, err)
 	}
 	return study, nil
 }
 
 // ScoreStudy sets the score of the current study and moves to the next study.
-func (store Store) ScoreStudy(chatID int64, score int) error {
+func (store Store) ScoreStudy(id int64, score int) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
 		c := bs.Cursor()
 		now := time.Now()
 		uNow := now.Unix()
-		prefix := itob(chatID)
+		prefix := itob(id)
 		var keyTime int64
 		var key []byte
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp, err := btoi(v)
-			if err != nil {
-				return err
-			}
+			timestamp := btoi(v)
 			if timestamp > uNow {
 				continue
 			}
@@ -130,7 +124,7 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to score study with chatID %d: %v", chatID, err)
+		return fmt.Errorf("failed to score study with id %d: %v", id, err)
 	}
 	return nil
 }
@@ -139,7 +133,7 @@ func (store Store) ScoreStudy(chatID int64, score int) error {
 // Returns the time until the next studies are ready and a count of the ready studies.
 // The returned duration is always at least dueMinInactive.
 // The count is 0 if the chat has no phrases yet.
-func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
+func (store Store) GetNotifyTime(id int64) (time.Duration, int, error) {
 	due := 0
 	now := time.Now()
 	minTime := now.Add(dueMinInactive).Unix()
@@ -147,12 +141,9 @@ func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
 
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketStudytimes).Cursor()
-		prefix := itob(chatID)
+		prefix := itob(id)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp, err := btoi(v)
-			if err != nil {
-				return err
-			}
+			timestamp := btoi(v)
 			if timestamp < minTime {
 				due++
 			}
@@ -174,7 +165,7 @@ func (store Store) GetNotifyTime(chatID int64) (time.Duration, int, error) {
 	})
 
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to get next studies for chat %d: %v", chatID, err)
+		return 0, 0, fmt.Errorf("failed to get next studies for chat %d: %v", id, err)
 	}
 
 	minCount := dueMinCount
@@ -194,24 +185,14 @@ func (store Store) EachActiveChat(fn func(int64)) error {
 	return store.db.View(func(tx *bolt.Tx) error {
 		active := tx.Bucket(bucketActivities)
 		return tx.Bucket(bucketReads).ForEach(func(k, v []byte) error {
-			timeRead, err := btoi(v)
-			if err != nil {
-				return err
-			}
 			a := active.Get(k)
 			if a == nil {
 				a = itob(0)
 			}
-			timeActive, err := btoi(a)
-			if err != nil {
-				return err
-			}
+			timeActive := btoi(a)
+			timeRead := btoi(v)
 			if timeRead > timeActive {
-				chatID, err := btoi(k)
-				if err != nil {
-					return err
-				}
-				fn(chatID)
+				fn(btoi(k))
 			}
 			return nil
 		})

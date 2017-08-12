@@ -12,7 +12,7 @@ import (
 
 // AddPhrase stores a new phrase.
 // Pass time the phrase should be created at.
-func (store Store) AddPhrase(chatID int64, phrase, explanation string, createdAt time.Time) error {
+func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
 
@@ -21,7 +21,7 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string, createdAt
 		if err != nil {
 			return err
 		}
-		prefix := itob(chatID)
+		prefix := itob(id)
 		phraseID := append(prefix, itob(int64(sequence))...)
 
 		// Phrase to GOB
@@ -56,17 +56,17 @@ func (store Store) AddPhrase(chatID int64, phrase, explanation string, createdAt
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to add phrase for chatID %d: %s - %s: %v", chatID, phrase, explanation, err)
+		return fmt.Errorf("failed to add phrase for id %d: %s - %s: %v", id, phrase, explanation, err)
 	}
 	return nil
 }
 
 // FindPhrase returns a phrase belonging to the passed user that matches the passed function.
-func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error) {
+func (store Store) FindPhrase(id int64, fn func(Phrase) bool) (Phrase, error) {
 	var p Phrase
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
-		prefix := itob(chatID)
+		prefix := itob(id)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var tmp Phrase
 			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
@@ -81,26 +81,23 @@ func (store Store) FindPhrase(chatID int64, fn func(Phrase) bool) (Phrase, error
 	})
 
 	if err != nil {
-		return p, fmt.Errorf("failed to find phrase with chatid %d: %v", chatID, err)
+		return p, fmt.Errorf("failed to find phrase with id %d: %v", id, err)
 	}
 	return p, nil
 }
 
 // DeleteStudyPhrase deletes the phrase the passed user currently has to study.
-func (store Store) DeleteStudyPhrase(chatID int64) error {
+func (store Store) DeleteStudyPhrase(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
 		c := bs.Cursor()
 		now := time.Now().Unix()
-		prefix := itob(chatID)
+		prefix := itob(id)
 		var keyTime int64
 		var key []byte
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp, err := btoi(v)
-			if err != nil {
-				return err
-			}
+			timestamp := btoi(v)
 			if timestamp > now {
 				continue
 			}
@@ -125,7 +122,7 @@ func (store Store) DeleteStudyPhrase(chatID int64) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to delete study phrase for chatID %d: %v", chatID, err)
+		return fmt.Errorf("failed to delete study phrase for id %d: %v", id, err)
 	}
 	return nil
 }

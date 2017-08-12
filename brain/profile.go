@@ -26,10 +26,10 @@ func (p profile) Timezone() float64 { return p.data.Timezone }
 
 // GetProfile fetches a cached profile.
 // Returns ErrNotFound if none found.
-func (store Store) GetProfile(chatID int64) (common.Profile, error) {
+func (store Store) GetProfile(id int64) (common.Profile, error) {
 	var p profileData
 	err := store.db.View(func(tx *bolt.Tx) error {
-		v := tx.Bucket(bucketProfiles).Get(itob(chatID))
+		v := tx.Bucket(bucketProfiles).Get(itob(id))
 		if v == nil {
 			return ErrNotFound
 		}
@@ -39,13 +39,13 @@ func (store Store) GetProfile(chatID int64) (common.Profile, error) {
 		if err == ErrNotFound {
 			return nil, err
 		}
-		return nil, fmt.Errorf("failed to get profile for chatID %d: %v", chatID, err)
+		return nil, fmt.Errorf("failed to get profile for id %d: %v", id, err)
 	}
 	return profile{p}, nil
 }
 
 // SetProfile caches a profile.
-func (store Store) SetProfile(chatID int64, p common.Profile) error {
+func (store Store) SetProfile(id int64, p common.Profile) error {
 	data := profileData{
 		Name:     p.Name(),
 		Locale:   p.Locale(),
@@ -56,10 +56,10 @@ func (store Store) SetProfile(chatID int64, p common.Profile) error {
 		if err := gob.NewEncoder(&buf).Encode(data); err != nil {
 			return err
 		}
-		return tx.Bucket(bucketProfiles).Put(itob(chatID), buf.Bytes())
+		return tx.Bucket(bucketProfiles).Put(itob(id), buf.Bytes())
 	})
 	if err != nil {
-		return fmt.Errorf("failed to set profile for chatID %d: %v: %v", chatID, data, err)
+		return fmt.Errorf("failed to set profile for id %d: %v: %v", id, data, err)
 	}
 	return nil
 }
