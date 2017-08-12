@@ -11,14 +11,19 @@ import (
 // is relative to the API URL.
 const settingsURL = "%s/me/messenger_profile?access_token=%s"
 
+// Greeting is a localized message describing the bot.
+type Greeting struct {
+	// Locale should be 5 chars, like "en_US".
+	// For supported locales see: https://developers.facebook.com/docs/messenger-platform/messenger-profile/supported-locales
+	Locale string `json:"locale"`
+	// Text can be any text, but it's restricted to 160 chars.
+	// Supports a few template strings, see: https://developers.facebook.com/docs/messenger-platform/messenger-profile/greeting-text
+	Text string `json:"text"`
+}
+
 // SetGreetings sets the text displayed in the bot description.
-// Pass a map of locale to greeting text.
 // Include "default" locale as fallback for missing locales.
-func (c Client) SetGreetings(greetings map[string]string) error {
-	g := []greeting{}
-	for k, v := range greetings {
-		g = append(g, greeting{Locale: k, Text: v})
-	}
+func (c Client) SetGreetings(g []Greeting) error {
 	return c.postSetting(greetingSettings{Greeting: g})
 }
 
@@ -48,12 +53,7 @@ func (c Client) postSetting(data interface{}) error {
 }
 
 type greetingSettings struct {
-	Greeting []greeting `json:"greeting,omitempty"`
-}
-
-type greeting struct {
-	Locale string `json:"locale"`
-	Text   string `json:"text"`
+	Greeting []Greeting `json:"greeting,omitempty"`
 }
 
 type getStartedSettings struct {

@@ -44,24 +44,19 @@ func (b Bot) scheduleNotify(id int64) {
 }
 
 func (b Bot) notify(id int64, count int) {
-	p, err := b.getProfile(id)
-	name := p.Name()
-	if err != nil {
-		name = "there"
-		b.err.Printf("failed to get profile for %d: %v", id, err)
-	}
-	msg := fmt.Sprintf(messageStudiesDue, name, count)
+	u := b.getUser(id)
+	msg := fmt.Sprintf(u.Msg.StudyNotification, u.Name(), count)
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
-		b.err.Printf("failed to activate menu mode while notifying %d: %v", id, err)
+		b.err.Printf("failed to activate menu mode while notifying %d: %v", u.ID, err)
 	}
-	if err = b.client.Send(id, msg, buttonsStudiesDue); err != nil {
-		b.err.Printf("failed to notify user %d: %v", id, err)
+	if err := b.client.Send(id, msg, u.Btn.StudiesDue); err != nil {
+		b.err.Printf("failed to notify user %d: %v", u.ID, err)
 	}
-	b.info.Printf("Notified %s (%d) with %d due studies", name, id, count)
+	b.info.Printf("Notified %s (%d) with %d due studies", u.Name(), u.ID, count)
 	// Track last sending of a notification
 	// to stop sending notifications
 	// when user hasn't read the last notification.
-	if err := b.store.SetActivity(id, time.Now()); err != nil {
+	if err := b.store.SetActivity(u.ID, time.Now()); err != nil {
 		b.err.Println(err)
 	}
 }

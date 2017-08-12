@@ -37,7 +37,7 @@ func oldbtoi(b []byte) (int64, error) {
 }
 
 func migrate(db *bolt.DB) error {
-	kvUpdater := func(k, v []byte) ([]byte, []byte, error) {
+	keyValUpdater := func(k, v []byte) ([]byte, []byte, error) {
 		ik, err := oldbtoi(k)
 		if err != nil {
 			return nil, nil, err
@@ -48,7 +48,7 @@ func migrate(db *bolt.DB) error {
 		}
 		return itob(ik), itob(iv), nil
 	}
-	kUpdater := func(k, v []byte) ([]byte, []byte, error) {
+	keyUpdater := func(k, v []byte) ([]byte, []byte, error) {
 		ik, err := oldbtoi(k)
 		if err != nil {
 			return nil, nil, err
@@ -62,7 +62,7 @@ func migrate(db *bolt.DB) error {
 	}{
 		{
 			bucket:  []byte("modes"),
-			updater: kvUpdater,
+			updater: keyValUpdater,
 		},
 		{
 			bucket: []byte("phrases"),
@@ -98,23 +98,23 @@ func migrate(db *bolt.DB) error {
 		},
 		{
 			bucket:  []byte("reads"),
-			updater: kvUpdater,
+			updater: keyValUpdater,
 		},
 		{
 			bucket:  []byte("activities"),
-			updater: kvUpdater,
+			updater: keyValUpdater,
 		},
 		{
 			bucket:  []byte("subscriptions"),
-			updater: kUpdater,
+			updater: keyUpdater,
 		},
 		{
 			bucket:  []byte("profiles"),
-			updater: kUpdater,
+			updater: keyUpdater,
 		},
 		{
 			bucket:  []byte("registerdates"),
-			updater: kvUpdater,
+			updater: keyValUpdater,
 		},
 	}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-type Phrase struct {
+type phrase struct {
 	Phrase      string
 	Explanation string
 	Score       int
@@ -49,7 +49,7 @@ func migrate(db *bolt.DB) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketPhrases)
 		return b.ForEach(func(k []byte, v []byte) error {
-			var p Phrase
+			var p phrase
 			if err := json.Unmarshal(v, &p); err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func migrate(db *bolt.DB) error {
 func readJSON(db *bolt.DB) error {
 	return db.View(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketPhrases).ForEach(func(k []byte, v []byte) error {
-			var p Phrase
+			var p phrase
 			if err := json.Unmarshal(v, &p); err != nil {
 				return err
 			}
@@ -79,7 +79,7 @@ func readJSON(db *bolt.DB) error {
 func readGOB(db *bolt.DB) error {
 	return db.View(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketPhrases).ForEach(func(k []byte, v []byte) error {
-			var p Phrase
+			var p phrase
 			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}

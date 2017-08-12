@@ -28,14 +28,9 @@ type profileData struct {
 func (p profile) Name() string      { return p.data.Name }
 func (p profile) Locale() string    { return p.data.Locale }
 func (p profile) Timezone() float64 { return p.data.Timezone }
-func (p *profile) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &p.data)
-}
 
 // GetProfile fetches a user profile for an ID.
 func (c Client) GetProfile(id int64) (common.Profile, error) {
-	var p profile
-
 	url := fmt.Sprintf(profileURL, c.api, id, c.token)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -50,9 +45,10 @@ func (c Client) GetProfile(id int64) (common.Profile, error) {
 		return nil, err
 	}
 
+	var p profileData
 	if err = json.Unmarshal(content, &p); err != nil {
-		return nil, err
+		return profile{p}, err
 	}
 
-	return p, checkError(bytes.NewReader(content))
+	return profile{p}, checkError(bytes.NewReader(content))
 }

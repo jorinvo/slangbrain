@@ -11,6 +11,8 @@ import (
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
+	"github.com/jorinvo/slangbrain/payload"
+	"github.com/jorinvo/slangbrain/translate"
 )
 
 // Feedback describes a message from a user a human has to react to
@@ -24,6 +26,7 @@ type Feedback struct {
 // Use New to setup and use register Bot as a http.Handler.
 type Bot struct {
 	store        brain.Store
+	content      translate.Translator
 	setup        bool
 	err          *log.Logger
 	info         *log.Logger
@@ -94,7 +97,10 @@ func WelcomeWait(t time.Duration) func(*Bot) {
 // A store and a Facebook API token are required.
 // The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait can be used.
 func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
-	b := Bot{store: store}
+	b := Bot{
+		store:   store,
+		content: translate.New(),
+	}
 	for _, option := range options {
 		option(&b)
 	}
@@ -112,11 +118,24 @@ func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
 	b.Handler = b.client.Webhook(b.HandleEvent, b.verifyToken)
 
 	if b.setup {
-		if err := b.client.SetGreetings(map[string]string{"default": greeting}); err != nil {
+		greetings := []fbot.Greeting{
+			{
+				Locale: "default",
+				Text:   b.content.Load("").Msg.Greeting,
+			},
+		}
+		for _, lang := range b.content.Langs() {
+			g := fbot.Greeting{
+				Locale: lang,
+				Text:   b.content.Load(lang).Msg.Greeting,
+			}
+			greetings = append(greetings, g)
+		}
+		if err := b.client.SetGreetings(greetings); err != nil {
 			return b, fmt.Errorf("failed to set greeting: %v", err)
 		}
 		b.info.Println("Greeting set")
-		if err := b.client.SetGetStartedPayload(payloadGetStarted); err != nil {
+		if err := b.client.SetGetStartedPayload(payload.GetStarted); err != nil {
 			return b, fmt.Errorf("failed to enable Get Started button: %v", err)
 		}
 		b.info.Printf("Get Started button activated")
@@ -137,6 +156,6 @@ func (b Bot) SendMessage(id int64, msg string) error {
 	if err := b.client.Send(id, msg, nil); err != nil {
 		return err
 	}
-	b.send(b.messageStartMenu(id))
+	b.send(b.messageStartMenu(b.getUser(id)))
 	return nil
 }

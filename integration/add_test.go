@@ -19,6 +19,12 @@ func TestAdd(t *testing.T) {
 
 	tt := []testCase{
 		{
+			name:     "get profile",
+			method:   "GET",
+			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
+			response: `{ "first_name": "Smith", "locale": "us" }`,
+		},
+		{
 			name:   "save phrase",
 			expect: `{"recipient":{"id":"123"},"message":{"text":"Saved phrase:\nHola\n\nWith explanation:\nHello/Hi"}}`,
 		},

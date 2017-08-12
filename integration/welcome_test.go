@@ -19,6 +19,18 @@ func TestWelcome(t *testing.T) {
 
 	tt := []testCase{
 		{
+			name:     "greeting",
+			url:      "/me/messenger_profile?access_token=some-test-token",
+			expect:   `{"greeting":[{"locale":"default","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"en_US","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."}]}`,
+			response: `{"result":"success"}`,
+		},
+		{
+			name:     "get started button",
+			url:      "/me/messenger_profile?access_token=some-test-token",
+			expect:   `{"get_started":{"payload":"PAYLOAD_GETSTARTED"}}`,
+			response: `{"result":"success"}`,
+		},
+		{
 			name:     "get profile",
 			method:   "GET",
 			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
@@ -47,6 +59,7 @@ func TestWelcome(t *testing.T) {
 	bot, err := messenger.New(
 		store,
 		token,
+		messenger.Setup,
 		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
 		messenger.FAPI(ts.URL),
 	)

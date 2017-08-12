@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	appUrl        = "https://api.slangbrain.com/"
+	appURL        = "https://api.slangbrain.com/"
 	token         = "some-test-token"
 	defaultMethod = "POST"
 	defaultURI    = "/me/messages?access_token=some-test-token"
@@ -117,7 +117,7 @@ func noMatchNorDefault(val, expect, defaultVal string) bool {
 // Send a message to Slangbrain.
 func send(t *testing.T, handler http.Handler, message string) {
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, httptest.NewRequest("POST", appUrl, strings.NewReader(message)))
+	handler.ServeHTTP(w, httptest.NewRequest("POST", appURL, strings.NewReader(message)))
 	body, err := ioutil.ReadAll(w.Result().Body)
 	fatal(t, w.Result().Body.Close())
 	fatal(t, err)
