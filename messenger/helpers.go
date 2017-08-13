@@ -117,7 +117,7 @@ func (b Bot) getProfile(id int64) (common.Profile, error) {
 		return p, fmt.Errorf("failed to fetch profile: %v", err)
 	}
 	// Update cache
-	if err := b.store.SetProfile(id, p); err != nil {
+	if err := b.store.SetProfile(id, p, time.Now()); err != nil {
 		b.err.Println(err)
 	}
 	return p, nil

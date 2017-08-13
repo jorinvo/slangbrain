@@ -24,6 +24,8 @@ const (
 	dueMinCount = 9
 	// Time user has to be inactive before being notified
 	dueMinInactive = 5 * time.Minute
+	// Cache profiles for one month
+	profileMaxCacheTime = 30 * 24 * time.Hour
 )
 
 var (

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/jorinvo/slangbrain/common"
@@ -15,9 +16,10 @@ type profile struct {
 }
 
 type profileData struct {
-	Name     string
-	Locale   string
-	Timezone float64
+	Name      string
+	Locale    string
+	Timezone  float64
+	CacheTime time.Time
 }
 
 func (p profile) Name() string      { return p.data.Name }
@@ -25,7 +27,7 @@ func (p profile) Locale() string    { return p.data.Locale }
 func (p profile) Timezone() float64 { return p.data.Timezone }
 
 // GetProfile fetches a cached profile.
-// Returns ErrNotFound if none found.
+// Returns ErrNotFound if none found or cache is older than profileMaxCacheTime.
 func (store Store) GetProfile(id int64) (common.Profile, error) {
 	var p profileData
 	err := store.db.View(func(tx *bolt.Tx) error {
@@ -41,15 +43,21 @@ func (store Store) GetProfile(id int64) (common.Profile, error) {
 		}
 		return nil, fmt.Errorf("failed to get profile for id %d: %v", id, err)
 	}
+	// Check if expired
+	if time.Now().Sub(p.CacheTime) > profileMaxCacheTime {
+		return nil, ErrNotFound
+	}
 	return profile{p}, nil
 }
 
 // SetProfile caches a profile.
-func (store Store) SetProfile(id int64, p common.Profile) error {
+// Pass the caching time for easier testing.
+func (store Store) SetProfile(id int64, p common.Profile, cachedAt time.Time) error {
 	data := profileData{
-		Name:     p.Name(),
-		Locale:   p.Locale(),
-		Timezone: p.Timezone(),
+		Name:      p.Name(),
+		Locale:    p.Locale(),
+		Timezone:  p.Timezone(),
+		CacheTime: cachedAt,
 	}
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		var buf bytes.Buffer
