@@ -36,7 +36,7 @@ Klicke den Button um anzufangen:`,
 
 %s
 
-Klicke einen Button oder tippe das Ergebnis.`,
+Schicke mir die Antwort oder klicke den Button.`,
 		ExplanationExists: `Du hast schon eine Vokabel mit der gleichen Erklärung:
 %s
 %s
@@ -55,7 +55,7 @@ Mit Erklärung:
 		AskToSubscribe: `
 
 ?`,
-		Subscribed:         `Ich schicke dir eine Nachricht sobald es wieder etwas zu wiederholen gibt.`,
+		Subscribed:         `Ich schicke dir eine Nachricht sobald es etwas zu wiederholen gibt.`,
 		ConfirmUnsubscribe: `Alles klar, du bekommst in Zukunft keine Benachrichtigungen mehr.`,
 		DenySubscribe:      `Alles klar.`,
 		Feedback:           "Ein Problem ist aufgetreten, du hast einen Verbesserungsvorschlag für uns oder du willst einfach nur hallo sagen? Sende jetzt eine Nachricht und sie wird weitergeleitet an die Menschen die Slangbrain entschickeln.",
@@ -74,13 +74,13 @@ Mit Erklärung:
 		Help:              "Hilfe",
 		SubscribeConfirm:  "gerne",
 		SubscribeDeny:     "nein",
-		StopNotifications: "Benachrichtigung ausschalten",
+		StopNotifications: iconDelete + " Benachrichtigung",
 		SendFeedback:      "Feedback geben",
 		QuitHelp:          "zurück",
 		CancelFeedback:    "abbrechen",
 		StopAdding:        "stop",
 		ShowPhrase:        "zeigen",
-		ScoreBad:          "hm",
+		ScoreBad:          "weiß nicht",
 		ScoreGood:         "weiß ich",
 		StudyNotNow:       "nicht jetzt",
 		ConfirmDelete:     "jetzt löschen",
