@@ -9,7 +9,7 @@ func de() (Msg, buttonLabels) {
 		Menu:     `Was willst du als nächstes machen?`,
 		Help:     "Wie kann ich dir weiterhelfen?",
 		Idle:     "Alles klar. Schicke mir einfach ein " + iconThumbsup + " um weiterzumachen.",
-		Add:      `Schicke ein Wort oder einen Satz in der Sprache die du lernst und nach einer leeren Zeile kannst du eine Erklärung in Deutsch hinzufügen.`,
+		Add:      `Schicke ein Wort oder einen Satz in der Sprache, die du lernst und nach einer leeren Zeile kannst du eine Erklärung in Deutsch hinzufügen.`,
 		Welcome1: `Hallo %s!
 
 Jedes Mal wenn du ein neues Wort im Alltag lernst, füge es einfach zu Slangbrain hinzu und vergesse es nie wieder.
@@ -47,14 +47,12 @@ Bitte sende nochmal eine Nachricht mit einer Erklärung die sich von der vorhand
 
 Mit Erklärung:
 %s`,
-		AddNext:           "Schicke die nächste Vokabel.",
-		StudyNotification: `Hey %s, %d Vokabeln warten auf dich!`,
-		ConfirmDelete:     "Bist du dir sicher, dass du die Vokabel löschen möchtest?",
-		Deleted:           "Ist gelöscht. Jetzt geht es weiter mit lernen.",
-		CancelDelete:      "Alles klar, dann geht es normal weiter mit lernen.",
-		AskToSubscribe: `
-
-?`,
+		AddNext:            "Schicke die nächste Vokabel.",
+		StudyNotification:  `Hey %s, %d Vokabeln warten auf dich!`,
+		ConfirmDelete:      "Bist du dir sicher, dass du die Vokabel löschen möchtest?",
+		Deleted:            "Ist gelöscht. Jetzt geht es weiter mit lernen.",
+		CancelDelete:       "Alles klar, dann geht es normal weiter mit lernen.",
+		AskToSubscribe:     `Möchtest du, dass ich dir eine Nachricht schicke sobald es Vokabeln zu wiederholen gibt?`,
 		Subscribed:         `Ich schicke dir eine Nachricht sobald es etwas zu wiederholen gibt.`,
 		ConfirmUnsubscribe: `Alles klar, du bekommst in Zukunft keine Benachrichtigungen mehr.`,
 		DenySubscribe:      `Alles klar.`,

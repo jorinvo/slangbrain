@@ -51,14 +51,12 @@ Please send it again with an explanation you can distinguish from the existing o
 
 With explanation:
 %s`,
-		AddNext:           "Add next phrase.",
-		StudyNotification: `Hey %s, you have %d phrases ready for review!`,
-		ConfirmDelete:     "Are you sure, you want to delete this phrase?",
-		Deleted:           "The phrase has been deleted. Let's continue studying other phrases.",
-		CancelDelete:      "Good, let's keep that phrase and continue studying.",
-		AskToSubscribe: `
-
-Would you like me to send you a message when there are phrases ready for studying?`,
+		AddNext:            "Add next phrase.",
+		StudyNotification:  `Hey %s, you have %d phrases ready for review!`,
+		ConfirmDelete:      "Are you sure, you want to delete this phrase?",
+		Deleted:            "The phrase has been deleted. Let's continue studying other phrases.",
+		CancelDelete:       "Good, let's keep that phrase and continue studying.",
+		AskToSubscribe:     `Would you like me to send you a message when there are phrases ready for studying?`,
 		Subscribed:         `Good, I will send you a message when your phrases are ready.`,
 		ConfirmUnsubscribe: `Sure, you won't receive any more notifications.`,
 		DenySubscribe:      `Sure, you won't receive any notifications.`,

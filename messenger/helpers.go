@@ -62,7 +62,7 @@ func (b Bot) startStudy(u user) (int64, string, []fbot.Button, error) {
 			return u.ID, msg, u.Btn.MenuMode, nil
 		}
 		// Ask to subscribe to notifications
-		return u.ID, msg + u.Msg.AskToSubscribe, u.Btn.Subscribe, nil
+		return u.ID, msg + "\n\n" + u.Msg.AskToSubscribe, u.Btn.Subscribe, nil
 	}
 	// Send study to user
 	return u.ID, fmt.Sprintf(u.Msg.StudyQuestion, study.Total, study.Explanation), u.Btn.Show, nil
