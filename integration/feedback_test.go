@@ -28,7 +28,7 @@ func TestFeedback(t *testing.T) {
 		},
 		{
 			name:   "welcome 2",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Bitte schicke jetzt einen Satz in der Sprache die du lernst und nach einer leeren Zeile kannst du eine Erklärung in Deutsch hinzufügen.\n\nEin Beispiel wäre, wenn du Französisch lernst, dann könntest du folgende Nachricht schicken:"}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Bitte schicke jetzt einen Satz in der Sprache die du lernst, und nach einer leeren Zeile kannst du eine Erklärung auf Deutsch hinzufügen.\n\nEin Beispiel wäre, wenn du Französisch lernst, dann könntest du folgende Nachricht schicken:"}}`,
 		},
 		{
 			name:   "welcome 3",
@@ -55,7 +55,7 @@ func TestFeedback(t *testing.T) {
 		},
 		{
 			name:   "help",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_FEEDBACK"),
 		},
 		{

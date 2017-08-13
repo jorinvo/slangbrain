@@ -15,32 +15,32 @@ func (b Bot) handlePayload(u user, p string) {
 	case payload.Idle:
 		b.send(u.ID, u.Msg.Idle, nil, nil)
 
-	case payload.StartStudy:
+	case payload.Study:
 		if err := b.store.SetMode(u.ID, brain.ModeStudy); err != nil {
 			b.send(u.ID, u.Msg.Error, u.Btn.MenuMode, err)
 			return
 		}
 		b.send(b.startStudy(u))
 
-	case payload.StartAdd:
+	case payload.Add:
 		if err := b.store.SetMode(u.ID, brain.ModeAdd); err != nil {
 			b.send(u.ID, u.Msg.Error, u.Btn.MenuMode, err)
 			return
 		}
 		b.send(u.ID, u.Msg.Add, u.Btn.AddMode, nil)
 
-	case payload.ShowHelp:
+	case payload.Help:
 		isSubscribed, err := b.store.IsSubscribed(u.ID)
 		if err != nil {
 			b.err.Println(err)
 		}
-		buttons := u.Btn.Help
-		if !isSubscribed {
-			buttons = buttons[1:]
+		if isSubscribed {
+			b.send(u.ID, u.Msg.Help, u.Btn.HelpDisable, nil)
+		} else {
+			b.send(u.ID, u.Msg.Help, u.Btn.HelpEnable, nil)
 		}
-		b.send(u.ID, u.Msg.Help, buttons, nil)
 
-	case payload.ShowStudy:
+	case payload.ShowPhrase:
 		study, err := b.store.GetStudy(u.ID)
 		if err != nil {
 			b.send(u.ID, u.Msg.Error, u.Btn.Show, fmt.Errorf("failed to get study: %v", err))
@@ -86,7 +86,7 @@ func (b Bot) handlePayload(u user, p string) {
 		}
 		b.send(u.ID, u.Msg.ConfirmUnsubscribe+"\n\n"+u.Msg.Menu, u.Btn.MenuMode, nil)
 
-	case payload.NoSubscription:
+	case payload.DenySubscribe:
 		b.send(u.ID, u.Msg.DenySubscribe+"\n\n"+u.Msg.Menu, u.Btn.MenuMode, nil)
 
 	case payload.Feedback:
@@ -96,7 +96,7 @@ func (b Bot) handlePayload(u user, p string) {
 		}
 		b.send(u.ID, u.Msg.Feedback, u.Btn.Feedback, nil)
 
-	case payload.StartMenu:
+	case payload.Menu:
 		fallthrough
 	default:
 		b.send(b.messageStartMenu(u))

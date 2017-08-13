@@ -10,7 +10,8 @@ import (
 type Btn struct {
 	MenuMode,
 	Subscribe,
-	Help,
+	HelpDisable,
+	HelpEnable,
 	Feedback,
 	AddMode,
 	StudyMode,
@@ -29,7 +30,8 @@ type buttonLabels struct {
 	Help,
 	SubscribeConfirm,
 	SubscribeDeny,
-	StopNotifications,
+	DisableNotifications,
+	EnableNotifications,
 	SendFeedback,
 	QuitHelp,
 	CancelFeedback,
@@ -44,11 +46,11 @@ type buttonLabels struct {
 
 func newBtn(b buttonLabels) Btn {
 	var (
-		buttonStudyDone = fbot.Button{Text: b.StudyDone, Payload: payload.StartMenu}
-		buttonStudy     = fbot.Button{Text: iconStudy + " " + b.Study, Payload: payload.StartStudy}
-		buttonAdd       = fbot.Button{Text: iconAdd + " " + b.Add, Payload: payload.StartAdd}
+		buttonStudyDone = fbot.Button{Text: b.StudyDone, Payload: payload.Menu}
+		buttonStudy     = fbot.Button{Text: iconStudy + " " + b.Study, Payload: payload.Study}
+		buttonAdd       = fbot.Button{Text: iconAdd + " " + b.Add, Payload: payload.Add}
 		buttonDone      = fbot.Button{Text: iconDone + " " + b.Done, Payload: payload.Idle}
-		buttonHelp      = fbot.Button{Text: iconHelp + " " + b.Help, Payload: payload.ShowHelp}
+		buttonHelp      = fbot.Button{Text: iconHelp + " " + b.Help, Payload: payload.Help}
 		buttonDelete    = fbot.Button{Text: iconDelete, Payload: payload.Delete}
 	)
 
@@ -61,18 +63,23 @@ func newBtn(b buttonLabels) Btn {
 		},
 		Subscribe: []fbot.Button{
 			fbot.Button{Text: iconGood + " " + b.SubscribeConfirm, Payload: payload.Subscribe},
-			fbot.Button{Text: b.SubscribeDeny, Payload: payload.NoSubscription},
+			fbot.Button{Text: b.SubscribeDeny, Payload: payload.DenySubscribe},
 		},
-		Help: []fbot.Button{
-			fbot.Button{Text: b.StopNotifications, Payload: payload.Unsubscribe},
+		HelpDisable: []fbot.Button{
+			fbot.Button{Text: b.DisableNotifications, Payload: payload.Unsubscribe},
 			fbot.Button{Text: b.SendFeedback, Payload: payload.Feedback},
-			fbot.Button{Text: b.QuitHelp, Payload: payload.StartMenu},
+			fbot.Button{Text: b.QuitHelp, Payload: payload.Menu},
+		},
+		HelpEnable: []fbot.Button{
+			fbot.Button{Text: b.EnableNotifications, Payload: payload.Subscribe},
+			fbot.Button{Text: b.SendFeedback, Payload: payload.Feedback},
+			fbot.Button{Text: b.QuitHelp, Payload: payload.Menu},
 		},
 		Feedback: []fbot.Button{
-			fbot.Button{Text: iconDelete + " " + b.CancelFeedback, Payload: payload.StartMenu},
+			fbot.Button{Text: iconDelete + " " + b.CancelFeedback, Payload: payload.Menu},
 		},
 		AddMode: []fbot.Button{
-			fbot.Button{Text: b.StopAdding, Payload: payload.StartMenu},
+			fbot.Button{Text: b.StopAdding, Payload: payload.Menu},
 		},
 		StudyMode: []fbot.Button{
 			buttonStudyDone,
@@ -80,7 +87,7 @@ func newBtn(b buttonLabels) Btn {
 		Show: []fbot.Button{
 			buttonDelete,
 			buttonStudyDone,
-			fbot.Button{Text: iconShow + " " + b.ShowPhrase, Payload: payload.ShowStudy},
+			fbot.Button{Text: iconShow + " " + b.ShowPhrase, Payload: payload.ShowPhrase},
 		},
 		Score: []fbot.Button{
 			buttonDelete,
@@ -93,7 +100,7 @@ func newBtn(b buttonLabels) Btn {
 		},
 		StudiesDue: []fbot.Button{
 			buttonStudy,
-			fbot.Button{Text: b.StudyNotNow, Payload: payload.StartMenu},
+			fbot.Button{Text: b.StudyNotNow, Payload: payload.Menu},
 		},
 		ConfirmDelete: []fbot.Button{
 			fbot.Button{Text: iconDelete + " " + b.ConfirmDelete, Payload: payload.ConfirmDelete},
