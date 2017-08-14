@@ -94,9 +94,9 @@ func WelcomeWait(t time.Duration) func(*Bot) {
 
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
-// A store and a Facebook API token are required.
+// A store, a Facebook API token and a Facebook app secret are required.
 // The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait can be used.
-func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
+func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, error) {
 	b := Bot{
 		store:   store,
 		content: translate.New(),
@@ -110,12 +110,18 @@ func New(store brain.Store, token string, options ...func(*Bot)) (Bot, error) {
 	if b.err == nil {
 		b.err = log.New(ioutil.Discard, "", 0)
 	}
+	if token == "" {
+		b.err.Println("created Bot with empty token; cannot make API request")
+	}
+	if secret == "" {
+		b.err.Println("created Bot with empty secret; cannot verify webhook requests")
+	}
 	if b.furl == "" {
 		b.client = fbot.New(token)
 	} else {
 		b.client = fbot.New(token, fbot.API(b.furl))
 	}
-	b.Handler = b.client.Webhook(b.HandleEvent, b.verifyToken)
+	b.Handler = b.client.Webhook(b.HandleEvent, secret, b.verifyToken)
 
 	if b.setup {
 		greetings := []fbot.Greeting{

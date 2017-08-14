@@ -67,6 +67,7 @@ func TestWelcome(t *testing.T) {
 	bot, err := messenger.New(
 		store,
 		token,
+		secret,
 		messenger.Setup,
 		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
 		messenger.FAPI(ts.URL),

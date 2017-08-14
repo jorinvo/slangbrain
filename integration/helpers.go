@@ -1,6 +1,9 @@
 package integration
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +18,7 @@ import (
 const (
 	appURL        = "https://api.slangbrain.com/"
 	token         = "some-test-token"
+	secret        = "some-test-secret"
 	defaultMethod = "POST"
 	defaultURI    = "/me/messages?access_token=some-test-token"
 )
@@ -117,7 +121,12 @@ func noMatchNorDefault(val, expect, defaultVal string) bool {
 // Send a message to Slangbrain.
 func send(t *testing.T, handler http.Handler, message string) {
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, httptest.NewRequest("POST", appURL, strings.NewReader(message)))
+	req := httptest.NewRequest("POST", appURL, strings.NewReader(message))
+	// Add signature header for authentication
+	mac := hmac.New(sha1.New, []byte(secret))
+	mac.Write([]byte(message))
+	req.Header.Set("X-Hub-Signature", "sha1="+hex.EncodeToString(mac.Sum(nil)))
+	handler.ServeHTTP(w, req)
 	body, err := ioutil.ReadAll(w.Result().Body)
 	fatal(t, w.Result().Body.Close())
 	fatal(t, err)

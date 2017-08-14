@@ -22,6 +22,7 @@ type Btn struct {
 	ConfirmDelete []fbot.Button
 }
 
+// button labels have a 20 char limit
 type buttonLabels struct {
 	StudyDone,
 	Study,

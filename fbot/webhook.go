@@ -1,8 +1,12 @@
 package fbot
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -42,7 +46,7 @@ type Event struct {
 
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
 // The passed event handler will be called with all received events.
-func (c Client) Webhook(handler func(Event), verifyToken string) http.Handler {
+func (c Client) Webhook(handler func(Event), secret, verifyToken string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			if r.FormValue("hub.verify_token") == verifyToken {
@@ -55,13 +59,31 @@ func (c Client) Webhook(handler func(Event), verifyToken string) http.Handler {
 
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			handler(Event{Type: EventError, Text: fmt.Sprintf("method not allowed: %s", r.Method)})
 			return
 		}
 
+		// Read body
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "unable to read body", http.StatusInternalServerError)
+			handler(Event{Type: EventError, Text: fmt.Sprintf("unable to read body: %v", err)})
+			return
+		}
+
+		// Authenticate using header
+		signature := r.Header.Get("X-Hub-Signature")
+		if !validSignature(signature, secret, data) {
+			http.Error(w, "invalid signature", http.StatusUnauthorized)
+			handler(Event{Type: EventError, Text: fmt.Sprintf("invalid signature header: %#v", signature)})
+			return
+		}
+
+		// Parse JSON
 		var rec receive
-		if err := json.NewDecoder(r.Body).Decode(&rec); err != nil {
+		if err := json.Unmarshal(data, &rec); err != nil {
 			http.Error(w, "JSON invalid", http.StatusBadRequest)
-			handler(Event{Type: EventError, Text: err.Error()})
+			handler(Event{Type: EventError, Text: fmt.Sprintf("invalid JSON: %v\n\n%s\n\n", err, data)})
 			return
 		}
 		_ = r.Body.Close()
@@ -80,6 +102,23 @@ func (c Client) Webhook(handler func(Event), verifyToken string) http.Handler {
 			}
 		}
 	})
+}
+
+// Expects a signature of the form "sha1=xxx".
+// Generates the sha1 sum for the given secret and data.
+// Checks equality with constant timing to prevent timing attacks.
+func validSignature(signature, secret string, data []byte) bool {
+	// Remove " sha1=" from header, compute sha1 of secret+body, compare them
+	if len(signature) <= 5 {
+		return false
+	}
+	sum, err := hex.DecodeString(signature[5:])
+	if err != nil {
+		return false
+	}
+	mac := hmac.New(sha1.New, []byte(secret))
+	mac.Write(data)
+	return hmac.Equal(sum, mac.Sum(nil))
 }
 
 func createEvent(m messageInfo) Event {

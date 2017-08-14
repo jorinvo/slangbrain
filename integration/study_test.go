@@ -124,6 +124,7 @@ func TestStudy(t *testing.T) {
 	bot, err := messenger.New(
 		store,
 		token,
+		secret,
 		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
 		messenger.FAPI(ts.URL),
 	)

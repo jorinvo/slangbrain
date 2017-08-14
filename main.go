@@ -51,6 +51,7 @@ func main() {
 	port := flag.Int("port", 8080, "Port Facebook webhook listens on.")
 	verifyToken := flag.String("verify", "", "Required. Messenger bot verify token.")
 	token := flag.String("token", "", "Required. Messenger bot token.")
+	secret := flag.String("secret", "", "Required. Facebook app secret.")
 	slackHook := flag.String("slackhook", "", "Required. URL of Slack Incoming Webhook. Used to send user messages to admin.")
 	slackToken := flag.String("slacktoken", "", "Token for Slack Outgoing Webhook. Used to send admin answers to user messages.")
 	adminPort := flag.Int("admin", 8081, "Port admin interface listens on.")
@@ -68,19 +69,23 @@ func main() {
 	}
 
 	if *db == "" {
-		errorLogger.Println("Flag -db is required.")
+		errorLogger.Println("Flag -db is required")
 		os.Exit(1)
 	}
 	if *token == "" {
-		errorLogger.Println("Flag -token is required.")
+		errorLogger.Println("flag -token is required")
+		os.Exit(1)
+	}
+	if *secret == "" {
+		errorLogger.Println("flag -secret is required")
 		os.Exit(1)
 	}
 	if *verifyToken == "" {
-		errorLogger.Println("Flag -verify is required.")
+		errorLogger.Println("flag -verify is required")
 		os.Exit(1)
 	}
 	if *slackHook == "" {
-		errorLogger.Println("Flag -slackhook is required.")
+		errorLogger.Println("flag -slackhook is required")
 		os.Exit(1)
 	}
 
@@ -105,6 +110,7 @@ func main() {
 	bot, err := messenger.New(
 		store,
 		*token,
+		*secret,
 		messenger.Verify(*verifyToken),
 		messenger.LogInfo(infoLogger),
 		messenger.LogErr(errorLogger),
