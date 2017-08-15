@@ -11,14 +11,14 @@ import (
 func (b Bot) handleMessage(u user, msg string) {
 	mode, err := b.store.GetMode(u.ID)
 	if err != nil {
-		b.send(u.ID, u.Msg.Error, u.Btn.MenuMode, fmt.Errorf("failed to get mode for id %v: %v", u.ID, err))
+		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, fmt.Errorf("failed to get mode for id %v: %v", u.ID, err))
 		return
 	}
 	switch mode {
 	case brain.ModeStudy:
 		study, err := b.store.GetStudy(u.ID)
 		if err != nil {
-			b.send(u.ID, u.Msg.Error, u.Btn.StudyMode, fmt.Errorf("failed to get study: %v", err))
+			b.send(u.ID, u.Msg.Error, u.Rpl.StudyMode, fmt.Errorf("failed to get study: %v", err))
 			return
 		}
 		// Score user unput and pick appropriate reply
@@ -26,10 +26,10 @@ func (b Bot) handleMessage(u user, msg string) {
 		if msgNormalizedA == "" {
 			study, err := b.store.GetStudy(u.ID)
 			if err != nil {
-				b.send(u.ID, u.Msg.Error, u.Btn.Show, fmt.Errorf("failed to get study: %v", err))
+				b.send(u.ID, u.Msg.Error, u.Rpl.Show, fmt.Errorf("failed to get study: %v", err))
 				return
 			}
-			b.send(u.ID, study.Phrase, u.Btn.Score, nil)
+			b.send(u.ID, study.Phrase, u.Rpl.Score, nil)
 			return
 		}
 		var score = 1
@@ -46,11 +46,11 @@ func (b Bot) handleMessage(u user, msg string) {
 		parts := strings.SplitN(strings.TrimSpace(msg), "\n", 2)
 		phrase := strings.TrimSpace(parts[0])
 		if phrase == "" {
-			b.send(u.ID, u.Msg.PhraseMissing, u.Btn.AddMode, nil)
+			b.send(u.ID, u.Msg.PhraseMissing, u.Rpl.AddMode, nil)
 			return
 		}
 		if len(parts) == 1 {
-			b.send(u.ID, u.Msg.ExplanationMissing, u.Btn.AddMode, nil)
+			b.send(u.ID, u.Msg.ExplanationMissing, u.Rpl.AddMode, nil)
 			return
 		}
 		explanation := strings.TrimSpace(parts[1])
@@ -63,16 +63,16 @@ func (b Bot) handleMessage(u user, msg string) {
 			return
 		}
 		if p.Phrase != "" {
-			b.send(u.ID, fmt.Sprintf(u.Msg.ExplanationExists, p.Phrase, p.Explanation), u.Btn.AddMode, nil)
+			b.send(u.ID, fmt.Sprintf(u.Msg.ExplanationExists, p.Phrase, p.Explanation), u.Rpl.AddMode, nil)
 			return
 		}
 		// Save phrase
 		if err = b.store.AddPhrase(u.ID, phrase, explanation, time.Now()); err != nil {
-			b.send(u.ID, u.Msg.Error, u.Btn.AddMode, fmt.Errorf("failed to save phrase: %v", err))
+			b.send(u.ID, u.Msg.Error, u.Rpl.AddMode, fmt.Errorf("failed to save phrase: %v", err))
 			return
 		}
 		b.send(u.ID, fmt.Sprintf(u.Msg.AddDone, phrase, explanation), nil, nil)
-		b.send(u.ID, u.Msg.AddNext, u.Btn.AddMode, nil)
+		b.send(u.ID, u.Msg.AddNext, u.Rpl.AddMode, nil)
 
 	case brain.ModeGetStarted:
 		b.messageWelcome(u)

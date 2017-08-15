@@ -49,7 +49,7 @@ func (b Bot) notify(id int64, count int) {
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
 		b.err.Printf("failed to activate menu mode while notifying %d: %v", u.ID, err)
 	}
-	if err := b.client.Send(id, msg, u.Btn.StudiesDue); err != nil {
+	if err := b.client.Send(id, msg, u.Rpl.StudiesDue); err != nil {
 		b.err.Printf("failed to notify user %d: %v", u.ID, err)
 	}
 	b.info.Printf("Notified %s (%d) with %d due studies", u.Name(), u.ID, count)

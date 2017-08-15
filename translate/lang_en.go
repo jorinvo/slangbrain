@@ -1,7 +1,7 @@
 package translate
 
 // en provides content in English.
-func en() (Msg, buttonLabels) {
+func en() (Msg, labels) {
 	m := Msg{
 		// Greeting is currently limited to 160 chars.
 		// {{user_first_name}} is replaced by Facebook.
@@ -68,7 +68,7 @@ With explanation:
 		Minutes:            "minutes",
 	}
 
-	b := buttonLabels{
+	l := labels{
 		StudyDone:            "done studying",
 		Study:                "study",
 		Add:                  "phrases",
@@ -88,7 +88,8 @@ With explanation:
 		StudyNotNow:          "not now",
 		ConfirmDelete:        "delete phrase",
 		CancelDelete:         "cancel",
+		Manage:               "manage phrases",
 	}
 
-	return m, b
+	return m, l
 }

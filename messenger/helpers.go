@@ -14,11 +14,11 @@ import (
 
 // Change to menu mode.
 // Return values can be passed directly to b.send().
-func (b Bot) messageStartMenu(u user) (int64, string, []fbot.Button, error) {
+func (b Bot) messageStartMenu(u user) (int64, string, []fbot.Reply, error) {
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
-		return u.ID, u.Msg.Error, u.Btn.MenuMode, err
+		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
-	return u.ID, u.Msg.Menu, u.Btn.MenuMode, nil
+	return u.ID, u.Msg.Menu, u.Rpl.MenuMode, nil
 }
 
 // Send both welcome messages after each other.
@@ -37,20 +37,20 @@ func (b Bot) messageWelcome(u user) {
 
 // Change to study mode and find correct message.
 // Return values can be passed directly to b.send().
-func (b Bot) startStudy(u user) (int64, string, []fbot.Button, error) {
+func (b Bot) startStudy(u user) (int64, string, []fbot.Reply, error) {
 	study, err := b.store.GetStudy(u.ID)
 	if err != nil {
-		return u.ID, u.Msg.Error, u.Btn.StudyMode, err
+		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
 	}
 	// No studies ready
 	if study.Total == 0 {
 		// Go to menu mode
 		if err = b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
-			return u.ID, u.Msg.Error, u.Btn.StudyMode, err
+			return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
 		}
 		// There are no studies yet
 		if study.Next == 0 {
-			return u.ID, u.Msg.StudyEmpty, u.Btn.StudyEmpty, nil
+			return u.ID, u.Msg.StudyEmpty, u.Rpl.StudyEmpty, nil
 		}
 		// Display time until next study is ready
 		msg := fmt.Sprintf(u.Msg.StudyDone, formatDuration(u.Msg, study.Next))
@@ -59,27 +59,27 @@ func (b Bot) startStudy(u user) (int64, string, []fbot.Button, error) {
 			b.err.Println(err)
 		}
 		if isSubscribed || err != nil {
-			return u.ID, msg, u.Btn.MenuMode, nil
+			return u.ID, msg, u.Rpl.MenuMode, nil
 		}
 		// Ask to subscribe to notifications
-		return u.ID, msg + "\n\n" + u.Msg.AskToSubscribe, u.Btn.Subscribe, nil
+		return u.ID, msg + "\n\n" + u.Msg.AskToSubscribe, u.Rpl.Subscribe, nil
 	}
 	// Send study to user
-	return u.ID, fmt.Sprintf(u.Msg.StudyQuestion, study.Total, study.Explanation), u.Btn.Show, nil
+	return u.ID, fmt.Sprintf(u.Msg.StudyQuestion, study.Total, study.Explanation), u.Rpl.Show, nil
 }
 
 // Score current study and continue with next one.
 // Return values can be passed directly to b.send().
-func (b Bot) scoreAndStudy(u user, score int) (int64, string, []fbot.Button, error) {
+func (b Bot) scoreAndStudy(u user, score int) (int64, string, []fbot.Reply, error) {
 	err := b.store.ScoreStudy(u.ID, score)
 	if err != nil {
-		return u.ID, u.Msg.Error, u.Btn.StudyMode, err
+		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
 	}
 	return b.startStudy(u)
 }
 
 // Send replies and log errors.
-func (b Bot) send(id int64, reply string, buttons []fbot.Button, err error) {
+func (b Bot) send(id int64, reply string, buttons []fbot.Reply, err error) {
 	if err != nil {
 		b.err.Println(err)
 	}

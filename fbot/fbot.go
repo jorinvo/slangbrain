@@ -38,8 +38,12 @@ func New(token string, options ...func(*Client)) Client {
 	return c
 }
 
-// Button describes a text quick reply.
-type Button struct {
+// Button describes a button that can be send with a Button Template.
+// Use URLButton or PayloadButton for initialization.
+type Button interface{}
+
+// Reply describes a text quick reply.
+type Reply struct {
 	// Text is the text on the button visible to the user
 	Text string
 	// Payload is a string to identify the quick reply event internally in your application.

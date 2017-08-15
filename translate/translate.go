@@ -10,15 +10,16 @@ type Translator struct {
 	data map[string]Content
 }
 
-// Content holds translated versions of messages and buttons.
+// Content holds translated versions of messages, replies and buttons.
 type Content struct {
 	Msg Msg
+	Rpl Rpl
 	Btn Btn
 }
 
-// New returns a translator with messages and buttons loaded in all available languages.
+// New returns a translator with messages, replies and buttons loaded in all available languages.
 func New() Translator {
-	langs := map[string]func() (Msg, buttonLabels){
+	langs := map[string]func() (Msg, labels){
 		defaultLang: en,
 		"en_GB":     en,
 		"de_DE":     de,
@@ -27,8 +28,12 @@ func New() Translator {
 
 	t := Translator{map[string]Content{}}
 	for lang, fn := range langs {
-		m, b := fn()
-		t.data[lang] = Content{Msg: m, Btn: newBtn(b)}
+		m, l := fn()
+		t.data[lang] = Content{
+			Msg: m,
+			Rpl: newRpl(l),
+			Btn: newBtn(l),
+		}
 	}
 
 	return t
