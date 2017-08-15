@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jorinvo/slangbrain/admin"
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
+	"github.com/jorinvo/slangbrain/slack"
 )
 
 const cliUsage = `Slangbrain Messenger bot
@@ -24,14 +24,12 @@ Slangbrain uses BoltDB as a database.
 Data is stored in a single file. No external system is needed.
 However, only one application can access the database at a time.
 
-Slangbrain starts a server to serve a webhook handler that can be registered as a Messenger bot.
+Slangbrain starts a server to serve a webhook handler at /webhook that can be registered as a Messenger bot.
 The server is HTTP only and a proxy server should be used to make the bot available on
 a public domain, preferably HTTPS only.
 
-An admin server runs on a separate port.
-It should be proxied and secured via HTTPS + basic auth.
-The admin server provides an endpoint to fetch backups of the database.
-Further, it provides an endpoint that can be registered as Slack Outgoing Webhook.
+/backup provides an endpoint to fetch backups of the database.
+/slack can be registered as Slack Outgoing Webhook.
 
 When users send feedback to the bot, the messages are forwarded to Slack
 and admin replies in Slack are send back to the users.
@@ -54,7 +52,7 @@ func main() {
 	secret := flag.String("secret", "", "Required. Facebook app secret.")
 	slackHook := flag.String("slackhook", "", "Required. URL of Slack Incoming Webhook. Used to send user messages to admin.")
 	slackToken := flag.String("slacktoken", "", "Token for Slack Outgoing Webhook. Used to send admin answers to user messages.")
-	adminPort := flag.Int("admin", 8081, "Port admin interface listens on.")
+	backupAuth := flag.String("backupauth", "", "/backup basic auth in the form user:pasword. If empty, /backup is deactivated.")
 
 	// Parse and validate flags
 	flag.Usage = func() {
@@ -122,34 +120,45 @@ func main() {
 	if err != nil {
 		errorLogger.Fatalln("failed to start messenger:", err)
 	}
-	mAddr := "localhost:" + strconv.Itoa(*port)
-	messengerServer := &http.Server{Addr: mAddr, Handler: bot}
-	go func() {
-		infoLogger.Printf("Messenger webhook server running at %s", mAddr)
-		if err = messengerServer.ListenAndServe(); err != nil {
-			errorLogger.Fatalln("failed to start server:", err)
-		}
-	}()
 
-	// Setup admin
-	adminHandler := admin.New(
+	slackHandler := slack.New(
 		store,
 		*slackHook,
-		admin.SlackReply(*slackToken, bot.SendMessage),
-		admin.LogErr(errorLogger),
+		slack.SlackReply(*slackToken, bot.SendMessage),
+		slack.LogErr(errorLogger),
 	)
-	aAddr := "localhost:" + strconv.Itoa(*adminPort)
-	adminServer := &http.Server{Addr: aAddr, Handler: adminHandler}
 	go func() {
-		infoLogger.Printf("Admin server running at %s", aAddr)
-		if err = adminServer.ListenAndServe(); err != nil {
-			errorLogger.Fatalln("failed to start server:", err)
+		for f := range feedback {
+			slackHandler.HandleMessage(f.ChatID, f.Username, f.Message)
 		}
 	}()
 
+	backupHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			http.Error(w, "invalid method: "+r.Method, http.StatusMethodNotAllowed)
+			return
+		}
+		if u, p, ok := r.BasicAuth(); !ok || u+":"+p != *backupAuth {
+			http.Error(w, "failed basic auth", http.StatusUnauthorized)
+			return
+		}
+		store.BackupTo(w)
+	})
+
+	mux := http.NewServeMux()
+	mux.Handle("/webhook", bot)
+	mux.Handle("/slack", slackHandler)
+	if *backupAuth != "" {
+		mux.Handle("/backup", backupHandler)
+	}
+
+	mAddr := "localhost:" + strconv.Itoa(*port)
+	messengerServer := &http.Server{Addr: mAddr, Handler: mux}
+
 	go func() {
-		for f := range feedback {
-			adminHandler.HandleMessage(f.ChatID, f.Username, f.Message)
+		infoLogger.Printf("Server running at %s", mAddr)
+		if err = messengerServer.ListenAndServe(); err != nil {
+			errorLogger.Fatalln("failed to start server:", err)
 		}
 	}()
 
@@ -157,9 +166,6 @@ func main() {
 	<-shutdownSignals
 	infoLogger.Println("Waiting for connections before shutting down server.")
 	if err = messengerServer.Shutdown(context.Background()); err != nil {
-		errorLogger.Fatalln("failed to shutdown gracefully:", err)
-	}
-	if err = adminServer.Shutdown(context.Background()); err != nil {
 		errorLogger.Fatalln("failed to shutdown gracefully:", err)
 	}
 	infoLogger.Println("Server gracefully stopped.")
