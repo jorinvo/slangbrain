@@ -1,7 +1,7 @@
 package translate
 
 // th provides content in Thai.
-func th() (Msg, labels) {
+func th() (Msg, labels, Web) {
 	m := Msg{
 		// Greeting is currently limited to 160 chars.
 		// {{user_first_name}} is replaced by Facebook.
@@ -91,5 +91,11 @@ With explanation:
 		Manage:               "manage phrases",
 	}
 
-	return m, l
+	w := Web{
+		Title:  "Manage phrases",
+		Search: "Search",
+		Empty:  "No phrases found.",
+	}
+
+	return m, l, w
 }

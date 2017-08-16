@@ -26,6 +26,8 @@ const (
 	dueMinInactive = 5 * time.Minute
 	// Cache profiles for one month
 	profileMaxCacheTime = 30 * 24 * time.Hour
+	// Number of chars a token gets
+	authTokenLength = 77
 )
 
 var (
@@ -49,6 +51,7 @@ var (
 	bucketRegisterDates  = []byte("registerdates")
 	bucketStudies        = []byte("studies")
 	bucketMessageIDs     = []byte("messageids")
+	bucketAuthTokens     = []byte("authtokens")
 )
 
 // id is a chat id as int64
@@ -80,6 +83,8 @@ var allBuckets = [][]byte{
 	bucketStudies,
 	// string -> []byte{}
 	bucketMessageIDs,
+	// token -> id
+	bucketAuthTokens,
 }
 
 // Mode is the state of a chat.

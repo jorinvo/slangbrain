@@ -86,6 +86,7 @@ func URLButton(text, url string) Button {
 		Title:       text,
 		URL:         url,
 		ShareButton: "hide",
+		Extensions:  true,
 	}
 }
 
@@ -111,6 +112,7 @@ type button struct {
 	Payload     string `json:"payload,omitempty"`
 	URL         string `json:"url,omitempty"`
 	ShareButton string `json:"webview_share_button,omitempty"`
+	Extensions  bool   `json:"messenger_extensions,omitempty"`
 }
 
 type sendMessage struct {

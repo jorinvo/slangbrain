@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/user"
 )
 
-func (b Bot) handleMessage(u user, msg string) {
+func (b Bot) handleMessage(u user.User, msg string) {
 	mode, err := b.store.GetMode(u.ID)
 	if err != nil {
 		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, fmt.Errorf("failed to get mode for id %v: %v", u.ID, err))

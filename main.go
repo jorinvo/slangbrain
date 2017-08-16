@@ -9,11 +9,14 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
+	"github.com/jorinvo/slangbrain/messenger/webview"
 	"github.com/jorinvo/slangbrain/slack"
+	"github.com/jorinvo/slangbrain/translate"
 )
 
 const cliUsage = `Slangbrain Messenger bot
@@ -28,12 +31,14 @@ Slangbrain starts a server to serve a webhook handler at /webhook that can be re
 The server is HTTP only and a proxy server should be used to make the bot available on
 a public domain, preferably HTTPS only.
 
-/backup provides an endpoint to fetch backups of the database.
-/slack can be registered as Slack Outgoing Webhook.
+Certain features are better done with a custom web view.
+They are rendered at /webview.
 
+/slack can be registered as Slack Outgoing Webhook.
 When users send feedback to the bot, the messages are forwarded to Slack
 and admin replies in Slack are send back to the users.
 
+/backup provides an endpoint to fetch backups of the database.
 
 Flags:
 `
@@ -53,6 +58,7 @@ func main() {
 	slackHook := flag.String("slackhook", "", "Required. URL of Slack Incoming Webhook. Used to send user messages to admin.")
 	slackToken := flag.String("slacktoken", "", "Token for Slack Outgoing Webhook. Used to send admin answers to user messages.")
 	backupAuth := flag.String("backupauth", "", "/backup basic auth in the form user:pasword. If empty, /backup is deactivated.")
+	baseURL := flag.String("url", "https://fbot.slangbrain.com", "Overwrite the base URL. Used for linking webviews.")
 
 	// Parse and validate flags
 	flag.Usage = func() {
@@ -99,13 +105,15 @@ func main() {
 	}()
 	infoLogger.Printf("Database initialized: %s", *db)
 
+	translator := translate.New(strings.TrimSuffix(*baseURL, "/") + "/webview/manage/")
+
 	// Listen to system events for graceful shutdown
 	shutdownSignals := make(chan os.Signal, 1)
 	signal.Notify(shutdownSignals, os.Interrupt)
 
 	// Start Facebook webhook server
 	feedback := make(chan messenger.Feedback)
-	bot, err := messenger.New(
+	webhookHandler, err := messenger.New(
 		store,
 		*token,
 		*secret,
@@ -116,6 +124,7 @@ func main() {
 		messenger.Setup,
 		messenger.Notify,
 		messenger.WelcomeWait(2*time.Second),
+		messenger.Translate(translator),
 	)
 	if err != nil {
 		errorLogger.Fatalln("failed to start messenger:", err)
@@ -124,7 +133,7 @@ func main() {
 	slackHandler := slack.New(
 		store,
 		*slackHook,
-		slack.SlackReply(*slackToken, bot.SendMessage),
+		slack.SlackReply(*slackToken, webhookHandler.SendMessage),
 		slack.LogErr(errorLogger),
 	)
 	go func() {
@@ -145,8 +154,11 @@ func main() {
 		store.BackupTo(w)
 	})
 
+	webviewHandler := webview.New(store, errorLogger, translator)
+
 	mux := http.NewServeMux()
-	mux.Handle("/webhook", bot)
+	mux.Handle("/webhook", webhookHandler)
+	mux.Handle("/webview/manage/", http.StripPrefix("/webview/manage/", webviewHandler))
 	mux.Handle("/slack", slackHandler)
 	if *backupAuth != "" {
 		mux.Handle("/backup", backupHandler)

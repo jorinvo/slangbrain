@@ -13,6 +13,7 @@ import (
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
 	"github.com/jorinvo/slangbrain/translate"
+	"github.com/jorinvo/slangbrain/user"
 )
 
 // Feedback describes a message from a user a human has to react to
@@ -27,16 +28,18 @@ type Feedback struct {
 type Bot struct {
 	store        brain.Store
 	content      translate.Translator
-	setup        bool
 	err          *log.Logger
 	info         *log.Logger
 	client       fbot.Client
-	verifyToken  string
 	feedback     chan<- Feedback
 	notifyTimers map[int64]*time.Timer
+	welcomeWait  time.Duration
+	// Fields below are only used for initialization
 	http.Handler
-	welcomeWait time.Duration
-	furl        string
+	setup         bool
+	verifyToken   string
+	furl          string
+	hasTranslator bool
 }
 
 // Setup sends greetings and the getting started message to Facebook.
@@ -92,14 +95,21 @@ func WelcomeWait(t time.Duration) func(*Bot) {
 	}
 }
 
+// Translate sets the translator service to be used.
+func Translate(t translate.Translator) func(*Bot) {
+	return func(b *Bot) {
+		b.hasTranslator = true
+		b.content = t
+	}
+}
+
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
 // A store, a Facebook API token and a Facebook app secret are required.
-// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait can be used.
+// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait, Translate can be used.
 func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, error) {
 	b := Bot{
-		store:   store,
-		content: translate.New(),
+		store: store,
 	}
 	for _, option := range options {
 		option(&b)
@@ -115,6 +125,10 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 	}
 	if secret == "" {
 		b.err.Println("created Bot with empty secret; cannot verify webhook requests")
+	}
+	if b.hasTranslator == false {
+		b.info.Println("created Bot without Translator; disabled manager link")
+		b.content = translate.New("")
 	}
 	if b.furl == "" {
 		b.client = fbot.New(token)
@@ -162,6 +176,7 @@ func (b Bot) SendMessage(id int64, msg string) error {
 	if err := b.client.Send(id, msg, nil); err != nil {
 		return err
 	}
-	b.send(b.messageStartMenu(b.getUser(id)))
+	u := user.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	b.send(b.messageStartMenu(u))
 	return nil
 }

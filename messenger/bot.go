@@ -4,19 +4,9 @@ import (
 	"regexp"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/common"
 	"github.com/jorinvo/slangbrain/fbot"
-	"github.com/jorinvo/slangbrain/translate"
+	"github.com/jorinvo/slangbrain/user"
 )
-
-// user stores relevent information for the current request.
-// It is used for handling messages and payloads.
-// A profile and content in the correct language are loaded.
-type user struct {
-	ID int64
-	common.Profile
-	translate.Content
-}
 
 // Everything that is not in the unicode character classes
 // for letters or numeric values
@@ -46,8 +36,10 @@ func (b Bot) HandleEvent(e fbot.Event) {
 
 	b.scheduleNotify(e.ChatID)
 
+	u := user.Get(e.ChatID, b.store, b.err, b.content, b.client.GetProfile)
+
 	if e.Type == fbot.EventPayload {
-		b.handlePayload(b.getUser(e.ChatID), e.Payload)
+		b.handlePayload(u, e.Payload)
 		return
 	}
 
@@ -60,5 +52,5 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	b.handleMessage(b.getUser(e.ChatID), e.Text)
+	b.handleMessage(u, e.Text)
 }

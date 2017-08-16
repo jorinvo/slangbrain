@@ -1,7 +1,7 @@
 package translate
 
 // de provides content in German.
-func de() (Msg, labels) {
+func de() (Msg, labels, Web) {
 	m := Msg{
 		// Greeting is currently limited to 160 chars.
 		// {{user_first_name}} is replaced by Facebook.
@@ -87,5 +87,11 @@ Mit Erklärung:
 		Manage:               "Vokabeln bearbeiten",
 	}
 
-	return m, l
+	w := Web{
+		Title:  "Vokabeln bearbeiten",
+		Search: "Suchen",
+		Empty:  "Keine Vokabeln gefunden.",
+	}
+
+	return m, l, w
 }

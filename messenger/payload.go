@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
+	"github.com/jorinvo/slangbrain/user"
 )
 
-func (b Bot) handlePayload(u user, p string) {
+func (b Bot) handlePayload(u user.User, p string) {
 	switch p {
 	case payload.GetStarted:
 		b.messageWelcome(u)
@@ -31,16 +31,16 @@ func (b Bot) handlePayload(u user, p string) {
 		b.send(u.ID, u.Msg.Add, u.Rpl.AddMode, nil)
 
 	case payload.Help:
+		// Generate manage token in case user clicks the manage button
+		token, err := b.store.GenerateToken(u.ID)
+		if err != nil {
+			b.err.Println(err)
+		}
 		isSubscribed, err := b.store.IsSubscribed(u.ID)
 		if err != nil {
 			b.err.Println(err)
 		}
-		var buttons []fbot.Button
-		if isSubscribed {
-			buttons = u.Btn.HelpDisable
-		} else {
-			buttons = u.Btn.HelpEnable
-		}
+		buttons := u.Btn.Help(isSubscribed, token)
 		if err = b.client.SendWithButtons(u.ID, u.Msg.Help, u.Rpl.Help, buttons); err != nil {
 			b.err.Println("failed to send message:", err)
 		}

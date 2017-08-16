@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/user"
 )
 
 // Start a timer to notify the given chat.
@@ -44,7 +45,7 @@ func (b Bot) scheduleNotify(id int64) {
 }
 
 func (b Bot) notify(id int64, count int) {
-	u := b.getUser(id)
+	u := user.Get(id, b.store, b.err, b.content, b.client.GetProfile)
 	msg := fmt.Sprintf(u.Msg.StudyNotification, u.Name(), count)
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
 		b.err.Printf("failed to activate menu mode while notifying %d: %v", u.ID, err)

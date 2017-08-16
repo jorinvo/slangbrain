@@ -8,24 +8,32 @@ import (
 // Btn contains all button sets that can be sent to a user.
 // They are already localized for one language.
 type Btn struct {
-	HelpEnable,
-	HelpDisable []fbot.Button
+	Help func(bool, string) []fbot.Button
 }
 
-func newBtn(l labels) Btn {
-	// manage := fbot.URLButton(l.Manage, "https://fbot.slangbrain.com/webview/manage")
+func newBtn(l labels, managerLocation string) Btn {
 	feedback := fbot.PayloadButton(l.SendFeedback, payload.Feedback)
 
 	return Btn{
-		HelpEnable: []fbot.Button{
-			// manage,
-			fbot.PayloadButton(l.EnableNotifications, payload.Subscribe),
-			feedback,
-		},
-		HelpDisable: []fbot.Button{
-			// manage,
-			fbot.PayloadButton(l.DisableNotifications, payload.Unsubscribe),
-			feedback,
+		Help: func(isSubscribed bool, manageToken string) []fbot.Button {
+			var notificationToggle fbot.Button
+			if isSubscribed {
+				notificationToggle = fbot.PayloadButton(l.DisableNotifications, payload.Unsubscribe)
+			} else {
+				notificationToggle = fbot.PayloadButton(l.EnableNotifications, payload.Subscribe)
+			}
+			// Disable manage link if no location given
+			if managerLocation == "" || manageToken == "" {
+				return []fbot.Button{
+					notificationToggle,
+					feedback,
+				}
+			}
+			return []fbot.Button{
+				fbot.URLButton(l.Manage, managerLocation+manageToken),
+				notificationToggle,
+				feedback,
+			}
 		},
 	}
 }

@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/common"
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/translate"
+	"github.com/jorinvo/slangbrain/user"
 )
 
 // Change to menu mode.
 // Return values can be passed directly to b.send().
-func (b Bot) messageStartMenu(u user) (int64, string, []fbot.Reply, error) {
+func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) {
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
@@ -22,7 +22,7 @@ func (b Bot) messageStartMenu(u user) (int64, string, []fbot.Reply, error) {
 }
 
 // Send both welcome messages after each other.
-func (b Bot) messageWelcome(u user) {
+func (b Bot) messageWelcome(u user.User) {
 	if err := b.store.Register(u.ID); err != nil {
 		b.err.Printf("failed to register user %d: %v", u.ID, err)
 	}
@@ -37,7 +37,7 @@ func (b Bot) messageWelcome(u user) {
 
 // Change to study mode and find correct message.
 // Return values can be passed directly to b.send().
-func (b Bot) startStudy(u user) (int64, string, []fbot.Reply, error) {
+func (b Bot) startStudy(u user.User) (int64, string, []fbot.Reply, error) {
 	study, err := b.store.GetStudy(u.ID)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
@@ -70,7 +70,7 @@ func (b Bot) startStudy(u user) (int64, string, []fbot.Reply, error) {
 
 // Score current study and continue with next one.
 // Return values can be passed directly to b.send().
-func (b Bot) scoreAndStudy(u user, score int) (int64, string, []fbot.Reply, error) {
+func (b Bot) scoreAndStudy(u user.User, score int) (int64, string, []fbot.Reply, error) {
 	err := b.store.ScoreStudy(u.ID, score)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
@@ -86,41 +86,6 @@ func (b Bot) send(id int64, reply string, buttons []fbot.Reply, err error) {
 	if err = b.client.Send(id, reply, buttons); err != nil {
 		b.err.Println("failed to send message:", err)
 	}
-}
-
-// Get a user with profile and content loaded.
-func (b Bot) getUser(id int64) user {
-	p, err := b.getProfile(id)
-	if err != nil {
-		b.err.Printf("failed to get profile for id %d: %v", id, err)
-	}
-	return user{
-		ID:      id,
-		Profile: p,
-		Content: b.content.Load(p.Locale()),
-	}
-}
-
-// Get profile from cache or fetch and update cache.
-func (b Bot) getProfile(id int64) (common.Profile, error) {
-	// Try cache
-	p, err := b.store.GetProfile(id)
-	if err == nil {
-		return p, nil
-	}
-	if err != brain.ErrNotFound {
-		b.err.Println(err)
-	}
-	// Fetch from Facebook
-	p, err = b.client.GetProfile(id)
-	if err != nil {
-		return p, fmt.Errorf("failed to fetch profile: %v", err)
-	}
-	// Update cache
-	if err := b.store.SetProfile(id, p, time.Now()); err != nil {
-		b.err.Println(err)
-	}
-	return p, nil
 }
 
 // Format like "X hour[s], X minute[s]".

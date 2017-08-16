@@ -135,3 +135,24 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 	}
 	return nil
 }
+
+// GetAllPhrases returns all phrases for a given user in a map with phrase sequence numbers as keys.
+func (store Store) GetAllPhrases(id int64) (map[int64]Phrase, error) {
+	phrases := map[int64]Phrase{}
+	err := store.db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket(bucketPhrases).Cursor()
+		prefix := itob(id)
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			var p Phrase
+			if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&p); err != nil {
+				return err
+			}
+			phrases[btoi(k[8:])] = p
+		}
+		return nil
+	})
+	if err != nil {
+		return phrases, fmt.Errorf("failed to get all phrases for %d: %v", id, err)
+	}
+	return phrases, nil
+}
