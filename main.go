@@ -59,6 +59,7 @@ func main() {
 	slackToken := flag.String("slacktoken", "", "Token for Slack Outgoing Webhook. Used to send admin answers to user messages.")
 	backupAuth := flag.String("backupauth", "", "/backup basic auth in the form user:pasword. If empty, /backup is deactivated.")
 	baseURL := flag.String("url", "https://fbot.slangbrain.com", "Overwrite the base URL. Used for linking webviews.")
+	noSetup := flag.Bool("nosetup", false, "Skip sending setup instructions to Facebook")
 
 	// Parse and validate flags
 	flag.Usage = func() {
@@ -113,18 +114,23 @@ func main() {
 
 	// Start Facebook webhook server
 	feedback := make(chan messenger.Feedback)
-	webhookHandler, err := messenger.New(
-		store,
-		*token,
-		*secret,
+	opts := []func(*messenger.Bot){
 		messenger.Verify(*verifyToken),
 		messenger.LogInfo(infoLogger),
 		messenger.LogErr(errorLogger),
 		messenger.GetFeedback(feedback),
-		messenger.Setup,
 		messenger.Notify,
-		messenger.WelcomeWait(2*time.Second),
+		messenger.WelcomeWait(2 * time.Second),
 		messenger.Translate(translator),
+	}
+	if !*noSetup {
+		opts = append(opts, messenger.Setup)
+	}
+	webhookHandler, err := messenger.New(
+		store,
+		*token,
+		*secret,
+		opts...,
 	)
 	if err != nil {
 		errorLogger.Fatalln("failed to start messenger:", err)
