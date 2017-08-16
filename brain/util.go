@@ -3,10 +3,8 @@ package brain
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/gob"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -35,17 +33,7 @@ func (store Store) BackupTo(w http.ResponseWriter) {
 	}
 }
 
-// StudyNow resets all study times of all users to now.
-func (store Store) StudyNow() error {
-	return store.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketStudytimes)
-		now := itob(time.Now().Unix())
-		return b.ForEach(func(k, v []byte) error {
-			return b.Put(k, now)
-		})
-	})
-}
-
+// TODO: it is unused and also needs to clean the other buckets.
 // DeleteChat removes all records of a given chat.
 func (store Store) DeleteChat(id int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
@@ -72,44 +60,4 @@ func (store Store) DeleteChat(id int64) error {
 		}
 		return nil
 	})
-}
-
-// GetChatIDs returns chatIDs of all users.
-func (store Store) GetChatIDs() ([]int64, error) {
-	var ids []int64
-	err := store.db.View(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketModes).ForEach(func(k, v []byte) error {
-			ids = append(ids, btoi(k))
-			return nil
-		})
-	})
-	return ids, err
-}
-
-// DeletePhrases removes all phrases fn matches.
-func (store Store) DeletePhrases(fn func(int64, Phrase) bool) (int, error) {
-	deleted := 0
-	err := store.db.Update(func(tx *bolt.Tx) error {
-		bp := tx.Bucket(bucketPhrases)
-		bs := tx.Bucket(bucketStudytimes)
-		return bp.ForEach(func(k, v []byte) error {
-			id := btoi(k[:8])
-			var p Phrase
-			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
-				return err
-			}
-			if !fn(id, p) {
-				return nil
-			}
-			if err := bs.Delete(k); err != nil {
-				return err
-			}
-			if err := bp.Delete(k); err != nil {
-				return err
-			}
-			deleted++
-			return nil
-		})
-	})
-	return deleted, err
 }
