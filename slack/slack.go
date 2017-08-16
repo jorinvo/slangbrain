@@ -24,10 +24,10 @@ type Slack struct {
 	replyHandler func(int64, string) error
 }
 
-// SlackReply is an option to enable /slack to receive replies from Slack.
+// Reply is an option to enable /slack to receive replies from Slack.
 // token is used to validate posts to the webhook.
 // fn is called with a chatID and a message.
-func SlackReply(token string, fn func(int64, string) error) func(*Slack) {
+func Reply(token string, fn func(int64, string) error) func(*Slack) {
 	return func(a *Slack) {
 		a.token = token
 		a.replyHandler = fn
@@ -42,7 +42,7 @@ func LogErr(l *log.Logger) func(*Slack) {
 }
 
 // New returns a new Slack which can be used as an http.Handler.
-// Optionally pass SlackReply or LogErr.
+// Optionally pass Reply or LogErr.
 func New(store brain.Store, hook string, options ...func(*Slack)) Slack {
 	a := Slack{
 		store: store,

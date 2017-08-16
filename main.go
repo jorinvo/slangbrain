@@ -133,7 +133,7 @@ func main() {
 	slackHandler := slack.New(
 		store,
 		*slackHook,
-		slack.SlackReply(*slackToken, webhookHandler.SendMessage),
+		slack.Reply(*slackToken, webhookHandler.SendMessage),
 		slack.LogErr(errorLogger),
 	)
 	go func() {

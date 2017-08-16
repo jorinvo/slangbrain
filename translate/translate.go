@@ -56,7 +56,7 @@ func (t Translator) Load(lang string) Content {
 // Langs returns a list of all supported languages.
 func (t Translator) Langs() []string {
 	langs := []string{}
-	for lang, _ := range t.data {
+	for lang := range t.data {
 		langs = append(langs, lang)
 	}
 	sort.Strings(langs)

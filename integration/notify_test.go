@@ -27,7 +27,7 @@ func TestNotify(t *testing.T) {
 		},
 		{
 			name:   "help 1",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"attachment":{"type":"template","payload":{"template_type":"button","text":"Wie kann ich dir weiterhelfen?","buttons":[{"type":"postback","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"type":"postback","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"}]}},"quick_replies":[{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
 			send:   fmt.Sprintf(formatPayload, payload.Subscribe),
 		},
 		{
@@ -37,7 +37,7 @@ func TestNotify(t *testing.T) {
 		},
 		{
 			name:   "help 2",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"❌ Benachrichtigung","payload":"PAYLOAD_UNSUBSCRIBE"},{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"attachment":{"type":"template","payload":{"template_type":"button","text":"Wie kann ich dir weiterhelfen?","buttons":[{"type":"postback","title":"❌ Benachrichtigung","payload":"PAYLOAD_UNSUBSCRIBE"},{"type":"postback","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"}]}},"quick_replies":[{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
 			send:   fmt.Sprintf(formatPayload, payload.Unsubscribe),
 		},
 		{
@@ -47,7 +47,7 @@ func TestNotify(t *testing.T) {
 		},
 		{
 			name:   "help 3",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Wie kann ich dir weiterhelfen?","quick_replies":[{"content_type":"text","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"attachment":{"type":"template","payload":{"template_type":"button","text":"Wie kann ich dir weiterhelfen?","buttons":[{"type":"postback","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"type":"postback","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"}]}},"quick_replies":[{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
 		},
 	}
 
