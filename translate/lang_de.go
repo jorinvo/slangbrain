@@ -88,18 +88,19 @@ Mit Erklärung:
 	}
 
 	w := Web{
-		Title:       "Vokabeln bearbeiten",
-		Search:      "Suchen",
-		Empty:       "Keine Vokabeln gefunden.",
-		Phrases:     "Vokabeln",
-		Phrase:      "Vokabel",
-		Explanation: "Erklärung",
-		Delete:      "Löschen",
-		Cancel:      "Abbrechen",
-		Save:        "Speichern",
-		Error:       "Leider ist etwas schief gelaufen. Versuche es bitte noch einmal.",
-		Updated:     "Vokabel aktualisiert",
-		Deleted:     "Vokabel gelöscht",
+		Title:         "Vokabeln bearbeiten",
+		Search:        "Suchen",
+		Empty:         "Keine Vokabeln gefunden.",
+		Phrases:       "Vokabeln",
+		Phrase:        "Vokabel",
+		Explanation:   "Erklärung",
+		Delete:        "Löschen",
+		Cancel:        "Abbrechen",
+		DeleteConfirm: "Wirklich löschen",
+		Save:          "Speichern",
+		Error:         "Leider ist etwas schief gelaufen. Versuche es bitte noch einmal.",
+		Updated:       "Vokabel aktualisiert",
+		Deleted:       "Vokabel gelöscht",
 	}
 
 	return m, l, w

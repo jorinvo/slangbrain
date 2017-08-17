@@ -10,6 +10,7 @@ type Web struct {
 	Explanation,
 	Delete,
 	Cancel,
+	DeleteConfirm,
 	Save,
 	Error,
 	Updated,

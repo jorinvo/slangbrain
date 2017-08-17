@@ -44,7 +44,6 @@ const html = `<!DOCTYPE html>
 				padding: 6%;
 				font-size: 110%;
 				cursor: pointer;
-				user-select: none;
 			}
 			.empty {
 				padding: 10% 3%;
@@ -103,6 +102,12 @@ const html = `<!DOCTYPE html>
 				padding: 8%;
 				font-size: 110%;
 				box-sizing: border-box;
+			}
+			button,
+			.update {
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
 				user-select: none;
 			}
 		</style>
@@ -132,7 +137,7 @@ const html = `<!DOCTYPE html>
 				</div>
 				<div id="delete-prompt" class="actions hide">
 					<button id="delete-confirm" class="half fail">
-						{{.Label.Delete}}
+						{{.Label.DeleteConfirm}}
 					</button><button id="delete-cancel" class="half warn">
 						{{.Label.Cancel}}
 					</button>
@@ -190,12 +195,13 @@ const html = `<!DOCTYPE html>
 			var editPhrase = document.getElementById('edit-phrase')
 			var editExplanation = document.getElementById('edit-explanation')
 			phrases.forEach(function(p, i) {
-				items[i].addEventListener('click', function() {
+				var el = items[i]
+				el.addEventListener('click', function() {
 					document.body.classList.add('noflow')
 					edit.classList.remove('hide')
 					editPhrase.value = p.phrase
 					editExplanation.value = p.explanation
-					editI = i
+					editI = Array.prototype.indexOf.call(container.children, el)
 				})
 			})
 			function closeEdit() {
@@ -215,6 +221,7 @@ const html = `<!DOCTYPE html>
 			function getURL() {
 				return '{{.API}}/'+phrases[editI].id+'?token={{.Token}}'
 			}
+
 			document.getElementById('delete-confirm').addEventListener('click', function() {
 				deletePrompt.classList.add('hide')
 				var request = new XMLHttpRequest();
@@ -225,7 +232,9 @@ const html = `<!DOCTYPE html>
 						return
 					}
 					phrases.splice(editI, 1)
+					delete phraseStates[editI]
 					container.removeChild(items[editI])
+					items = document.getElementsByClassName('phrase')
 					handleEmpty()
 					closeEdit()
 					msg(msgDelete)
