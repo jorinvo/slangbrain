@@ -21,31 +21,29 @@ const html = `<!DOCTYPE html>
 			.hide {
 				display: none;
 			}
-			.noflow {
-				overflow: hidden;
-			}
 			input[type="text"],
 			input[type="search"],
 			textarea {
 				width: 94%;
-				padding: 3%;
+				padding: 2%;
 				margin: 3%;
 				font-size: 100%;
 				box-sizing: border-box;
 			}
 			textarea {
-				height: 20%;
+				height: 36%;
 				resize: none;
 				margin-top: 0;
+				line-height: 120%;
 			}
 			button {
 				border: 1px solid;
 				width: 29.333%;
-				padding: 4% 0;
+				padding: 2.5% 0;
 				font-size: 100%;
 				cursor: pointer;
 				margin: 1.5%;
-				background: none;
+				background: white;
 			}
 			.empty {
 				padding: 10% 3%;
@@ -57,7 +55,8 @@ const html = `<!DOCTYPE html>
 				padding: 0;
 			}
 			.phrase {
-				margin: 4% 3%;
+				margin: 2% 0;
+				padding: 1% 3%;
 				cursor: pointer;
 			}
 			.phrase span {
@@ -68,35 +67,40 @@ const html = `<!DOCTYPE html>
 			.phrase span:first-child {
 				font-weight: bold;
 			}
+			.open {
+				background: #f1f1f1;
+			}
 			.total {
 				margin: 10% 3%;
 				font-size: 90%;
 			}
 			.edit {
 				position: fixed;
-				top: 0;
-				background: white;
+				-webkit-backface-visibility: hidden;
+				bottom: 0;
+				background: #f1f1f1;
 				width: 100%;
-				height: 100%;
+				height: 34%;
 			}
 			.actions {
 				position: absolute;
 				bottom: 0;
 				width: 100%;
 				margin: 1.5%;
-				background: white;
+				background: #f1f1f1;
 			}
 			.half {
 				width: 45.5%;
 			}
 			.update {
 				position: fixed;
+				-webkit-backface-visibility: hidden;
 				bottom: 0;
 				width: 100%;
 				text-align: center;
 				padding: 7%;
 				box-sizing: border-box;
-				background: white;
+				background: #f1f1f1;
 			}
 			button,
 			.update {
@@ -192,15 +196,16 @@ const html = `<!DOCTYPE html>
 			phrases.forEach(function(p, i) {
 				var el = items[i]
 				el.addEventListener('click', function() {
-					document.body.classList.add('noflow')
+					closeEdit()
 					edit.classList.remove('hide')
 					editPhrase.value = p.phrase
 					editExplanation.value = p.explanation
+					el.classList.add('open')
 					editI = Array.prototype.indexOf.call(container.children, el)
 				})
 			})
 			function closeEdit() {
-				document.body.classList.remove('noflow')
+				items[editI].classList.remove('open')
 				edit.classList.add('hide')
 				editI = undefined
 			}
