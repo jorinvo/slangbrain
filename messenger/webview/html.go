@@ -145,11 +145,11 @@ const html = `<!DOCTYPE html>
 		<script>
 
 			var phrases = [
-				{{range $id, $phrase := .Phrases}}
+				{{range .Phrases}}
 				{
-					id: {{$id}},
-					phrase: '{{$phrase.Phrase}}',
-					explanation: '{{$phrase.Explanation}}'
+					id: {{.ID}},
+					phrase: '{{.Phrase}}',
+					explanation: '{{.Explanation}}'
 				},
 				{{end}}
 			]

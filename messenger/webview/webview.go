@@ -68,7 +68,7 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	u := user.Get(id, view.store, view.err, view.content, nil)
 	data := struct {
-		Phrases map[int64]brain.Phrase
+		Phrases []brain.IDPhrase
 		Label   translate.Web
 		API     string
 		Token   string

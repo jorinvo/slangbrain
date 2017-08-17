@@ -10,6 +10,7 @@ import (
 	"github.com/jorinvo/slangbrain/brain"
 )
 
+// Phrases returns a handler that implements DELETE and PUT for /:phraseid?token=:token
 func Phrases(store brain.Store, errorLogger *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		seq, err := strconv.Atoi(r.URL.Path)

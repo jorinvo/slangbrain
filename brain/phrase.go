@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -133,21 +134,49 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 	return nil
 }
 
+// IDPhrase is a phrase format that contains the ID but not the Score.
+type IDPhrase struct {
+	ID                  int64
+	Phrase, Explanation string
+}
+
+type idPhrases struct {
+	p []IDPhrase
+	t map[int64]int64
+}
+
+func (p idPhrases) Len() int {
+	return len(p.p)
+}
+
+func (p idPhrases) Less(i, j int) bool {
+	return p.t[p.p[i].ID] < p.t[p.p[j].ID]
+}
+
+func (p idPhrases) Swap(i, j int) {
+	p.p[j], p.p[i] = p.p[i], p.p[j]
+}
+
 // GetAllPhrases returns all phrases for a given user in a map with phrase sequence numbers as keys.
-func (store Store) GetAllPhrases(id int64) (map[int64]Phrase, error) {
-	phrases := map[int64]Phrase{}
+func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
+	var phrases []IDPhrase
+	addTimes := map[int64]int64{}
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
+		bt := tx.Bucket(bucketPhraseAddTimes)
 		prefix := itob(id)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var p Phrase
 			if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&p); err != nil {
 				return err
 			}
-			phrases[btoi(k[8:])] = p
+			seq := btoi(k[8:])
+			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation})
+			addTimes[seq] = btoi(bt.Get(k))
 		}
 		return nil
 	})
+	sort.Sort(idPhrases{phrases, addTimes})
 	if err != nil {
 		return phrases, fmt.Errorf("failed to get all phrases for %d: %v", id, err)
 	}
