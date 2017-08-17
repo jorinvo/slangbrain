@@ -39,11 +39,13 @@ const html = `<!DOCTYPE html>
 				margin-top: 0;
 			}
 			button {
-				border: 0;
-				width: 33.3333%;
-				padding: 6%;
-				font-size: 110%;
+				border: 1px solid;
+				width: 29.333%;
+				padding: 4% 0;
+				font-size: 100%;
 				cursor: pointer;
+				margin: 1.5%;
+				background: none;
 			}
 			.empty {
 				padding: 10% 3%;
@@ -81,27 +83,20 @@ const html = `<!DOCTYPE html>
 				position: absolute;
 				bottom: 0;
 				width: 100%;
-			}
-			.fail {
-				background-color: #ff4b4b;
-			}
-			.warn {
-				background-color: #ffbe48;
-			}
-			.success {
-				background-color: #6ae16a;
+				margin: 1.5%;
+				background: white;
 			}
 			.half {
-				width: 50%;
+				width: 45.5%;
 			}
 			.update {
 				position: fixed;
 				bottom: 0;
 				width: 100%;
 				text-align: center;
-				padding: 8%;
-				font-size: 110%;
+				padding: 7%;
 				box-sizing: border-box;
+				background: white;
 			}
 			button,
 			.update {
