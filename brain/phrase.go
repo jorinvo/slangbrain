@@ -95,7 +95,6 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
 		bp := tx.Bucket(bucketPhrases)
-		bd := tx.Bucket(bucketDeletedPhrases)
 		c := bs.Cursor()
 		now := time.Now().Unix()
 		prefix := itob(id)
@@ -123,9 +122,6 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 			return err
 		}
 
-		// Backup deleted phrases for now
-		if err := bd.Put(key, bp.Get(key)); err != nil {
-		}
 		// Delete phrase
 		return bp.Delete(key)
 	})
@@ -165,12 +161,8 @@ func (store Store) DeletePhrase(id int64, seq int) error {
 		if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
 			return err
 		}
-		// Backup deleted phrases for now
-		bp := tx.Bucket(bucketPhrases)
-		if err := tx.Bucket(bucketDeletedPhrases).Put(key, bp.Get(key)); err != nil {
-		}
 		// Delete phrase
-		return bp.Delete(key)
+		return tx.Bucket(bucketPhrases).Delete(key)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
