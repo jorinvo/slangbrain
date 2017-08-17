@@ -44,6 +44,7 @@ const html = `<!DOCTYPE html>
 				padding: 6%;
 				font-size: 110%;
 				cursor: pointer;
+				user-select: none;
 			}
 			.empty {
 				padding: 10% 3%;
@@ -102,6 +103,7 @@ const html = `<!DOCTYPE html>
 				padding: 8%;
 				font-size: 110%;
 				box-sizing: border-box;
+				user-select: none;
 			}
 		</style>
 	</head>
@@ -157,9 +159,12 @@ const html = `<!DOCTYPE html>
 			var editI
 
 			var empty = document.getElementById('empty')
-			if (!phrases.length) {
-				empty.classList.remove('hide')
+			function handleEmpty() {
+				if (!phrases.length) {
+					empty.classList.remove('hide')
+				}
 			}
+			handleEmpty()
 
 			var container = document.getElementById('phrases')
 			container.innerHTML = phrases.map(function(p) {
@@ -221,6 +226,7 @@ const html = `<!DOCTYPE html>
 					}
 					phrases.splice(editI, 1)
 					container.removeChild(items[editI])
+					handleEmpty()
 					closeEdit()
 					msg(msgDelete)
 				};
