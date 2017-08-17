@@ -156,3 +156,56 @@ func (store Store) GetAllPhrases(id int64) (map[int64]Phrase, error) {
 	}
 	return phrases, nil
 }
+
+// DeletePhrase removes a phrase.
+func (store Store) DeletePhrase(id int64, seq int) error {
+	key := append(itob(id), itob(int64(seq))...)
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		// Delete study time
+		if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
+			return err
+		}
+		// Backup deleted phrases for now
+		bp := tx.Bucket(bucketPhrases)
+		if err := tx.Bucket(bucketDeletedPhrases).Put(key, bp.Get(key)); err != nil {
+		}
+		// Delete phrase
+		return bp.Delete(key)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
+	}
+	return nil
+}
+
+// UpdatePhrase updates an existing phrase.
+// Return ErrNotFound if phrase does not exist.
+func (store Store) UpdatePhrase(id int64, seq int, phrase, explanation string) error {
+	key := append(itob(id), itob(int64(seq))...)
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		bp := tx.Bucket(bucketPhrases)
+		// Get existing phrase
+		b := bp.Get(key)
+		if b == nil {
+			return ErrNotFound
+		}
+		var p Phrase
+		if err := gob.NewDecoder(bytes.NewBuffer(b)).Decode(&p); err != nil {
+			return err
+		}
+		// Update
+		p.Phrase = phrase
+		p.Explanation = explanation
+		// Save phrase
+		var buf bytes.Buffer
+		if err := gob.NewEncoder(&buf).Encode(p); err != nil {
+			return err
+		}
+		return bp.Put(key, buf.Bytes())
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update phrase for key %x: %s - %s: %v", key, phrase, explanation, err)
+	}
+	return nil
+}

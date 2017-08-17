@@ -4,5 +4,14 @@ package translate
 type Web struct {
 	Title,
 	Search,
-	Empty string
+	Empty,
+	Phrases,
+	Phrase,
+	Explanation,
+	Delete,
+	Cancel,
+	Save,
+	Error,
+	Updated,
+	Deleted string
 }

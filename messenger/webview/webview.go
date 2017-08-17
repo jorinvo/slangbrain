@@ -18,15 +18,17 @@ type Webview struct {
 	err      *log.Logger
 	template *template.Template
 	content  translate.Translator
+	api      string
 }
 
 // New creates a new Webview.
-func New(store brain.Store, errorLogger *log.Logger, t translate.Translator) http.Handler {
+func New(s brain.Store, errLog *log.Logger, t translate.Translator, api string) http.Handler {
 	return Webview{
-		store:    store,
-		err:      errorLogger,
+		store:    s,
+		err:      errLog,
 		template: template.Must(template.New("manage").Parse(html)),
 		content:  t,
+		api:      strings.TrimSuffix(api, "/") + "/phrases",
 	}
 }
 
@@ -38,7 +40,7 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Allow rendering inline on web
 	allowFrom := []string{"https://www.messenger.com/", "https://www.facebook.com/"}
@@ -68,7 +70,9 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Phrases map[int64]brain.Phrase
 		Label   translate.Web
-	}{phrases, u.Web}
+		API     string
+		Token   string
+	}{phrases, u.Web, view.api, token}
 	if err := view.template.Execute(w, data); err != nil {
 		view.err.Printf("failed to render template: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)

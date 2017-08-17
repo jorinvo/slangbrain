@@ -92,9 +92,18 @@ With explanation:
 	}
 
 	w := Web{
-		Title:  "Manage phrases",
-		Search: "Search",
-		Empty:  "No phrases found.",
+		Title:       "Manage phrases",
+		Search:      "Search",
+		Empty:       "No phrases found.",
+		Phrases:     "phrases",
+		Phrase:      "Phrase",
+		Explanation: "Explanation",
+		Delete:      "delete",
+		Cancel:      "cancel",
+		Save:        "save",
+		Error:       "Something went wrong. Please try again.",
+		Updated:     "updated phrase",
+		Deleted:     "deleted phrase",
 	}
 
 	return m, l, w

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jorinvo/slangbrain/api"
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
 	"github.com/jorinvo/slangbrain/messenger/webview"
@@ -160,10 +161,12 @@ func main() {
 		store.BackupTo(w)
 	})
 
-	webviewHandler := webview.New(store, errorLogger, translator)
+	apiHandler := api.Phrases(store, errorLogger)
+	webviewHandler := webview.New(store, errorLogger, translator, "/api/")
 
 	mux := http.NewServeMux()
 	mux.Handle("/webhook", webhookHandler)
+	mux.Handle("/api/phrases/", http.StripPrefix("/api/phrases/", apiHandler))
 	mux.Handle("/webview/manage/", http.StripPrefix("/webview/manage/", webviewHandler))
 	mux.Handle("/slack", slackHandler)
 	if *backupAuth != "" {
