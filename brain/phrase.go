@@ -111,17 +111,18 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 				key = k
 			}
 		}
-
 		// No studies found
 		if key == nil {
 			return errors.New("no study found")
 		}
-
 		// Delete study time
 		if err := bs.Delete(key); err != nil {
 			return err
 		}
-
+		// Delete add time
+		if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
+			return err
+		}
 		// Delete phrase
 		return bp.Delete(key)
 	})
@@ -159,6 +160,10 @@ func (store Store) DeletePhrase(id int64, seq int) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		// Delete study time
 		if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
+			return err
+		}
+		// Delete add time
+		if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
 			return err
 		}
 		// Delete phrase
