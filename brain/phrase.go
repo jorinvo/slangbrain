@@ -172,7 +172,12 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 			}
 			seq := btoi(k[8:])
 			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation})
-			addTimes[seq] = btoi(bt.Get(k))
+			var t int64
+			tb := bt.Get(k)
+			if tb != nil {
+				t = btoi(tb)
+			}
+			addTimes[seq] = t
 		}
 		return nil
 	})
