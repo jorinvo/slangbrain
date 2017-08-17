@@ -150,7 +150,7 @@ func (p idPhrases) Len() int {
 }
 
 func (p idPhrases) Less(i, j int) bool {
-	return p.t[p.p[i].ID] < p.t[p.p[j].ID]
+	return p.t[p.p[i].ID] > p.t[p.p[j].ID]
 }
 
 func (p idPhrases) Swap(i, j int) {
