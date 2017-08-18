@@ -205,6 +205,7 @@ const html = `<!DOCTYPE html>
 				})
 			})
 			function closeEdit() {
+				if (editI === undefined) return
 				items[editI].classList.remove('open')
 				edit.classList.add('hide')
 				editI = undefined

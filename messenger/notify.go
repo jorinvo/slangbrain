@@ -34,7 +34,7 @@ func (b Bot) scheduleNotify(id int64) {
 		b.err.Println(err)
 		return
 	}
-	if count == 0 {
+	if count <= 1 {
 		return
 	}
 
