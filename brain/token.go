@@ -4,22 +4,48 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
 
 // GenerateToken creates and returns the token for a user.
 // It can be used to authenticate the user after.
+// If a token already exists, it is reused instead of generating a new one.
 func (store Store) GenerateToken(id int64) (string, error) {
-	token, err := random(authTokenLength)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate manage token for %d: %v", id, err)
-	}
-	err = store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketAuthTokens).Put([]byte(token), itob(id))
+	var token string
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		bid := itob(id)
+		bu := tx.Bucket(bucketAuthUsers)
+		bt := tx.Bucket(bucketAuthTokens)
+		now := time.Now()
+		// Lookup existing
+		if v := bu.Get(bid); v != nil {
+			if time.Duration(now.Sub(time.Unix(btoi(v[:8]), 0))) < authTokenMaxAge {
+				token = string(v[8:])
+				return nil
+			}
+			// Or clear expired
+			if err := bu.Delete(bid); err != nil {
+				return err
+			}
+			if err := bt.Delete(v[8:]); err != nil {
+				return err
+			}
+		}
+		// Or create new
+		t, err := random(authTokenLength)
+		if err != nil {
+			return fmt.Errorf("failed to generate token: %v", err)
+		}
+		token = t
+		if err := bt.Put([]byte(token), bid); err != nil {
+			return err
+		}
+		return bu.Put(bid, append(itob(now.Unix()), []byte(token)...))
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to write manage token for %d: %v", id, err)
+		return "", fmt.Errorf("failed to get auth token for %d: %v", id, err)
 	}
 	return token, nil
 }
@@ -40,7 +66,7 @@ func (store Store) LookupToken(token string) (int64, error) {
 		if err == ErrNotFound {
 			return id, err
 		}
-		return id, fmt.Errorf("failed to write manage token for %d: %v", id, err)
+		return id, fmt.Errorf("failed to lookup auth token for %d: %v", id, err)
 	}
 	return id, nil
 }
