@@ -21,19 +21,20 @@ const html = `<!DOCTYPE html>
 			.hide {
 				display: none;
 			}
-			input[type="text"],
-			input[type="search"],
+			input,
 			textarea {
 				width: 94%;
 				padding: 2%;
 				margin: 3%;
 				font-size: 100%;
 				box-sizing: border-box;
+				border: 1px solid #dedede;
 			}
 			textarea {
-				height: 36%;
+				height: 4.8em;
 				resize: none;
 				margin-top: 0;
+				margin-bottom: 0;
 				line-height: 120%;
 			}
 			button {
@@ -80,14 +81,16 @@ const html = `<!DOCTYPE html>
 				bottom: 0;
 				background: #f1f1f1;
 				width: 100%;
-				height: 34%;
+				box-shadow: 0 -2px 6px 2px white;
 			}
 			.actions {
-				position: absolute;
-				bottom: 0;
 				width: 100%;
 				margin: 1.5%;
 				background: #f1f1f1;
+			}
+			.delete-prompt {
+				position: absolute;
+				bottom: 0;
 			}
 			.half {
 				width: 45.5%;
@@ -103,11 +106,35 @@ const html = `<!DOCTYPE html>
 				background: #f1f1f1;
 			}
 			button,
-			.update {
-				-moz-user-select: none;
+			.search,
+			.edit,
+			.update,
+			.total,
+			.empty {
+				-webkit-touch-callout: none;
 				-webkit-user-select: none;
+				-khtml-user-select: none;
+				-moz-user-select: none;
 				-ms-user-select: none;
 				user-select: none;
+			}
+			button,
+			.phrase {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, .1);
+			}
+			button::-moz-focus-inner {
+				border: 0;
+			}
+			button:hover,
+			button:focus,
+			.phrase:hover {
+				outline: none;
+				background-color: #dedede;
+			}
+			input:focus,
+			textarea:focus {
+				outline: none;
+				border: 1px solid #939393;
 			}
 		</style>
 	</head>
@@ -134,7 +161,7 @@ const html = `<!DOCTYPE html>
 						{{.Label.Save}}
 					</button>
 				</div>
-				<div id="delete-prompt" class="actions hide">
+				<div id="delete-prompt" class="delete-prompt actions hide">
 					<button id="delete-confirm" class="half fail">
 						{{.Label.DeleteConfirm}}
 					</button><button id="delete-cancel" class="half warn">
@@ -183,9 +210,13 @@ const html = `<!DOCTYPE html>
 			var msgUpdate = document.getElementById('update-success')
 			var msgDelete = document.getElementById('delete-success')
 			var msgErr = document.getElementById('error')
+
+			var msgTimeout
+			var msgTimeoutEl
 			function msg(el) {
 				el.classList.remove('hide')
-				setTimeout(function() {
+				msgTimeoutEl = el
+				msgTimeout = setTimeout(function() {
 					el.classList.add('hide')
 				}, 2000)
 			}
@@ -197,13 +228,25 @@ const html = `<!DOCTYPE html>
 				var el = items[i]
 				el.addEventListener('click', function() {
 					closeEdit()
+
+					if (msgTimeout) {
+						clearTimeout(msgTimeout)
+						msgTimeoutEl.classList.add('hide')
+						msgTimeout = undefined
+						msgTimeoutEl = undefined
+					}
+
 					edit.classList.remove('hide')
+
 					editPhrase.value = p.phrase
 					editExplanation.value = p.explanation
+
 					el.classList.add('open')
+
 					editI = Array.prototype.indexOf.call(container.children, el)
 				})
 			})
+
 			function closeEdit() {
 				if (editI === undefined) return
 				items[editI].classList.remove('open')
@@ -237,7 +280,7 @@ const html = `<!DOCTYPE html>
 					container.removeChild(items[editI])
 					items = document.getElementsByClassName('phrase')
 					handleEmpty()
-					closeEdit()
+					edit.classList.add('hide')
 					msg(msgDelete)
 				};
 				request.onerror = function(err) {
