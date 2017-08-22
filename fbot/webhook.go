@@ -49,10 +49,12 @@ type Event struct {
 // Attachment describes an attachment.
 // Type is one of "image", "video", audio, "location", "file" or "feedback".
 // Currently only the URL field is loaded because we only use "file".
+// If a sticker is sent the type is "image" and Sticker != 0.
 // For more see: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message
 type Attachment struct {
-	Type string
-	URL  string
+	Type    string
+	URL     string
+	Sticker int64
 }
 
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
@@ -148,8 +150,9 @@ func getEvent(m messageInfo) Event {
 			var as []Attachment
 			for _, a := range m.Message.Attachments {
 				as = append(as, Attachment{
-					Type: a.Type,
-					URL:  a.Payload.URL,
+					Type:    a.Type,
+					URL:     a.Payload.URL,
+					Sticker: a.Payload.Sticker,
 				})
 			}
 			return Event{
@@ -232,5 +235,6 @@ type attachment struct {
 }
 
 type attachmentPayload struct {
-	URL string `json:"url,omitempty"`
+	Sticker int64  `json:"sticker_id,omitempty"`
+	URL     string `json:"url,omitempty"`
 }

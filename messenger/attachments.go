@@ -20,10 +20,14 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 	for _, a := range attachments {
 		// Notify admin for non-file attachments
 		if a.Type != "file" {
+			// Ignore stickers for now, 'like' button is used, but ignored.
+			if a.Sticker != 0 {
+				continue
+			}
 			if b.feedback != nil {
-				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: "[user sent unhandled attachment]"}
+				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: "[user sent unhandled attachment of type '" + a.Type + "']"}
 			} else {
-				b.err.Printf("got unhandled attachment from %s (%d)", u.Name(), u.ID)
+				b.err.Printf("got unhandled attachment (%s) from %s (%d)", a.Type, u.Name(), u.ID)
 			}
 			continue
 		}
