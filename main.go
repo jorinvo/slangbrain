@@ -121,7 +121,7 @@ func main() {
 		messenger.LogErr(errorLogger),
 		messenger.GetFeedback(feedback),
 		messenger.Notify,
-		messenger.WelcomeWait(2 * time.Second),
+		messenger.MessageDelay(2 * time.Second),
 		messenger.Translate(translator),
 	}
 	if !*noSetup {

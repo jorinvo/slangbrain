@@ -22,5 +22,9 @@ type labels struct {
 	StudyNotNow,
 	ConfirmDelete,
 	CancelDelete,
-	Manage string
+	Manage,
+	ImportHelp,
+	CloseImportHelp,
+	ConfirmImport,
+	CancelImport string
 }

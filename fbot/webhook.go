@@ -15,8 +15,8 @@ import (
 type EventType int
 
 const (
-	// EventUnknown is the default and will be used if none of the other types match.
-	EventUnknown EventType = iota
+	// EventError is triggered when the webhook is called with invalid JSON content.
+	EventError EventType = 1 + iota
 	// EventMessage is triggered when a user sends Text, stickers or other content.
 	// Only text is available at the moment.
 	EventMessage
@@ -24,8 +24,8 @@ const (
 	EventPayload
 	// EventRead is triggered when a user read a message.
 	EventRead
-	// EventError is triggered when the webhook is called with invalid JSON content.
-	EventError
+	// EventAttachment is triggered when attachemnts are send.
+	EventAttachment
 )
 
 // Event contains information about a user action.
@@ -42,6 +42,17 @@ type Event struct {
 	Payload string
 	// MessageID is a unique ID for each message.
 	MessageID string
+	// Attachments are multiple attachment types.
+	Attachments []Attachment
+}
+
+// Attachment describes an attachment.
+// Type is one of "image", "video", audio, "location", "file" or "feedback".
+// Currently only the URL field is loaded because we only use "file".
+// For more see: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message
+type Attachment struct {
+	Type string
+	URL  string
 }
 
 // Webhook returns a handler for HTTP requests that can be registered with Facebook.
@@ -95,8 +106,7 @@ func (c Client) Webhook(handler func(Event), secret, verifyToken string) http.Ha
 
 		for _, e := range rec.Entry {
 			for _, m := range e.Messaging {
-				event := createEvent(m)
-				if event.Type != EventUnknown {
+				if event := getEvent(m); event.Type != 0 {
 					handler(event)
 				}
 			}
@@ -121,7 +131,7 @@ func validSignature(signature, secret string, data []byte) bool {
 	return hmac.Equal(sum, mac.Sum(nil))
 }
 
-func createEvent(m messageInfo) Event {
+func getEvent(m messageInfo) Event {
 	if m.Message != nil {
 		if m.Message.IsEcho {
 			return Event{}
@@ -132,6 +142,22 @@ func createEvent(m messageInfo) Event {
 				ChatID:  m.Sender.ID,
 				Time:    msToTime(m.Timestamp),
 				Payload: m.Message.QuickReply.Payload,
+			}
+		}
+		if m.Message.Attachments != nil {
+			var as []Attachment
+			for _, a := range m.Message.Attachments {
+				as = append(as, Attachment{
+					Type: a.Type,
+					URL:  a.Payload.URL,
+				})
+			}
+			return Event{
+				Type:        EventAttachment,
+				ChatID:      m.Sender.ID,
+				Time:        msToTime(m.Timestamp),
+				MessageID:   m.Message.MID,
+				Attachments: as,
 			}
 		}
 		return Event{
@@ -185,10 +211,11 @@ type sender struct {
 }
 
 type message struct {
-	IsEcho     bool        `json:"is_echo,omitempty"`
-	Text       string      `json:"text"`
-	QuickReply *quickReply `json:"quick_reply,omitempty"`
-	MID        string      `json:"mid,omitempty"`
+	IsEcho      bool         `json:"is_echo,omitempty"`
+	Text        string       `json:"text"`
+	QuickReply  *quickReply  `json:"quick_reply,omitempty"`
+	MID         string       `json:"mid,omitempty"`
+	Attachments []attachment `json:"attachments,omitempty"`
 }
 
 type read struct {
@@ -197,4 +224,13 @@ type read struct {
 
 type postback struct {
 	Payload string `json:"payload"`
+}
+
+type attachment struct {
+	Type    string            `json:"type,omitempty"`
+	Payload attachmentPayload `json:"payload,omitempty"`
+}
+
+type attachmentPayload struct {
+	URL string `json:"url,omitempty"`
 }

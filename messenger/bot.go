@@ -22,11 +22,6 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	if e.Type == fbot.EventUnknown {
-		b.err.Println("received unknown event:", e)
-		return
-	}
-
 	if e.Type == fbot.EventRead {
 		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
 			b.err.Println(err)
@@ -52,5 +47,15 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	b.handleMessage(u, e.Text)
+	if e.Type == fbot.EventMessage {
+		b.handleMessage(u, e.Text)
+		return
+	}
+
+	if e.Type == fbot.EventAttachment {
+		b.handleAttachments(u, e.Attachments)
+		return
+	}
+
+	b.err.Printf("unhandled event: %#v", e)
 }

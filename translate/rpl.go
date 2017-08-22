@@ -18,7 +18,9 @@ type Rpl struct {
 	Score,
 	StudyEmpty,
 	StudiesDue,
-	ConfirmDelete []fbot.Reply
+	ConfirmDelete,
+	ImportHelp,
+	Import []fbot.Reply
 }
 
 func newRpl(l labels) Rpl {
@@ -43,6 +45,7 @@ func newRpl(l labels) Rpl {
 			fbot.Reply{Text: l.SubscribeDeny, Payload: payload.DenySubscribe},
 		},
 		Help: []fbot.Reply{
+			fbot.Reply{Text: l.ImportHelp, Payload: payload.ImportHelp},
 			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 		},
 		Feedback: []fbot.Reply{
@@ -75,6 +78,13 @@ func newRpl(l labels) Rpl {
 		ConfirmDelete: []fbot.Reply{
 			fbot.Reply{Text: iconDelete + " " + l.ConfirmDelete, Payload: payload.ConfirmDelete},
 			fbot.Reply{Text: l.CancelDelete, Payload: payload.CancelDelete},
+		},
+		ImportHelp: []fbot.Reply{
+			fbot.Reply{Text: l.CloseImportHelp, Payload: payload.Menu},
+		},
+		Import: []fbot.Reply{
+			fbot.Reply{Text: iconGood + " " + l.ConfirmImport, Payload: payload.ConfirmImport},
+			fbot.Reply{Text: l.CancelImport, Payload: payload.CancelImport},
 		},
 	}
 }

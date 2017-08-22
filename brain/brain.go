@@ -54,6 +54,7 @@ var (
 	bucketMessageIDs     = []byte("messageids")
 	bucketAuthTokens     = []byte("authtokens")
 	bucketAuthUsers      = []byte("authusers")
+	bucketPendingImports = []byte("pendingimports")
 )
 
 // id is a chat id as int64
@@ -87,6 +88,8 @@ var allBuckets = [][]byte{
 	bucketAuthTokens,
 	// id -> time+token
 	bucketAuthUsers,
+	// id -> gob([]Phrase)
+	bucketPendingImports,
 }
 
 // Mode is the state of a chat.

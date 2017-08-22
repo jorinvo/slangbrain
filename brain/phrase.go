@@ -14,7 +14,16 @@ import (
 // AddPhrase stores a new phrase.
 // Pass time the phrase should be created at.
 func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt time.Time) error {
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	p := Phrase{Phrase: phrase, Explanation: explanation}
+	if err := store.db.Update(phraseAdder(itob(id), p, createdAt)); err != nil {
+		return fmt.Errorf("failed to add phrase for id %d: %s - %s: %v", id, phrase, explanation, err)
+	}
+	return nil
+}
+
+// Abstract adding to reuse it for import.
+func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) error {
+	return func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
 
 		// Get phrase id
@@ -22,13 +31,11 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 		if err != nil {
 			return err
 		}
-		prefix := itob(id)
 		phraseID := append(prefix, itob(int64(sequence))...)
 
 		// Phrase to GOB
 		var buf bytes.Buffer
-		tmp := Phrase{Phrase: phrase, Explanation: explanation}
-		if err := gob.NewEncoder(&buf).Encode(tmp); err != nil {
+		if err := gob.NewEncoder(&buf).Encode(p); err != nil {
 			return err
 		}
 
@@ -40,12 +47,12 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 		// Limit number of new studies per day
 		newPhrases := 0
 		c := tx.Bucket(bucketPhrases).Cursor()
-		var p Phrase
+		var tmp Phrase
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
+			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
 				return err
 			}
-			if p.Score == 0 {
+			if tmp.Score == 0 {
 				newPhrases++
 			}
 		}
@@ -58,12 +65,7 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 
 		// Save time phrase has been added
 		return tx.Bucket(bucketPhraseAddTimes).Put(phraseID, itob(createdAt.Unix()))
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to add phrase for id %d: %s - %s: %v", id, phrase, explanation, err)
 	}
-	return nil
 }
 
 // FindPhrase returns a phrase belonging to the passed user that matches the passed function.

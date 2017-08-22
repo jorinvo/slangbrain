@@ -58,6 +58,22 @@ Mit Erklärung:
 		DenySubscribe:      `Alles klar.`,
 		Feedback:           "Ein Problem ist aufgetreten, du hast einen Verbesserungsvorschlag für uns oder du willst einfach nur hallo sagen? Sende jetzt eine Nachricht und sie wird weitergeleitet an die Menschen die Slangbrain entschickeln.",
 		FeedbackDone:       "Danke %s, wir melden uns bei dir sobald wie möglich.",
+		ImportHelp1: `Du kannst viele Vokabeln auf einmal hinzufügen indem du Slangbrain eine CSV Datei schickst.
+Die Datei muss die Endung '.csv' haben und sie muss 2 Spalten haben, wobei die erste Spalte für Vokabeln und die zweite für deren Erklärungen ist.
+Stelle sicher, dass die CSV Datei keine Kopfzeile, also keine Spaltentitel, enthält. Die Spalten werden durch ein Komma voneinander getrennt. Jeden Zelle kann in Anführungszeichen gesetzt werden, was hilfreich ist, falls man in der Zelle ein Komma benutzen will.
+Eine CSV Datei kann z.B. so aussehen:`,
+		ImportHelp2: `Bonjour !,Hallo!
+"merci","danke, dankeschön"`,
+		ImportPrompt:       "%d neue Vokabeln wurden gefunden. Willst du sie importieren?",
+		ImportPromptIgnore: "%d neue Vokabeln wurden gefunden und %d wurden ignoriert, weil du diese schon in deinem Slangbrain hast. Willst du die neuen Vokabeln importieren?",
+		ImportNone:         "%d Vokabel wurden fedunen, aber du hast die Vokabeln alle schon in deinem Slangbrain.",
+		ImportConfirm:      "%d neue Vokabeln wurden hinzugefügt.",
+		ImportCancel:       "Ok, keine neuen Vokabeln werden hinzugefügt.",
+		ImportEmpty:        "Die CSV Datei ist leer.",
+		ImportErrParse: `Die Datei '%s' is nicht richtig formatiert. Bitte überprüfe die Datei und versuche es noch einmal. Folgender Fehler ist aufgetreten:
+'%v'`,
+		ImportErrCols:      "Die CSV Dateien muss 2 Spalten haben, aber die Datei '%s' hat %d Spalten. Die erste Spalte ist für Vokabeln und die zweite für deren Erklärungen.",
+		ImportErrDuplicate: "Es gibt zwei Zeilen mit der gleichen Erklärung '%s'. Bitte bearbeite eine der beiden und versuche es noch einmal.",
 		AnHour:             "einer Stunde",
 		Hours:              "Stunden",
 		AMinute:            "einer Minute",
@@ -70,6 +86,8 @@ Mit Erklärung:
 		Add:                  "neu",
 		Done:                 "fertig",
 		Help:                 "Hilfe",
+		ImportHelp:           "Vokabeln importieren",
+		CloseImportHelp:      "ok",
 		SubscribeConfirm:     "gerne",
 		SubscribeDeny:        "nein",
 		DisableNotifications: iconDelete + " Benachrichtigung",
@@ -85,6 +103,8 @@ Mit Erklärung:
 		ConfirmDelete:        "jetzt löschen",
 		CancelDelete:         "abbrechen",
 		Manage:               "Vokabeln bearbeiten",
+		ConfirmImport:        "ja",
+		CancelImport:         "abbrechen",
 	}
 
 	w := Web{

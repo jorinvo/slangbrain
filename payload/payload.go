@@ -18,4 +18,7 @@ const (
 	Unsubscribe   = "PAYLOAD_UNSUBSCRIBE"
 	DenySubscribe = "PAYLOAD_NOSUBSCRIPTION"
 	Feedback      = "PAYLOAD_FEEDBACK"
+	ImportHelp    = "PAYLOAD_IMPORTHELP"
+	ConfirmImport = "PAYLOAD_CONFIRMIMPORT"
+	CancelImport  = "PAYLOAD_CANCELIMPORT"
 )

@@ -30,10 +30,11 @@ type Bot struct {
 	content      translate.Translator
 	err          *log.Logger
 	info         *log.Logger
+	do           func(req *http.Request) (*http.Response, error)
 	client       fbot.Client
 	feedback     chan<- Feedback
 	notifyTimers map[int64]*time.Timer
-	welcomeWait  time.Duration
+	messageDelay time.Duration
 	// Fields below are only used for initialization
 	http.Handler
 	setup         bool
@@ -88,10 +89,10 @@ func FAPI(url string) func(*Bot) {
 	}
 }
 
-// WelcomeWait sets a time for which to wait before sending the second welcome message.
-func WelcomeWait(t time.Duration) func(*Bot) {
+// MessageDelay sets a time for which to wait between sending messages when sending multiple in a row.
+func MessageDelay(t time.Duration) func(*Bot) {
 	return func(b *Bot) {
-		b.welcomeWait = t
+		b.messageDelay = t
 	}
 }
 
@@ -103,10 +104,18 @@ func Translate(t translate.Translator) func(*Bot) {
 	}
 }
 
+// HTTPDo sets the function to use for HTTP requests.
+// http.Client.Do can be used. If not specified http.DefaultClient is used.
+func HTTPDo(do func(req *http.Request) (*http.Response, error)) func(*Bot) {
+	return func(b *Bot) {
+		b.do = do
+	}
+}
+
 // New creates a Bot.
 // It can be used as a HTTP handler for the webhook.
 // A store, a Facebook API token and a Facebook app secret are required.
-// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, WelcomeWait, Translate can be used.
+// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, MessageDelay, Translate, HTTPDo can be used.
 func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, error) {
 	b := Bot{
 		store: store,
@@ -129,6 +138,9 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 	if b.hasTranslator == false {
 		b.info.Println("created Bot without Translator; disabled manager link")
 		b.content = translate.New("")
+	}
+	if b.do == nil {
+		b.do = http.DefaultClient.Do
 	}
 	if b.furl == "" {
 		b.client = fbot.New(token)

@@ -62,6 +62,22 @@ With explanation:
 		DenySubscribe:      `Sure, you won't receive any notifications.`,
 		Feedback:           "If you run into a problem, have any feedback for the people behind Slangbrain or just like to say hello, you can send a message now and we will get back to you as soon as possible.",
 		FeedbackDone:       "Thanks %s, you will hear from us soon.",
+		ImportHelp1: `You can add many phrases at once by sending a CSV file to Slangbrain.
+The file needs to end with '.csv' and it needs to have 2 columns, the first one is for  phrases, the second for their explanations.
+Don't add any header row in the CSV file. The columns on each line need to be separated by a comma. Each cell can be wrapped in quotes which is helpful if a cell contains a comma.
+A valid file could look like this:`,
+		ImportHelp2: `hola,hello
+"gracias","thanks, thank you"`,
+		ImportPrompt:       "%d phrases have been detected. Would you like to import them into Slangbrain?",
+		ImportPromptIgnore: "%d new phrases have been detected and %d have been becuase you already have them in your Slangbrain. Would you like to import the new phrases?",
+		ImportNone:         "%d phrases have been detected, but you already have all of them in your Slangbrain.",
+		ImportConfirm:      "%d phrases have been imported.",
+		ImportCancel:       "Ok, no phrases have been imported.",
+		ImportEmpty:        "The CSV file is empty. Nothing has been imported.",
+		ImportErrParse: `The file '%s' is not formatted correctly. Please check the file and try it again. Parsing the file failed with the error:
+'%v'`,
+		ImportErrCols:      "Expecting CSV files to have 2 columns, but file '%s' has %d. The first one should contain the phrase, the second an explanation.",
+		ImportErrDuplicate: "There are multiple phrases with the explantion '%s'. Please solve the conflict and try again.",
 		AnHour:             "an hour",
 		Hours:              "hours",
 		AMinute:            "a minute",
@@ -74,6 +90,8 @@ With explanation:
 		Add:                  "phrases",
 		Done:                 "done",
 		Help:                 "help",
+		ImportHelp:           "import phrases",
+		CloseImportHelp:      "ok",
 		SubscribeConfirm:     "sounds good",
 		SubscribeDeny:        "no thanks",
 		DisableNotifications: "stop notifications",
@@ -89,6 +107,8 @@ With explanation:
 		ConfirmDelete:        "delete phrase",
 		CancelDelete:         "cancel",
 		Manage:               "manage phrases",
+		ConfirmImport:        "yes",
+		CancelImport:         "cancel",
 	}
 
 	w := Web{

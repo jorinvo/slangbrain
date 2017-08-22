@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/payload"
@@ -100,6 +101,22 @@ func (b Bot) handlePayload(u user.User, p string) {
 			return
 		}
 		b.send(u.ID, u.Msg.Feedback, u.Rpl.Feedback, nil)
+
+	case payload.ImportHelp:
+		b.send(u.ID, u.Msg.ImportHelp1, nil, nil)
+		time.Sleep(b.messageDelay)
+		b.send(u.ID, u.Msg.ImportHelp2, u.Rpl.ImportHelp, nil)
+
+	case payload.ConfirmImport:
+		count, err := b.store.ApplyImport(u.ID)
+		if err != nil {
+			b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, err)
+			return
+		}
+		b.send(u.ID, fmt.Sprintf(u.Msg.ImportConfirm, count)+"\n\n"+u.Msg.Menu, u.Rpl.MenuMode, nil)
+
+	case payload.CancelImport:
+		b.send(u.ID, u.Msg.ImportCancel+"\n\n"+u.Msg.Menu, u.Rpl.MenuMode, b.store.ClearImport(u.ID))
 
 	case payload.Menu:
 		fallthrough

@@ -27,11 +27,11 @@ func (b Bot) messageWelcome(u user.User) {
 		b.err.Printf("failed to register user %d: %v", u.ID, err)
 	}
 	b.send(u.ID, fmt.Sprintf(u.Msg.Welcome1, u.Name()), nil, nil)
-	time.Sleep(b.welcomeWait)
+	time.Sleep(b.messageDelay)
 	b.send(u.ID, u.Msg.Welcome2, nil, nil)
-	time.Sleep(b.welcomeWait)
+	time.Sleep(b.messageDelay)
 	b.send(u.ID, u.Msg.Welcome3, nil, nil)
-	time.Sleep(b.welcomeWait)
+	time.Sleep(b.messageDelay)
 	b.send(u.ID, u.Msg.Welcome4, nil, b.store.SetMode(u.ID, brain.ModeAdd))
 }
 
