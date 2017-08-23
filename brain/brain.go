@@ -19,11 +19,11 @@ const (
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 50
+	newPerDay = 30
 	// Minimum number of studies needed to be due before notifying user
-	dueMinCount = 9
+	dueMinCount = 10
 	// Time user has to be inactive before being notified
-	dueMinInactive = 5 * time.Minute
+	dueMinInactive = 2 * time.Hour
 	// Cache profiles for one month
 	profileMaxCacheTime = 30 * 24 * time.Hour
 	// Number of chars a token gets
