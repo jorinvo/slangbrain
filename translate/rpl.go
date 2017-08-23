@@ -10,7 +10,8 @@ import (
 type Rpl struct {
 	MenuMode,
 	Subscribe,
-	Help,
+	HelpSubscribe,
+	HelpUnsubscribe,
 	Feedback,
 	AddMode,
 	StudyMode,
@@ -44,8 +45,14 @@ func newRpl(l labels) Rpl {
 			fbot.Reply{Text: iconGood + " " + l.SubscribeConfirm, Payload: payload.Subscribe},
 			fbot.Reply{Text: l.SubscribeDeny, Payload: payload.DenySubscribe},
 		},
-		Help: []fbot.Reply{
-			fbot.Reply{Text: l.ImportHelp, Payload: payload.ImportHelp},
+		HelpSubscribe: []fbot.Reply{
+			fbot.Reply{Text: l.EnableNotifications, Payload: payload.Subscribe},
+			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
+			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
+		},
+		HelpUnsubscribe: []fbot.Reply{
+			fbot.Reply{Text: l.DisableNotifications, Payload: payload.Unsubscribe},
+			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
 			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 		},
 		Feedback: []fbot.Reply{

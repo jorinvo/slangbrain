@@ -19,7 +19,7 @@ type Content struct {
 }
 
 // New returns a translator with messages, replies and buttons loaded in all available languages.
-func New(managerLocation string) Translator {
+func New(serverURL string) Translator {
 	langs := map[string]func() (Msg, labels, Web){
 		defaultLang: en,
 		"en_GB":     en,
@@ -33,7 +33,7 @@ func New(managerLocation string) Translator {
 		t.data[lang] = Content{
 			Msg: m,
 			Rpl: newRpl(l),
-			Btn: newBtn(l, managerLocation),
+			Btn: newBtn(l, serverURL),
 			Web: w,
 		}
 	}

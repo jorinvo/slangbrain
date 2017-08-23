@@ -20,11 +20,8 @@ func Phrases(store brain.Store, errorLogger *log.Logger) http.Handler {
 			return
 		}
 
-		token := r.URL.Query().Get("token")
-		id, err := store.LookupToken(token)
-		if err != nil {
-			errorLogger.Printf("invalid token '%s': %v", token, err)
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+		id, ok := getID(store, errorLogger, w, r)
+		if !ok {
 			return
 		}
 
@@ -41,12 +38,14 @@ func Phrases(store brain.Store, errorLogger *log.Logger) http.Handler {
 				http.Error(w, "failed to update phrase", http.StatusInternalServerError)
 				return
 			}
+
 		case http.MethodDelete:
 			if err := store.DeletePhrase(id, seq); err != nil {
 				errorLogger.Printf("failed to delete phrase: %v", err)
 				http.Error(w, "failed to delete phrase", http.StatusInternalServerError)
 				return
 			}
+
 		default:
 			http.Error(w, "unsupported method", http.StatusMethodNotAllowed)
 			return

@@ -24,6 +24,7 @@ type labels struct {
 	CancelDelete,
 	Manage,
 	ImportHelp,
+	Export,
 	CloseImportHelp,
 	ConfirmImport,
 	CancelImport string

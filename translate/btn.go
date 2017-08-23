@@ -1,6 +1,8 @@
 package translate
 
 import (
+	"strings"
+
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
 )
@@ -8,31 +10,25 @@ import (
 // Btn contains all button sets that can be sent to a user.
 // They are already localized for one language.
 type Btn struct {
-	Help func(bool, string) []fbot.Button
+	Help func(string) []fbot.Button
 }
 
-func newBtn(l labels, managerLocation string) Btn {
-	feedback := fbot.PayloadButton(l.SendFeedback, payload.Feedback)
+func newBtn(l labels, serverURL string) Btn {
+	importHelp := fbot.PayloadButton(l.ImportHelp, payload.ImportHelp)
+	normURL := strings.TrimSuffix(serverURL, "/")
+	manager := normURL + "/webview/manage/"
+	exporter := normURL + "/api/phrases.csv?token="
 
 	return Btn{
-		Help: func(isSubscribed bool, manageToken string) []fbot.Button {
-			var notificationToggle fbot.Button
-			if isSubscribed {
-				notificationToggle = fbot.PayloadButton(l.DisableNotifications, payload.Unsubscribe)
-			} else {
-				notificationToggle = fbot.PayloadButton(l.EnableNotifications, payload.Subscribe)
-			}
+		Help: func(token string) []fbot.Button {
 			// Disable manage link if no location given
-			if managerLocation == "" || manageToken == "" {
-				return []fbot.Button{
-					notificationToggle,
-					feedback,
-				}
+			if serverURL == "" || token == "" {
+				return []fbot.Button{importHelp}
 			}
 			return []fbot.Button{
-				fbot.URLButton(l.Manage, managerLocation+manageToken),
-				notificationToggle,
-				feedback,
+				fbot.URLButton(l.Manage, manager+token),
+				importHelp,
+				fbot.LinkButton(l.Export, exporter+token),
 			}
 		},
 	}

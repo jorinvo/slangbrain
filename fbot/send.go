@@ -90,6 +90,17 @@ func URLButton(text, url string) Button {
 	}
 }
 
+// LinkButton returns a button that opens a URL in the browser.
+func LinkButton(text, url string) Button {
+	return button{
+		Type:        "web_url",
+		Title:       text,
+		URL:         url,
+		ShareButton: "hide",
+		Extensions:  false,
+	}
+}
+
 type buttonTemplate struct {
 	Attachment   buttonAttachment `json:"attachment"`
 	QuickReplies []quickReply     `json:"quick_replies,omitempty"`

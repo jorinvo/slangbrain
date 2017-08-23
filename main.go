@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/jorinvo/slangbrain/api"
@@ -107,7 +106,7 @@ func main() {
 	}()
 	infoLogger.Printf("Database initialized: %s", *db)
 
-	translator := translate.New(strings.TrimSuffix(*baseURL, "/") + "/webview/manage/")
+	translator := translate.New(*baseURL)
 
 	// Listen to system events for graceful shutdown
 	shutdownSignals := make(chan os.Signal, 1)
@@ -162,10 +161,12 @@ func main() {
 	})
 
 	apiHandler := api.Phrases(store, errorLogger)
+	csvHandler := api.CSV(store, errorLogger)
 	webviewHandler := webview.New(store, errorLogger, translator, "/api/")
 
 	mux := http.NewServeMux()
 	mux.Handle("/webhook", webhookHandler)
+	mux.Handle("/api/phrases.csv", csvHandler)
 	mux.Handle("/api/phrases/", http.StripPrefix("/api/phrases/", apiHandler))
 	mux.Handle("/webview/manage/", http.StripPrefix("/webview/manage/", webviewHandler))
 	mux.Handle("/slack", slackHandler)

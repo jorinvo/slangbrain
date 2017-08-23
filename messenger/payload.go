@@ -41,8 +41,12 @@ func (b Bot) handlePayload(u user.User, p string) {
 		if err != nil {
 			b.err.Println(err)
 		}
-		buttons := u.Btn.Help(isSubscribed, token)
-		if err = b.client.SendWithButtons(u.ID, u.Msg.Help, u.Rpl.Help, buttons); err != nil {
+		replies := u.Rpl.HelpSubscribe
+		if isSubscribed {
+			replies = u.Rpl.HelpUnsubscribe
+		}
+		buttons := u.Btn.Help(token)
+		if err = b.client.SendWithButtons(u.ID, u.Msg.Help, replies, buttons); err != nil {
 			b.err.Println("failed to send message:", err)
 		}
 

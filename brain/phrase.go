@@ -159,7 +159,8 @@ func (p idPhrases) Swap(i, j int) {
 	p.p[j], p.p[i] = p.p[i], p.p[j]
 }
 
-// GetAllPhrases returns all phrases for a given user in a map with phrase sequence numbers as keys.
+// GetAllPhrases returns all phrases for a given user sorted by the time they have been added.
+// Need to load all of the user's phrases in memory to be able to sort them.
 func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 	var phrases []IDPhrase
 	addTimes := map[int64]int64{}
