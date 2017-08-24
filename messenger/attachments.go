@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
@@ -18,9 +19,23 @@ import (
 func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 	var csvFiles []struct{ Name, URL string }
 	for _, a := range attachments {
-		// Notify admin for non-file attachments
-		if a.Type != "file" {
-			// Ignore stickers for now, 'like' button is used, but ignored.
+		// Support sharing CSV files to Slangbrain:
+		// Extract fallback URL and treat it like an uploaded file
+		if a.Type == "fallback" {
+			f, err := url.ParseRequestURI(a.URL)
+			if err != nil {
+				b.err.Printf("[id=%d,url=%s] failed to parse fallback URL: %v", u.ID, a.URL, err)
+				return
+			}
+			a.URL, err = url.QueryUnescape(f.Query().Get("u"))
+			if err != nil {
+				b.err.Printf("[id=%d,url=%s] failed to unescape fallback URL: %v", u.ID, a.URL, err)
+				return
+			}
+
+			// Notify admin for non-file and non-fallback attachments
+		} else if a.Type != "file" {
+			// Ignore stickers for now, since 'like' button is sent a lot
 			if a.Sticker != 0 {
 				continue
 			}
@@ -40,9 +55,9 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 		}
 		if strings.ToLower(path.Ext(f.Path)) != ".csv" {
 			if b.feedback != nil {
-				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: "[unhandled file: " + a.URL + "]"}
+				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: fmt.Sprintf("[unhandled %s: %s]", a.Type, a.URL)}
 			} else {
-				b.err.Printf("got unhandled file from %s (%d): %s", u.Name(), u.ID, a.URL)
+				b.err.Printf("[id=%d] got unhandled %s from %s: %s", u.ID, a.Type, u.Name(), a.URL)
 			}
 			continue
 		}
@@ -130,4 +145,25 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, valid, existing)
 		b.send(u.ID, msg, u.Rpl.Import, nil)
 	}
+}
+
+// Facebook escapes special chars in a weird unicode format.
+// \u00253A should actually be \u003A
+// \u00252F should be \u002F
+func unescape(s string) (string, error) {
+	for {
+		i := strings.Index(s, `\u0025`)
+		if i == -1 {
+			break
+		}
+		if i+8 >= len(s) {
+			return s, fmt.Errorf("found codepoint at index %d but string is shorter than %d+8=%d", i, i, i+8)
+		}
+		r, err := strconv.Unquote(`'\u00` + s[i+6:i+8] + `'`)
+		if err != nil {
+			return s, err
+		}
+		s = s[:i] + string(r) + s[i+8:]
+	}
+	return s, nil
 }

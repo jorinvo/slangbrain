@@ -149,11 +149,19 @@ func getEvent(m messageInfo) Event {
 		if m.Message.Attachments != nil {
 			var as []Attachment
 			for _, a := range m.Message.Attachments {
-				as = append(as, Attachment{
-					Type:    a.Type,
-					URL:     a.Payload.URL,
-					Sticker: a.Payload.Sticker,
-				})
+				if a.Type == "fallback" {
+					as = append(as, Attachment{
+						Type:    a.Type,
+						URL:     a.URL,
+						Sticker: a.Payload.Sticker,
+					})
+				} else {
+					as = append(as, Attachment{
+						Type:    a.Type,
+						URL:     a.Payload.URL,
+						Sticker: a.Payload.Sticker,
+					})
+				}
 			}
 			return Event{
 				Type:        EventAttachment,
@@ -232,6 +240,8 @@ type postback struct {
 type attachment struct {
 	Type    string            `json:"type,omitempty"`
 	Payload attachmentPayload `json:"payload,omitempty"`
+	// used by fallback
+	URL string `json:"url,omitempty"`
 }
 
 type attachmentPayload struct {
