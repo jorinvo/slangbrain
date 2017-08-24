@@ -10,6 +10,15 @@ import (
 )
 
 func (b Bot) handlePayload(u user.User, p string) {
+	isDuplicate, err := b.store.IsDuplicate(u.ID, p)
+	if err != nil {
+		b.err.Println(err)
+	}
+	if isDuplicate {
+		b.info.Printf("[id=%d,p=%s] same payload sent twice in a row", u.ID, p)
+		return
+	}
+
 	switch p {
 	case payload.GetStarted:
 		b.messageWelcome(u)

@@ -30,6 +30,8 @@ const (
 	authTokenLength = 77
 	// Tokens are valid for one month
 	authTokenMaxAge = 30 * 24 * time.Hour
+	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
+	payloadDuplicateInterval = time.Minute
 )
 
 var (
@@ -55,6 +57,7 @@ var (
 	bucketAuthTokens     = []byte("authtokens")
 	bucketAuthUsers      = []byte("authusers")
 	bucketPendingImports = []byte("pendingimports")
+	bucketPrevPayloads   = []byte("prevpayloads")
 )
 
 // id is a chat id as int64
@@ -86,10 +89,12 @@ var allBuckets = [][]byte{
 	bucketMessageIDs,
 	// token -> id
 	bucketAuthTokens,
-	// id -> time+token
+	// id -> time+string(token)
 	bucketAuthUsers,
 	// id -> gob([]Phrase)
 	bucketPendingImports,
+	// id -> time+string(payload)
+	bucketPrevPayloads,
 }
 
 // Mode is the state of a chat.
