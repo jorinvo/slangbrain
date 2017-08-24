@@ -170,6 +170,9 @@ func main() {
 	mux.Handle("/api/phrases/", http.StripPrefix("/api/phrases/", apiHandler))
 	mux.Handle("/webview/manage/", http.StripPrefix("/webview/manage/", webviewHandler))
 	mux.Handle("/slack", slackHandler)
+	mux.Handle("/status", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "OK")
+	}))
 	if *backupAuth != "" {
 		mux.Handle("/backup", backupHandler)
 	}
