@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
@@ -17,6 +16,11 @@ import (
 // Handle the upload of CSV files to import phrases.
 // Other attachments are handled only by notifying the admin to look into them manually.
 func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
+	// Go back to menu mode in any case
+	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
+		b.err.Println(err)
+	}
+
 	var csvFiles []struct{ Name, URL string }
 	for _, a := range attachments {
 		// Support sharing CSV files to Slangbrain:
@@ -50,8 +54,8 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 		// Notify admin for non-csv files
 		f, err := url.ParseRequestURI(a.URL)
 		if err != nil {
-			b.send(u.ID, u.Msg.Error, nil, fmt.Errorf("failed to parse URL of file at %s (user %d): %v", a.URL, u.ID, err))
-			return
+			b.err.Printf("[id=%d,url=%s]failed to parse URL: %v", u.ID, a.URL, err)
+			continue
 		}
 		if strings.ToLower(path.Ext(f.Path)) != ".csv" {
 			if b.feedback != nil {
@@ -145,25 +149,4 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, valid, existing)
 		b.send(u.ID, msg, u.Rpl.Import, nil)
 	}
-}
-
-// Facebook escapes special chars in a weird unicode format.
-// \u00253A should actually be \u003A
-// \u00252F should be \u002F
-func unescape(s string) (string, error) {
-	for {
-		i := strings.Index(s, `\u0025`)
-		if i == -1 {
-			break
-		}
-		if i+8 >= len(s) {
-			return s, fmt.Errorf("found codepoint at index %d but string is shorter than %d+8=%d", i, i, i+8)
-		}
-		r, err := strconv.Unquote(`'\u00` + s[i+6:i+8] + `'`)
-		if err != nil {
-			return s, err
-		}
-		s = s[:i] + string(r) + s[i+8:]
-	}
-	return s, nil
 }

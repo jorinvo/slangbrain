@@ -29,7 +29,7 @@ func (store Store) SetMode(id int64, mode Mode) error {
 		return tx.Bucket(bucketModes).Put(itob(id), itob(int64(mode)))
 	})
 	if err != nil {
-		return fmt.Errorf("failed to set mode for id %d: %d: %v", id, mode, err)
+		return fmt.Errorf("[id=%d,mode=%v] failed to set mode: %v", id, mode, err)
 	}
 	return nil
 }
