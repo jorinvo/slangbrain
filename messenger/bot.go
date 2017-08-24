@@ -11,7 +11,7 @@ import (
 // Everything that is not in the unicode character classes
 // for letters or numeric values
 // See: http://www.fileformat.info/info/unicode/category/index.htm
-var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}]`)
+var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}\p{Mn}]`)
 
 var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
