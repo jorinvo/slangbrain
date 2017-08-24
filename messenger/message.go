@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -9,7 +10,17 @@ import (
 	"github.com/jorinvo/slangbrain/user"
 )
 
+// Keeping it simple for now.
+// handleLink() will find the false positives.
+var matchURL = regexp.MustCompile(`https?://\S+\.\S+`)
+
 func (b Bot) handleMessage(u user.User, msg string) {
+	// If message contains links, handle them instead of whatever would be next
+	if links := matchURL.FindAllString(msg, -1); links != nil {
+		b.handleLinks(u, links)
+		return
+	}
+
 	mode, err := b.store.GetMode(u.ID)
 	if err != nil {
 		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, fmt.Errorf("failed to get mode for id %v: %v", u.ID, err))
