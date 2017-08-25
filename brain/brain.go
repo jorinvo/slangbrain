@@ -11,8 +11,8 @@ import (
 const (
 	// Time to wait for first study in hours
 	firstStudytime = 2
-	// base time in hours to use to calculate next study time
-	baseStudytime = 6
+	// Base time in hours to use to calculate next study time
+	baseStudytime = 10
 	// Time in minutes
 	// When study times are updated they are randomly placed
 	// somewhere between the new time and new time + studyTimeDiffusion
