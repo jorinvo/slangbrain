@@ -1,19 +1,10 @@
 package messenger
 
 import (
-	"regexp"
-
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/user"
 )
-
-// Everything that is not in the unicode character classes
-// for letters or numeric values
-// See: http://www.fileformat.info/info/unicode/category/index.htm
-var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}\p{Mn}]`)
-
-var inParantheses = regexp.MustCompile(`\(.*?\)`)
 
 // HandleEvent handles a Messenger event.
 func (b Bot) HandleEvent(e fbot.Event) {

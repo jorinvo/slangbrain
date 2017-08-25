@@ -3,6 +3,7 @@ package messenger
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -11,6 +12,14 @@ import (
 	"github.com/jorinvo/slangbrain/translate"
 	"github.com/jorinvo/slangbrain/user"
 )
+
+// Everything that is not in the unicode character classes
+// for letters or numeric values
+// See: http://www.fileformat.info/info/unicode/category/index.htm
+var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}\p{Mn}]`)
+
+// inside () or [] or || or {} or <>
+var inParantheses = regexp.MustCompile(`\(.*?\)|\[.*?\]|\|.*?\||\{.*?\}|\<.*?\>`)
 
 // Change to menu mode.
 // Return values can be passed directly to b.send().
@@ -112,7 +121,7 @@ func formatDuration(msg translate.Msg, d time.Duration) string {
 	return s
 }
 
-// Normalize two forms so user can choose add parts in paranthesis or not.
+// Normalize two forms so user can choose to add parts in paranthesis or not.
 // Case, space and punctuation are ignored.
 func normPhrases(s string) (string, string) {
 	return normPhrase(inParantheses.ReplaceAllString(s, "")), normPhrase(s)
