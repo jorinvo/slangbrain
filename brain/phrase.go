@@ -84,12 +84,37 @@ func (store Store) FindPhrase(id int64, fn func(Phrase) bool) (Phrase, error) {
 	return p, nil
 }
 
+// DeletePhrase removes a phrase.
+func (store Store) DeletePhrase(id int64, seq int) error {
+	key := append(itob(id), itob(int64(seq))...)
+	err := store.db.Update(func(tx *bolt.Tx) error {
+		return phraseDeleter(tx, key)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
+	}
+	return nil
+}
+
+// Reuse deleting functionality to only have one place
+// to think about that all related buckets have been cleared.
+func phraseDeleter(tx *bolt.Tx, key []byte) error {
+	// Delete study time
+	if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
+		return err
+	}
+	// Delete add time
+	if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
+		return err
+	}
+	// Delete phrase
+	return tx.Bucket(bucketPhrases).Delete(key)
+}
+
 // DeleteStudyPhrase deletes the phrase the passed user currently has to study.
 func (store Store) DeleteStudyPhrase(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bs := tx.Bucket(bucketStudytimes)
-		bp := tx.Bucket(bucketPhrases)
-		c := bs.Cursor()
+		c := tx.Bucket(bucketStudytimes).Cursor()
 		now := time.Now().Unix()
 		prefix := itob(id)
 		var keyTime int64
@@ -109,16 +134,8 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 		if key == nil {
 			return errors.New("no study found")
 		}
-		// Delete study time
-		if err := bs.Delete(key); err != nil {
-			return err
-		}
-		// Delete add time
-		if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
-			return err
-		}
-		// Delete phrase
-		return bp.Delete(key)
+
+		return phraseDeleter(tx, key)
 	})
 
 	if err != nil {
@@ -182,27 +199,6 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 		return phrases, fmt.Errorf("failed to get all phrases for %d: %v", id, err)
 	}
 	return phrases, nil
-}
-
-// DeletePhrase removes a phrase.
-func (store Store) DeletePhrase(id int64, seq int) error {
-	key := append(itob(id), itob(int64(seq))...)
-	err := store.db.Update(func(tx *bolt.Tx) error {
-		// Delete study time
-		if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
-			return err
-		}
-		// Delete add time
-		if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
-			return err
-		}
-		// Delete phrase
-		return tx.Bucket(bucketPhrases).Delete(key)
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
-	}
-	return nil
 }
 
 // UpdatePhrase updates an existing phrase.
