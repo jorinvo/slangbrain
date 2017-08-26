@@ -44,21 +44,12 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) er
 			return err
 		}
 
-		// Limit number of new studies per day
-		var newPhrases float64
-		c := tx.Bucket(bucketPhrases).Cursor()
-		var tmp Phrase
-		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
-				return err
-			}
-			if tmp.Score == 0 {
-				newPhrases++
-			}
-		}
-
 		// Save study time
-		next := itob(createdAt.Add(time.Duration(newPhrases/newPerDay*24)*time.Hour + studyIntervals[0]).Unix())
+		offset, err := limitPerDay(tx, prefix)
+		if err != nil {
+			return err
+		}
+		next := itob(createdAt.Add(studyIntervals[0] + offset).Unix())
 		if err := tx.Bucket(bucketStudytimes).Put(phraseID, next); err != nil {
 			return err
 		}

@@ -3,8 +3,10 @@ package brain
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/gob"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -31,6 +33,25 @@ func (store Store) BackupTo(w http.ResponseWriter) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// Limit number of studies per day.
+// The more new phrases there are, the later the studies should be scheduled.
+// Returns an offset to add to a timestamp.
+func limitPerDay(tx *bolt.Tx, prefix []byte) (time.Duration, error) {
+	var newPhrases float64
+	c := tx.Bucket(bucketPhrases).Cursor()
+	var tmp Phrase
+	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+		if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
+			return 0, err
+		}
+		if tmp.Score == 0 {
+			newPhrases++
+		}
+	}
+
+	return time.Duration(newPhrases/newPerDay*24) * time.Hour, nil
 }
 
 // TODO: it is unused and also needs to clean the other buckets.

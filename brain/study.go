@@ -112,15 +112,15 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		}
 
 		// Update study time
-		//
-		// Randomize order by spreading studies over a period of time
-		diffusion := time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
-		// Limit to study intervals
 		i := p.Score
 		if i >= len(studyIntervals) {
 			i = len(studyIntervals) - 1
 		}
-		next := itob(now.Add(studyIntervals[i] + diffusion).Unix())
+		offset, err := limitPerDay(tx, prefix)
+		if err != nil {
+			return err
+		}
+		next := itob(now.Add(studyIntervals[i] + offset + diffusion()).Unix())
 		if err := bs.Put(key, next); err != nil {
 			return err
 		}
@@ -139,6 +139,11 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		return fmt.Errorf("failed to score study with id %d: %v", id, err)
 	}
 	return nil
+}
+
+// Randomize order by spreading studies over a period of time
+func diffusion() time.Duration {
+	return time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
 }
 
 // GetNotifyTime gets the time until the user should be notified to study.
