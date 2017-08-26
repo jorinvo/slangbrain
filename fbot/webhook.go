@@ -134,6 +134,21 @@ func validSignature(signature, secret string, data []byte) bool {
 }
 
 func getEvent(m messageInfo) Event {
+	if m.Postback != nil {
+		return Event{
+			Type:    EventPayload,
+			ChatID:  m.Sender.ID,
+			Time:    msToTime(m.Timestamp),
+			Payload: m.Postback.Payload,
+		}
+	}
+	if m.Read != nil {
+		return Event{
+			Type:   EventRead,
+			ChatID: m.Sender.ID,
+			Time:   msToTime(m.Read.Watermark),
+		}
+	}
 	if m.Message != nil {
 		if m.Message.IsEcho {
 			return Event{}
@@ -177,21 +192,6 @@ func getEvent(m messageInfo) Event {
 			Time:      msToTime(m.Timestamp),
 			Text:      m.Message.Text,
 			MessageID: m.Message.MID,
-		}
-	}
-	if m.Postback != nil {
-		return Event{
-			Type:    EventPayload,
-			ChatID:  m.Sender.ID,
-			Time:    msToTime(m.Timestamp),
-			Payload: m.Postback.Payload,
-		}
-	}
-	if m.Read != nil {
-		return Event{
-			Type:   EventRead,
-			ChatID: m.Sender.ID,
-			Time:   msToTime(m.Read.Watermark),
 		}
 	}
 	return Event{}

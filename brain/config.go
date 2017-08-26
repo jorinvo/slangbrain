@@ -21,7 +21,7 @@ const (
 	// Tokens are valid for one month
 	authTokenMaxAge = 30 * 24 * time.Hour
 	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
-	payloadDuplicateInterval = time.Minute
+	payloadDuplicateInterval = 10 * time.Second
 )
 
 var studyIntervals = [14]time.Duration{
