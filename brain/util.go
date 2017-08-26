@@ -53,32 +53,3 @@ func limitPerDay(tx *bolt.Tx, prefix []byte) (time.Duration, error) {
 
 	return time.Duration(newPhrases/newPerDay*24) * time.Hour, nil
 }
-
-// TODO: it is unused and also needs to clean the other buckets.
-// DeleteChat removes all records of a given chat.
-func (store Store) DeleteChat(id int64) error {
-	return store.db.Update(func(tx *bolt.Tx) error {
-		key := itob(id)
-		// Remove mode
-		if err := tx.Bucket(bucketModes).Delete(key); err != nil {
-			return err
-		}
-		// Remove phrases
-		bp := tx.Bucket(bucketPhrases)
-		c := bp.Cursor()
-		for k, _ := c.Seek(key); k != nil && bytes.HasPrefix(k, key); k, _ = c.Next() {
-			if err := bp.Delete(k); err != nil {
-				return err
-			}
-		}
-		// Remove study times
-		bs := tx.Bucket(bucketStudytimes)
-		c = bp.Cursor()
-		for k, _ := c.Seek(key); k != nil && bytes.HasPrefix(k, key); k, _ = c.Next() {
-			if err := bs.Delete(k); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-}
