@@ -81,7 +81,7 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		if len(records) == 0 {
 			continue
 		}
-		if cols := len(records[0]); cols != 2 {
+		if cols := len(records[0]); cols < 2 {
 			b.send(u.ID, fmt.Sprintf(u.Msg.ImportErrCols, file.Name, cols), nil, nil)
 			return
 		}

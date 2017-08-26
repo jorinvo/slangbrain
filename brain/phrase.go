@@ -127,10 +127,12 @@ func (store Store) DeleteStudyPhrase(id int64) error {
 	return nil
 }
 
-// IDPhrase is a phrase format that contains the ID but not the Score.
+// IDPhrase is a phrase format that also contains ID.
 type IDPhrase struct {
-	ID                  int64
-	Phrase, Explanation string
+	ID          int64
+	Phrase      string
+	Explanation string
+	Score       int
 }
 
 type idPhrases struct {
@@ -165,7 +167,7 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 				return err
 			}
 			seq := btoi(k[8:])
-			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation})
+			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation, p.Score})
 			var t int64
 			tb := bt.Get(k)
 			if tb != nil {
