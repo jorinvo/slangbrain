@@ -63,7 +63,7 @@ func (store Store) GetStudy(id int64) (Study, error) {
 }
 
 // ScoreStudy sets the score of the current study and moves to the next study.
-func (store Store) ScoreStudy(id int64, score int) error {
+func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bs := tx.Bucket(bucketStudytimes)
 		c := bs.Cursor()
@@ -97,7 +97,7 @@ func (store Store) ScoreStudy(id int64, score int) error {
 		}
 
 		// Update score
-		p.Score += score
+		p.Score += scoreUpdate
 		if p.Score < 0 {
 			p.Score = 0
 		}
@@ -127,8 +127,8 @@ func (store Store) ScoreStudy(id int64, score int) error {
 
 		// Save study
 		idAndTime := append(prefix, itob(uNow)...)
-		seqAndScore := append(key[8:], itob(int64(score))...)
-		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScore); err != nil {
+		seqAndScores := append(append(key[8:], itob(int64(scoreUpdate))...), itob(int64(p.Score))...)
+		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScores); err != nil {
 			return err
 		}
 

@@ -22,7 +22,8 @@ var (
 // id is a chat id as int64
 // time is an unix timestamp in seconds as int64
 // phrase is a bucket sequence as uint64
-// score is an int64
+// scoreupdate is an int64
+// newscore is an int64
 var allBuckets = [][]byte{
 	// id -> Mode
 	bucketModes,
@@ -42,7 +43,7 @@ var allBuckets = [][]byte{
 	bucketProfiles,
 	// id -> time
 	bucketRegisterDates,
-	// id+time -> phrase+score
+	// id+time -> phrase+scoreupdate+newscore
 	bucketStudies,
 	// string -> []byte{}
 	bucketMessageIDs,
