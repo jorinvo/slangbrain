@@ -8,107 +8,12 @@ import (
 	"time"
 )
 
-const (
-	// Time in minutes
-	// When study times are updated they are randomly placed
-	// somewhere between the new time and new time + studyTimeDiffusion
-	// to mix up the order in which words are studied.
-	studyTimeDiffusion = 30
-	// Maximum number of new studies per day
-	newPerDay = 30.0
-	// Minimum number of studies needed to be due before notifying user
-	dueMinCount = 10
-	// Time user has to be inactive before being notified
-	dueMinInactive = 2 * time.Hour
-	// Cache profiles for one month
-	profileMaxCacheTime = 30 * 24 * time.Hour
-	// Number of chars a token gets
-	authTokenLength = 77
-	// Tokens are valid for one month
-	authTokenMaxAge = 30 * 24 * time.Hour
-	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
-	payloadDuplicateInterval = time.Minute
-)
-
-var studyIntervals = [14]time.Duration{
-	2 * time.Hour,
-	8 * time.Hour,
-	20 * time.Hour,
-	44 * time.Hour,
-	(4*24 - 2) * time.Hour,
-	(7*24 - 2) * time.Hour,
-	(14*24 - 2) * time.Hour,
-	(30*24 - 2) * time.Hour,
-	(60*24 - 2) * time.Hour,
-	(100*24 - 2) * time.Hour,
-	(5*30*24 - 2) * time.Hour,
-	(8*30*24 - 2) * time.Hour,
-	(12*30*24 - 2) * time.Hour,
-	(15*30*24 - 2) * time.Hour,
-}
-
 var (
 	// ErrExists signals that the thing to be added has been added already.
 	ErrExists = errors.New("already exists")
 	// ErrNotFound signals that the requested entry couldn't be found.
 	ErrNotFound = errors.New("not found")
 )
-
-// For docs see allBuckets
-var (
-	bucketModes          = []byte("modes")
-	bucketPhrases        = []byte("phrases")
-	bucketStudytimes     = []byte("studytimes")
-	bucketPhraseAddTimes = []byte("phraseaddtimes")
-	bucketReads          = []byte("reads")
-	bucketActivities     = []byte("activities")
-	bucketSubscriptions  = []byte("subscriptions")
-	bucketProfiles       = []byte("profiles")
-	bucketRegisterDates  = []byte("registerdates")
-	bucketStudies        = []byte("studies")
-	bucketMessageIDs     = []byte("messageids")
-	bucketAuthTokens     = []byte("authtokens")
-	bucketAuthUsers      = []byte("authusers")
-	bucketPendingImports = []byte("pendingimports")
-	bucketPrevPayloads   = []byte("prevpayloads")
-)
-
-// id is a chat id as int64
-// time is an unix timestamp in seconds as int64
-// phrase is a bucket sequence as uint64
-// score is an int64
-var allBuckets = [][]byte{
-	// id -> Mode
-	bucketModes,
-	// id+phrase -> gob(Phrase)
-	bucketPhrases,
-	// id+phrase -> time
-	bucketStudytimes,
-	// id+phrase -> time
-	bucketPhraseAddTimes,
-	// id -> time
-	bucketReads,
-	// id -> time
-	bucketActivities,
-	// id -> '1'
-	bucketSubscriptions,
-	// id -> gob(profile)
-	bucketProfiles,
-	// id -> time
-	bucketRegisterDates,
-	// id+time -> phrase+score
-	bucketStudies,
-	// string -> []byte{}
-	bucketMessageIDs,
-	// token -> id
-	bucketAuthTokens,
-	// id -> time+string(token)
-	bucketAuthUsers,
-	// id -> gob([]Phrase)
-	bucketPendingImports,
-	// id -> time+string(payload)
-	bucketPrevPayloads,
-}
 
 // Mode is the state of a chat.
 // We need to keep track of the state each chat is in.
