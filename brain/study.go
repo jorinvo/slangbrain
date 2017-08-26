@@ -16,28 +16,12 @@ import (
 func (store Store) GetStudy(id int64) (Study, error) {
 	var study Study
 	err := store.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketStudytimes).Cursor()
-		now := time.Now().Unix()
-		prefix := itob(id)
-		total := 0
-		var keyTime int64
-		var key []byte
-
-		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp := btoi(v)
-			if timestamp < keyTime || keyTime == 0 {
-				keyTime = timestamp
-				key = k
-			}
-			if timestamp <= now {
-				total++
-			}
-		}
+		key, total, fromNow := findCurrentStudy(tx, itob(id), time.Now())
 
 		// No studies found
 		if total == 0 {
-			if keyTime > 0 {
-				study = Study{Next: time.Second * time.Duration(keyTime-now)}
+			if fromNow > 0 {
+				study = Study{Next: fromNow}
 			}
 			return nil
 		}
@@ -65,24 +49,9 @@ func (store Store) GetStudy(id int64) (Study, error) {
 // ScoreStudy sets the score of the current study and moves to the next study.
 func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bs := tx.Bucket(bucketStudytimes)
-		c := bs.Cursor()
 		now := time.Now()
-		uNow := now.Unix()
 		prefix := itob(id)
-		var keyTime int64
-		var key []byte
-
-		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp := btoi(v)
-			if timestamp > uNow {
-				continue
-			}
-			if timestamp < keyTime || keyTime == 0 {
-				keyTime = timestamp
-				key = k
-			}
-		}
+		key, _, _ := findCurrentStudy(tx, prefix, now)
 
 		// No studies found
 		if key == nil {
@@ -121,12 +90,12 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 			return err
 		}
 		next := itob(now.Add(studyIntervals[i] + offset + diffusion()).Unix())
-		if err := bs.Put(key, next); err != nil {
+		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
 			return err
 		}
 
 		// Save study for reference and to analyze them later
-		idAndTime := append(prefix, itob(uNow)...)
+		idAndTime := append(prefix, itob(now.Unix())...)
 		seqAndScores := append(append(key[8:], itob(int64(scoreUpdate))...), itob(int64(p.Score))...)
 		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScores); err != nil {
 			return err

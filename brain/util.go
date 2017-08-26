@@ -53,3 +53,28 @@ func limitPerDay(tx *bolt.Tx, prefix []byte) (time.Duration, error) {
 
 	return time.Duration(newPhrases/newPerDay*24) * time.Hour, nil
 }
+
+// Find the key for the phrase that should be studied next.
+// Key is nil if non could be found.
+// Also returns the total number of due studies and a duration until the next phrase is due.
+// The duration is only useful if total is 0 otherwise the duration is a negative time.
+func findCurrentStudy(tx *bolt.Tx, prefix []byte, now time.Time) ([]byte, int, time.Duration) {
+	c := tx.Bucket(bucketStudytimes).Cursor()
+	uNow := now.Unix()
+	total := 0
+	var keyTime int64
+	var key []byte
+
+	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+		timestamp := btoi(v)
+		if timestamp < keyTime || keyTime == 0 {
+			keyTime = timestamp
+			key = k
+		}
+		if timestamp <= uNow {
+			total++
+		}
+	}
+
+	return key, total, time.Unix(keyTime, 0).Sub(now)
+}

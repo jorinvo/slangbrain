@@ -111,25 +111,11 @@ func phraseDeleter(tx *bolt.Tx, key []byte) error {
 	return tx.Bucket(bucketPhrases).Delete(key)
 }
 
-// DeleteStudyPhrase deletes the phrase the passed user currently has to study.
+// DeleteStudyPhrase deletes the phrase the user currently has to study.
 func (store Store) DeleteStudyPhrase(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketStudytimes).Cursor()
-		now := time.Now().Unix()
-		prefix := itob(id)
-		var keyTime int64
-		var key []byte
+		key, _, _ := findCurrentStudy(tx, itob(id), time.Now())
 
-		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			timestamp := btoi(v)
-			if timestamp > now {
-				continue
-			}
-			if timestamp < keyTime || keyTime == 0 {
-				keyTime = timestamp
-				key = k
-			}
-		}
 		// No studies found
 		if key == nil {
 			return errors.New("no study found")
