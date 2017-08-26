@@ -9,17 +9,13 @@ import (
 )
 
 const (
-	// Time to wait for first study in hours
-	firstStudytime = 2
-	// Base time in hours to use to calculate next study time
-	baseStudytime = 10
 	// Time in minutes
 	// When study times are updated they are randomly placed
 	// somewhere between the new time and new time + studyTimeDiffusion
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies per day
-	newPerDay = 30
+	newPerDay = 30.0
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 10
 	// Time user has to be inactive before being notified
@@ -33,6 +29,23 @@ const (
 	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
 	payloadDuplicateInterval = time.Minute
 )
+
+var studyIntervals = [14]time.Duration{
+	2 * time.Hour,
+	8 * time.Hour,
+	20 * time.Hour,
+	44 * time.Hour,
+	(4*24 - 2) * time.Hour,
+	(7*24 - 2) * time.Hour,
+	(14*24 - 2) * time.Hour,
+	(30*24 - 2) * time.Hour,
+	(60*24 - 2) * time.Hour,
+	(100*24 - 2) * time.Hour,
+	(5*30*24 - 2) * time.Hour,
+	(8*30*24 - 2) * time.Hour,
+	(12*30*24 - 2) * time.Hour,
+	(15*30*24 - 2) * time.Hour,
+}
 
 var (
 	// ErrExists signals that the thing to be added has been added already.

@@ -98,9 +98,8 @@ func (store Store) ScoreStudy(id int64, score int) error {
 
 		// Update score
 		p.Score += score
-		newScore := p.Score
-		if newScore < 0 {
-			newScore = 0
+		if p.Score < 0 {
+			p.Score = 0
 		}
 
 		// Save phrase
@@ -113,9 +112,15 @@ func (store Store) ScoreStudy(id int64, score int) error {
 		}
 
 		// Update study time
+		//
 		// Randomize order by spreading studies over a period of time
 		diffusion := time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
-		next := itob(now.Add((baseStudytime<<uint(newScore))*time.Hour + diffusion).Unix())
+		// Limit to study intervals
+		i := p.Score
+		if i >= len(studyIntervals) {
+			i = len(studyIntervals) - 1
+		}
+		next := itob(now.Add(studyIntervals[i] + diffusion).Unix())
 		if err := bs.Put(key, next); err != nil {
 			return err
 		}
