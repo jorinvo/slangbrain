@@ -11,6 +11,7 @@ var (
 	bucketSubscriptions  = []byte("subscriptions")
 	bucketProfiles       = []byte("profiles")
 	bucketRegisterDates  = []byte("registerdates")
+	bucketZeroscores     = []byte("zeroscores")
 	bucketStudies        = []byte("studies")
 	bucketMessageIDs     = []byte("messageids")
 	bucketAuthTokens     = []byte("authtokens")
@@ -43,6 +44,8 @@ var allBuckets = [][]byte{
 	bucketProfiles,
 	// id -> time
 	bucketRegisterDates,
+	// id -> int64
+	bucketZeroscores,
 	// id+time -> phrase+scoreupdate+newscore
 	bucketStudies,
 	// string -> []byte{}

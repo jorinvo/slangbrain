@@ -44,12 +44,13 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) er
 			return err
 		}
 
-		// Save study time
-		offset, err := limitPerDay(tx, prefix)
-		if err != nil {
+		// Update zeroscores
+		if err := updateZeroscore(tx, prefix, 1); err != nil {
 			return err
 		}
-		next := itob(createdAt.Add(studyIntervals[0] + offset).Unix())
+
+		// Save study time
+		next := itob(createdAt.Add(studyIntervals[0] + limitPerDay(tx, prefix)).Unix())
 		if err := tx.Bucket(bucketStudytimes).Put(phraseID, next); err != nil {
 			return err
 		}
@@ -103,12 +104,46 @@ func phraseDeleter(tx *bolt.Tx, key []byte) error {
 	if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
 		return err
 	}
+
 	// Delete add time
 	if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
 		return err
 	}
+
+	// Update zeroscore
+	p, err := getPhrase(tx, key)
+	if err != nil {
+		return err
+	}
+	if p.Score == 0 {
+		if err := updateZeroscore(tx, key[:8], -1); err != nil {
+			return err
+		}
+	}
+
 	// Delete phrase
 	return tx.Bucket(bucketPhrases).Delete(key)
+}
+
+func getPhrase(tx *bolt.Tx, key []byte) (Phrase, error) {
+	v := tx.Bucket(bucketPhrases).Get(key)
+	var p Phrase
+	if v == nil {
+		return p, ErrNotFound
+	}
+	return p, gob.NewDecoder(bytes.NewReader(v)).Decode(&p)
+}
+
+func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
+	zeroscores := int64(scoreUpdate)
+	bz := tx.Bucket(bucketZeroscores)
+	if v := bz.Get(prefix); v != nil {
+		zeroscores += btoi(v)
+	}
+	if zeroscores < 0 {
+		zeroscores = 0
+	}
+	return bz.Put(prefix, itob(zeroscores))
 }
 
 // DeleteStudyPhrase deletes the phrase the user currently has to study.
@@ -194,12 +229,8 @@ func (store Store) UpdatePhrase(id int64, seq int, phrase, explanation string) e
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
 		// Get existing phrase
-		b := bp.Get(key)
-		if b == nil {
-			return ErrNotFound
-		}
-		var p Phrase
-		if err := gob.NewDecoder(bytes.NewBuffer(b)).Decode(&p); err != nil {
+		p, err := getPhrase(tx, key)
+		if err != nil {
 			return err
 		}
 		// Update

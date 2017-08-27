@@ -3,7 +3,6 @@ package brain
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/gob"
 	"net/http"
 	"strconv"
 	"time"
@@ -38,20 +37,12 @@ func (store Store) BackupTo(w http.ResponseWriter) {
 // Limit number of studies per day.
 // The more new phrases there are, the later the studies should be scheduled.
 // Returns an offset to add to a timestamp.
-func limitPerDay(tx *bolt.Tx, prefix []byte) (time.Duration, error) {
-	var newPhrases float64
-	c := tx.Bucket(bucketPhrases).Cursor()
-	var tmp Phrase
-	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-		if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&tmp); err != nil {
-			return 0, err
-		}
-		if tmp.Score == 0 {
-			newPhrases++
-		}
+func limitPerDay(tx *bolt.Tx, key []byte) time.Duration {
+	var zeroScores float64
+	if v := tx.Bucket(bucketZeroscores).Get(key); v != nil {
+		zeroScores = float64(btoi(v))
 	}
-
-	return time.Duration(newPhrases/newPerDay*24) * time.Hour, nil
+	return time.Duration(zeroScores/newPerDay*24) * time.Hour
 }
 
 // Find the key for the phrase that should be studied next.

@@ -27,9 +27,8 @@ func (store Store) GetStudy(id int64) (Study, error) {
 		}
 
 		// Get study from phrase
-		var p Phrase
-		v := bytes.NewReader(tx.Bucket(bucketPhrases).Get(key))
-		if err := gob.NewDecoder(v).Decode(&p); err != nil {
+		p, err := getPhrase(tx, key)
+		if err != nil {
 			return err
 		}
 		study = Study{
@@ -59,10 +58,16 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		}
 
 		// Get phrase
-		var p Phrase
-		bp := tx.Bucket(bucketPhrases)
-		if err := gob.NewDecoder(bytes.NewReader(bp.Get(key))).Decode(&p); err != nil {
+		p, err := getPhrase(tx, key)
+		if err != nil {
 			return err
+		}
+
+		// Update zeroscore
+		if (p.Score == 0 && scoreUpdate == 1) || (p.Score == 1 && scoreUpdate == -1) {
+			if err := updateZeroscore(tx, prefix, scoreUpdate); err != nil {
+				return err
+			}
 		}
 
 		// Update score
@@ -76,7 +81,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if err := gob.NewEncoder(&buf).Encode(p); err != nil {
 			return err
 		}
-		if err := bp.Put(key, buf.Bytes()); err != nil {
+		if err := tx.Bucket(bucketPhrases).Put(key, buf.Bytes()); err != nil {
 			return err
 		}
 
@@ -85,11 +90,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if i >= len(studyIntervals) {
 			i = len(studyIntervals) - 1
 		}
-		offset, err := limitPerDay(tx, prefix)
-		if err != nil {
-			return err
-		}
-		next := itob(now.Add(studyIntervals[i] + offset + diffusion()).Unix())
+		next := itob(now.Add(studyIntervals[i] + limitPerDay(tx, prefix) + diffusion()).Unix())
 		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
 			return err
 		}
