@@ -47,5 +47,6 @@ type Msg struct {
 	AnHour,
 	Hours,
 	AMinute,
-	Minutes string
+	Minutes,
+	And string
 }

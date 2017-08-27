@@ -64,9 +64,9 @@ Stelle sicher, dass die CSV Datei keine Kopfzeile, also keine Spaltentitel, enth
 Eine CSV Datei kann z.B. so aussehen:`,
 		ImportHelp2: `Bonjour !,Hallo!
 "merci","danke, dankeschön"`,
-		ImportPrompt:       "%d neue Vokabeln wurden gefunden. Willst du sie importieren?",
-		ImportPromptIgnore: "%d neue Vokabeln %d Vokabeln, die du schon in deinem Slangbrain hast, wurden gefunden. Willst du die neuen Vokabeln importieren?",
-		ImportNone:         "%d Vokabel wurden fedunen, aber du hast die Vokabeln alle schon in deinem Slangbrain.",
+		ImportPrompt:       "%d neue Vokabeln wurden in %s gefunden. Willst du sie importieren?",
+		ImportPromptIgnore: "%d neue Vokabeln %d Vokabeln, die du schon in deinem Slangbrain hast, wurden in %s gefunden. Willst du die neuen Vokabeln importieren?",
+		ImportNone:         "%d Vokabel wurden in %s gefunden, aber du hast die Vokabeln alle schon in deinem Slangbrain.",
 		ImportConfirm:      "%d neue Vokabeln wurden hinzugefügt.",
 		ImportCancel:       "Ok, keine neuen Vokabeln werden hinzugefügt.",
 		ImportEmpty:        "Die CSV Datei ist leer.",
@@ -78,6 +78,7 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		Hours:              "Stunden",
 		AMinute:            "einer Minute",
 		Minutes:            "Minuten",
+		And:                "und",
 	}
 
 	l := labels{

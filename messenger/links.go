@@ -52,6 +52,7 @@ func (b Bot) handleLinks(u user.User, links []string) {
 	}
 
 	var allRecords [][]string
+	var fileNames []string
 	for _, file := range csvFiles {
 		// Get contents and parse CSV
 		req, err := http.NewRequest("GET", file.URL, nil)
@@ -86,6 +87,7 @@ func (b Bot) handleLinks(u user.User, links []string) {
 			return
 		}
 
+		fileNames = append(fileNames, file.Name)
 		allRecords = append(allRecords, records...)
 	}
 
@@ -110,20 +112,28 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		phrases = append(phrases, p)
 	}
 
-	// Queue import and ask user for confirmation
+	// Queue import
 	valid, existing, err := b.store.QueueImport(u.ID, phrases)
 	if err != nil {
 		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, err)
 		return
 	}
+
+	// List file names
+	files := fileNames[0]
+	if l := len(fileNames); l > 1 {
+		files = strings.Join(fileNames[:l-1], ", ") + " " + u.Msg.And + " " + fileNames[l-1]
+	}
+
+	// Ask for confirmation
 	if existing == 0 {
-		msg := fmt.Sprintf(u.Msg.ImportPrompt, valid)
+		msg := fmt.Sprintf(u.Msg.ImportPrompt, valid, files)
 		b.send(u.ID, msg, u.Rpl.Import, nil)
 	} else if valid == 0 {
-		msg := fmt.Sprintf(u.Msg.ImportNone+"\n\n"+u.Msg.Menu, existing)
+		msg := fmt.Sprintf(u.Msg.ImportNone+"\n\n"+u.Msg.Menu, existing, files)
 		b.send(u.ID, msg, u.Rpl.MenuMode, nil)
 	} else {
-		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, valid, existing)
+		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, valid, existing, files)
 		b.send(u.ID, msg, u.Rpl.Import, nil)
 	}
 }
