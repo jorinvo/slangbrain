@@ -69,7 +69,7 @@ A valid file could look like this:`,
 		ImportHelp2: `hola,hello
 "gracias","thanks, thank you"`,
 		ImportPrompt:       "%d new phrases have been detected. Would you like to import them into Slangbrain?",
-		ImportPromptIgnore: "%d new phrases have been detected and %d have been becuase you already have them in your Slangbrain. Would you like to import the new phrases?",
+		ImportPromptIgnore: "%d new phrases and %d phrases, that you already have in your Slangbrain, have been detected. Would you like to import the new phrases?",
 		ImportNone:         "%d phrases have been detected, but you already have all of them in your Slangbrain.",
 		ImportConfirm:      "%d phrases have been imported.",
 		ImportCancel:       "Ok, no phrases have been imported.",

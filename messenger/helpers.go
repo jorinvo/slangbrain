@@ -21,6 +21,10 @@ var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{
 // inside () or [] or || or {} or <>
 var inParantheses = regexp.MustCompile(`\(.*?\)|\[.*?\]|\|.*?\||\{.*?\}|\<.*?\>`)
 
+// Keeping it simple for now.
+// handleLinks() will find the false positives.
+var matchURL = regexp.MustCompile(`https?://\S+\.\S+`)
+
 // Change to menu mode.
 // Return values can be passed directly to b.send().
 func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) {
@@ -128,4 +132,10 @@ func normPhrases(s string) (string, string) {
 }
 func normPhrase(s string) string {
 	return specialChars.ReplaceAllString(strings.ToLower(strings.TrimSpace(s)), "")
+}
+
+// Finds all links in a given text and returns them.
+// Returns nil if no links could be found.
+func getLinks(s string) []string {
+	return matchURL.FindAllString(s, -1)
 }

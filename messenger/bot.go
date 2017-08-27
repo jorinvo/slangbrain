@@ -1,6 +1,8 @@
 package messenger
 
 import (
+	"net/url"
+
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/user"
@@ -20,9 +22,23 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	b.scheduleNotify(e.ChatID)
-
 	u := user.Get(e.ChatID, b.store, b.err, b.content, b.client.GetProfile)
+
+	if e.Type == fbot.EventReferral {
+		ref, err := url.QueryUnescape(e.Ref)
+		if err != nil {
+			b.err.Printf("[id=%d] failed to unescape ref: %s", u.ID, e.Ref)
+			return
+		}
+		if links := getLinks(ref); links != nil {
+			b.handleLinks(u, links)
+			return
+		}
+		b.err.Printf("[id=%d] got unhandled ref: %s", u.ID, e.Ref)
+		return
+	}
+
+	b.scheduleNotify(e.ChatID)
 
 	if e.Type == fbot.EventPayload {
 		b.handlePayload(u, e.Payload)

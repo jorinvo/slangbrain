@@ -65,7 +65,7 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		ImportHelp2: `Bonjour !,Hallo!
 "merci","danke, dankeschön"`,
 		ImportPrompt:       "%d neue Vokabeln wurden gefunden. Willst du sie importieren?",
-		ImportPromptIgnore: "%d neue Vokabeln wurden gefunden und %d wurden ignoriert, weil du diese schon in deinem Slangbrain hast. Willst du die neuen Vokabeln importieren?",
+		ImportPromptIgnore: "%d neue Vokabeln %d Vokabeln, die du schon in deinem Slangbrain hast, wurden gefunden. Willst du die neuen Vokabeln importieren?",
 		ImportNone:         "%d Vokabel wurden fedunen, aber du hast die Vokabeln alle schon in deinem Slangbrain.",
 		ImportConfirm:      "%d neue Vokabeln wurden hinzugefügt.",
 		ImportCancel:       "Ok, keine neuen Vokabeln werden hinzugefügt.",

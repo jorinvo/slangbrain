@@ -26,6 +26,8 @@ const (
 	EventRead
 	// EventAttachment is triggered when attachemnts are send.
 	EventAttachment
+	// EventReferral is triggered when referring through a link or other source.
+	EventReferral
 )
 
 // Event contains information about a user action.
@@ -44,6 +46,8 @@ type Event struct {
 	MessageID string
 	// Attachments are multiple attachment types.
 	Attachments []Attachment
+	// Ref contains the ref data from the URL for EventReferral.
+	Ref string
 }
 
 // Attachment describes an attachment.
@@ -149,6 +153,14 @@ func getEvent(m messageInfo) Event {
 			Time:   msToTime(m.Read.Watermark),
 		}
 	}
+	if m.Referral != nil {
+		return Event{
+			Type:   EventReferral,
+			ChatID: m.Sender.ID,
+			Time:   msToTime(m.Timestamp),
+			Ref:    m.Referral.Ref,
+		}
+	}
 	if m.Message != nil {
 		if m.Message.IsEcho {
 			return Event{}
@@ -215,6 +227,7 @@ type messageInfo struct {
 	Message   *message  `json:"message"`
 	Postback  *postback `json:"postback"`
 	Read      *read     `json:"read"`
+	Referral  *referral `json:"referral"`
 }
 
 type sender struct {
@@ -229,12 +242,21 @@ type message struct {
 	Attachments []attachment `json:"attachments,omitempty"`
 }
 
+type postback struct {
+	Payload string `json:"payload"`
+}
+
 type read struct {
 	Watermark int64 `json:"watermark"`
 }
 
-type postback struct {
-	Payload string `json:"payload"`
+// For now Source and Type are ignored.
+// The can be used later to handle ADS and other sources.
+// https://developers.facebook.com/docs/messenger-platform/referral-params
+type referral struct {
+	Ref    string `json:"ref"`
+	Source string `json:"source"`
+	Type   string `json:"type"`
 }
 
 type attachment struct {

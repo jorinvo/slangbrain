@@ -13,7 +13,7 @@ import (
 )
 
 // Helper to handle links sent to Slangbrain.
-// It doesn't matter if the links come from file uploads, sharing or inside messages.
+// It doesn't matter if the links come from file uploads, sharing, referral links or inside messages.
 //
 // For now we only handle CSV files.
 // For all other links admins are notified to look into them manually.
