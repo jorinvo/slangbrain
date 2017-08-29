@@ -12,6 +12,7 @@ type Msg struct {
 	Welcome2,
 	Welcome3,
 	Welcome4,
+	WelcomeReferral,
 	Error,
 	ExplanationMissing,
 	PhraseMissing,

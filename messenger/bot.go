@@ -27,7 +27,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventReferral {
 		ref, err := url.QueryUnescape(e.Ref)
 		if err != nil {
-			b.err.Printf("[id=%d] failed to unescape ref: %s", u.ID, e.Ref)
+			b.err.Printf("[id=%d] failed to unescape ref %s: %v", u.ID, e.Ref, err)
 			return
 		}
 		if links := getLinks(ref); links != nil {
@@ -41,7 +41,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 	b.scheduleNotify(e.ChatID)
 
 	if e.Type == fbot.EventPayload {
-		b.handlePayload(u, e.Payload)
+		b.handlePayload(u, e.Payload, e.Ref)
 		return
 	}
 

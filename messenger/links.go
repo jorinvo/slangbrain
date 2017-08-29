@@ -12,12 +12,56 @@ import (
 	"github.com/jorinvo/slangbrain/user"
 )
 
+// Wrapper around extractPhrases that queues found phrases and sends an appropriate answer to the user.
+func (b Bot) handleLinks(u user.User, links []string) {
+	// Go back to menu mode in any case
+	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
+		b.err.Println(err)
+	}
+
+	var queued int
+	phrases, files, userErr, err := b.extractPhrases(u, links)
+	if err != nil && userErr != "" {
+		queued, err = b.store.QueueImport(u.ID, phrases)
+	}
+	if err != nil || userErr != "" || files == "" {
+		if userErr == "" {
+			userErr = u.Msg.Menu
+		}
+		b.send(u.ID, userErr, u.Rpl.MenuMode, err)
+		return
+	}
+
+	// Ask for confirmation
+	existing := len(phrases) - queued
+	if existing == 0 {
+		msg := fmt.Sprintf(u.Msg.ImportPrompt, queued, files)
+		b.send(u.ID, msg, u.Rpl.Import, nil)
+	} else if queued == 0 {
+		msg := fmt.Sprintf(u.Msg.ImportNone+"\n\n"+u.Msg.Menu, existing, files)
+		b.send(u.ID, msg, u.Rpl.MenuMode, nil)
+	} else {
+		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, queued, existing, files)
+		b.send(u.ID, msg, u.Rpl.Import, nil)
+	}
+}
+
 // Helper to handle links sent to Slangbrain.
 // It doesn't matter if the links come from file uploads, sharing, referral links or inside messages.
 //
+// This function doesn't send anything back to the user,
+// but returns information that should be used to generate a reply.
+//
 // For now we only handle CSV files.
 // For all other links admins are notified to look into them manually.
-func (b Bot) handleLinks(u user.User, links []string) {
+//
+// Returns a list of phrases that afterwards can be queued or imported directly,
+// a formatted list of the imported files (f.e. "Japanese.csv, German.txt and English.tsv"),
+// an error message to be sent to the user
+// and a possible application error that needs to be handled.
+//
+// It is possible to have user error but no application error and also the other way around.
+func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string, string, error) {
 	// Collect CSV files from links
 	var csvFiles []struct{ Name, URL string }
 	for _, link := range links {
@@ -41,62 +85,52 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		csvFiles = append(csvFiles, struct{ Name, URL string }{path.Base(f.Path), link})
 	}
 
-	// Go back to menu mode in any case
-	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
-		b.err.Println(err)
-	}
-
 	if len(csvFiles) == 0 {
-		b.send(u.ID, u.Msg.Menu, u.Rpl.MenuMode, nil)
-		return
+		return nil, "", "", nil
 	}
 
+	// Get contents and parse CSV files
 	var allRecords [][]string
 	var fileNames []string
 	for _, file := range csvFiles {
-		// Get contents and parse CSV
 		req, err := http.NewRequest("GET", file.URL, nil)
 		if err != nil {
-			b.send(u.ID, u.Msg.Error, nil, fmt.Errorf("failed to create request to file %s (user %d): %v", file.URL, u.ID, err))
-			return
+			return nil, "", "", fmt.Errorf("failed to create request to file %s: %v", file.URL, err)
 		}
 
 		res, err := b.do(req)
 		if err != nil {
-			b.send(u.ID, u.Msg.Error, nil, fmt.Errorf("failed to get file %s (user %d): %v", file.URL, u.ID, err))
-			return
+			return nil, "", "", fmt.Errorf("failed to get file %s: %v", file.URL, err)
 		}
 		defer func(f string) {
 			if err := res.Body.Close(); err != nil {
-				b.err.Printf("failed to close body for request to %s (user %d): %v", f, u.ID, err)
+				b.err.Printf("failed to close body for request to %s: %v", f, err)
 			}
 		}(file.URL)
 
 		records, err := csv.NewReader(res.Body).ReadAll()
 		if err != nil {
-			b.send(u.ID, fmt.Sprintf(u.Msg.ImportErrParse, file.Name, err), nil, fmt.Errorf("failed to parse CSV file %s (user %d): %v", file.URL, u.ID, err))
-			return
+			msg := fmt.Sprintf(u.Msg.ImportErrParse, file.Name, err)
+			return nil, "", msg, fmt.Errorf("failed to parse CSV file %s: %v", file.URL, err)
 		}
 
-		// Check CSV formatting
 		if len(records) == 0 {
 			continue
 		}
+		// Check CSV formatting
 		if cols := len(records[0]); cols < 2 {
-			b.send(u.ID, fmt.Sprintf(u.Msg.ImportErrCols, file.Name, cols), nil, nil)
-			return
+			return nil, "", fmt.Sprintf(u.Msg.ImportErrCols, file.Name, cols), nil
 		}
 
 		fileNames = append(fileNames, file.Name)
 		allRecords = append(allRecords, records...)
 	}
 
-	if len(allRecords) < 1 {
-		b.send(u.ID, u.Msg.ImportEmpty, nil, nil)
-		return
+	if len(allRecords) == 0 {
+		return nil, "", u.Msg.ImportEmpty, nil
 	}
 
-	// Prevent duplicates
+	// Check for duplicates
 	var phrases []brain.Phrase
 	for _, r := range allRecords {
 		p := brain.Phrase{
@@ -105,18 +139,10 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		}
 		for _, prev := range phrases {
 			if p.Explanation == prev.Explanation {
-				b.send(u.ID, fmt.Sprintf(u.Msg.ImportErrDuplicate, p.Explanation), nil, nil)
-				return
+				return nil, "", fmt.Sprintf(u.Msg.ImportErrDuplicate, p.Explanation), nil
 			}
 		}
 		phrases = append(phrases, p)
-	}
-
-	// Queue import
-	valid, existing, err := b.store.QueueImport(u.ID, phrases)
-	if err != nil {
-		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, err)
-		return
 	}
 
 	// List file names
@@ -125,15 +151,6 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		files = strings.Join(fileNames[:l-1], ", ") + " " + u.Msg.And + " " + fileNames[l-1]
 	}
 
-	// Ask for confirmation
-	if existing == 0 {
-		msg := fmt.Sprintf(u.Msg.ImportPrompt, valid, files)
-		b.send(u.ID, msg, u.Rpl.Import, nil)
-	} else if valid == 0 {
-		msg := fmt.Sprintf(u.Msg.ImportNone+"\n\n"+u.Msg.Menu, existing, files)
-		b.send(u.ID, msg, u.Rpl.MenuMode, nil)
-	} else {
-		msg := fmt.Sprintf(u.Msg.ImportPromptIgnore, valid, existing, files)
-		b.send(u.ID, msg, u.Rpl.Import, nil)
-	}
+	// Queue import
+	return phrases, files, "", nil
 }

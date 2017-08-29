@@ -9,7 +9,7 @@ import (
 	"github.com/jorinvo/slangbrain/user"
 )
 
-func (b Bot) handlePayload(u user.User, p string) {
+func (b Bot) handlePayload(u user.User, p, referral string) {
 	isDuplicate, err := b.store.IsDuplicate(u.ID, p)
 	if err != nil {
 		b.err.Println(err)
@@ -21,7 +21,7 @@ func (b Bot) handlePayload(u user.User, p string) {
 
 	switch p {
 	case payload.GetStarted:
-		b.messageWelcome(u)
+		b.messageWelcome(u, referral)
 
 	case payload.Idle:
 		b.send(u.ID, u.Msg.Idle, nil, nil)

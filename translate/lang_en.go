@@ -24,7 +24,9 @@ Separate them with a linebreak.
 If your mother tongue is English and you're studying Spanish, a message would look like this:`,
 		Welcome3: `Hola
 Hello`,
-		Welcome4:           "Now it's your turn:",
+		Welcome4: "Now it's your turn:",
+		WelcomeReferral: `%d phrases from the collection '%s' have already been added for you.
+Let's start with memorizing them.`,
 		Error:              "Sorry, something went wrong.",
 		ExplanationMissing: "The phrase is missing an explanation. Please send it again with explanation.",
 		PhraseMissing:      "Please send a phrase.",

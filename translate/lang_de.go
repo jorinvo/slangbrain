@@ -20,7 +20,9 @@ Nachdem du Vokabeln gespeichert hast, wird Slangbrain dich automatisch in sinnvo
 Ein Beispiel wäre, wenn du Französisch lernst, dann könntest du folgende Nachricht schicken:`,
 		Welcome3: `Bonjour !
 Guten Tag!`,
-		Welcome4:           "Jetzt bist du dran:",
+		Welcome4: "Jetzt bist du dran:",
+		WelcomeReferral: `%d Vokabeln aus der Liste '%s' wurden schon zu deinem Slangbrain hinzugefügt.
+Lass uns damit anfangen die Vokabeln zu wiederholen.`,
 		Error:              "Entschuldigung, etwas ist schief gelaufen.",
 		ExplanationMissing: "Jede Vokabel braucht auch eine Erklärung. Schicke nochmal eine Nachricht.",
 		PhraseMissing:      "Schicke eine Vokabel.",

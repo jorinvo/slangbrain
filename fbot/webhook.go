@@ -47,6 +47,8 @@ type Event struct {
 	// Attachments are multiple attachment types.
 	Attachments []Attachment
 	// Ref contains the ref data from the URL for EventReferral.
+	// Ref is also set for EventPayload if the Event was triggered through the Get Started button
+	// and the user used a refferal link to get there.
 	Ref string
 }
 
@@ -144,6 +146,7 @@ func getEvent(m messageInfo) Event {
 			ChatID:  m.Sender.ID,
 			Time:    msToTime(m.Timestamp),
 			Payload: m.Postback.Payload,
+			Ref:     m.Postback.Referral.Ref,
 		}
 	}
 	if m.Read != nil {
@@ -243,7 +246,8 @@ type message struct {
 }
 
 type postback struct {
-	Payload string `json:"payload"`
+	Payload  string    `json:"payload"`
+	Referral *referral `json:"referral"`
 }
 
 type read struct {

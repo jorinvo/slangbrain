@@ -3,6 +3,7 @@ package messenger
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -35,17 +36,66 @@ func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) 
 }
 
 // Send both welcome messages after each other.
-func (b Bot) messageWelcome(u user.User) {
+func (b Bot) messageWelcome(u user.User, referral string) {
 	if err := b.store.Register(u.ID); err != nil {
 		b.err.Printf("failed to register user %d: %v", u.ID, err)
 	}
+
 	b.send(u.ID, fmt.Sprintf(u.Msg.Welcome1, u.Name()), nil, nil)
 	time.Sleep(b.messageDelay)
+
+	if b.startWithReferral(u, referral) {
+		return
+	}
+
+	// Start by adding phrases
 	b.send(u.ID, u.Msg.Welcome2, nil, nil)
 	time.Sleep(b.messageDelay)
 	b.send(u.ID, u.Msg.Welcome3, nil, nil)
 	time.Sleep(b.messageDelay)
 	b.send(u.ID, u.Msg.Welcome4, nil, b.store.SetMode(u.ID, brain.ModeAdd))
+}
+
+// Start studying with referral phrases.
+// Returns true of started successfully.
+func (b Bot) startWithReferral(u user.User, referral string) bool {
+	if referral == "" {
+		return false
+	}
+
+	ref, err := url.QueryUnescape(referral)
+	if err != nil {
+		b.err.Printf("[id=%d] failed to unescape welcome ref %s: %v", u.ID, referral, err)
+		return false
+	}
+
+	links := getLinks(ref)
+	if links == nil {
+		b.err.Printf("[id=%d] got unhandled welcome ref: %s", u.ID, referral)
+		return false
+	}
+
+	phrases, files, _, err := b.extractPhrases(u, links)
+	if err != nil {
+		b.err.Printf("[id=%d] failed to extract welcome phrases from ref %s: %v", u.ID, referral, err)
+		return false
+	}
+
+	count, err := b.store.Import(u.ID, phrases)
+	if err != nil {
+		b.err.Printf("[id=%d] failed to import welcome phrases from ref %s: %v", u.ID, referral, err)
+		return false
+	}
+
+	b.send(u.ID, fmt.Sprintf(u.Msg.WelcomeReferral, count, files), nil, nil)
+	time.Sleep(b.messageDelay)
+
+	if err := b.store.SetMode(u.ID, brain.ModeStudy); err != nil {
+		b.send(u.ID, u.Msg.Error, u.Rpl.MenuMode, err)
+		return true
+	}
+	b.send(b.startStudy(u))
+	return true
 }
 
 // Change to study mode and find correct message.

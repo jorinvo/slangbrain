@@ -82,7 +82,7 @@ func (b Bot) handleMessage(u user.User, msg string) {
 		b.send(u.ID, u.Msg.AddNext, u.Rpl.AddMode, nil)
 
 	case brain.ModeGetStarted:
-		b.messageWelcome(u)
+		b.messageWelcome(u, "")
 
 	case brain.ModeFeedback:
 		if b.feedback != nil {
