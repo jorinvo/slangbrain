@@ -141,12 +141,16 @@ func validSignature(signature, secret string, data []byte) bool {
 
 func getEvent(m messageInfo) Event {
 	if m.Postback != nil {
+		ref := ""
+		if m.Postback.Referral != nil {
+			ref = m.Postback.Referral.Ref
+		}
 		return Event{
 			Type:    EventPayload,
 			ChatID:  m.Sender.ID,
 			Time:    msToTime(m.Timestamp),
 			Payload: m.Postback.Payload,
-			Ref:     m.Postback.Referral.Ref,
+			Ref:     ref,
 		}
 	}
 	if m.Read != nil {
