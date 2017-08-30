@@ -13,6 +13,7 @@ const html = `<!DOCTYPE html>
 			html {
 				padding: 0;
 				margin: 0;
+				background: white;
 			}
 			body,
 			textarea {
@@ -38,13 +39,15 @@ const html = `<!DOCTYPE html>
 				line-height: 120%;
 			}
 			button {
-				border: 1px solid;
+				border: 1px solid rgba(255, 255, 255, 0);
 				width: 29.333%;
 				padding: 2.5% 0;
-				font-size: 100%;
 				cursor: pointer;
 				margin: 1.5%;
-				background: white;
+				background: black;
+				color: white;
+				font-family: monospace;
+				font-size: 105%;
 			}
 			.empty {
 				padding: 10% 3%;
@@ -54,9 +57,10 @@ const html = `<!DOCTYPE html>
 			.phrases {
 				list-style: none;
 				padding: 0;
+				margin: 0;
 			}
 			.phrase {
-				margin: 2% 0;
+				margin: 2% 3%;
 				padding: 1% 3%;
 				cursor: pointer;
 			}
@@ -72,21 +76,20 @@ const html = `<!DOCTYPE html>
 				background: #f1f1f1;
 			}
 			.total {
-				margin: 10% 3%;
-				font-size: 90%;
+				margin: 10% 0;
+				font-size: 86%;
+				text-align: center;
 			}
 			.edit {
 				position: fixed;
 				-webkit-backface-visibility: hidden;
 				bottom: 0;
-				background: #f1f1f1;
-				width: 100%;
-				box-shadow: 0 -2px 6px 2px white;
+				background: white;
 			}
 			.actions {
 				width: 100%;
 				margin: 1.5%;
-				background: #f1f1f1;
+				background: white;
 			}
 			.delete-prompt {
 				position: absolute;
@@ -101,9 +104,11 @@ const html = `<!DOCTYPE html>
 				bottom: 0;
 				width: 100%;
 				text-align: center;
-				padding: 7%;
+				padding: 6%;
 				box-sizing: border-box;
-				background: #f1f1f1;
+				background: black;
+				color: white;
+				font-size: 105%;
 			}
 			button,
 			.search,
@@ -118,15 +123,22 @@ const html = `<!DOCTYPE html>
 				-ms-user-select: none;
 				user-select: none;
 			}
-			button,
 			.phrase {
 				-webkit-tap-highlight-color: rgba(0, 0, 0, .1);
+			}
+			button {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 			}
 			button::-moz-focus-inner {
 				border: 0;
 			}
 			button:hover,
-			button:focus,
+			button:focus {
+				outline: none;
+				border: 1px solid black;
+				background: white;
+				color: black;
+			}
 			.phrase:hover {
 				outline: none;
 				background-color: #dedede;
@@ -135,6 +147,12 @@ const html = `<!DOCTYPE html>
 			textarea:focus {
 				outline: none;
 				border: 1px solid #939393;
+			}
+			button,
+			textarea,
+			input,
+			.phrase {
+				border-radius: 5px;
 			}
 		</style>
 	</head>
