@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-# Build, and deploy latest version of Slangbrain to the live server.
+# Build, and deploy latest version of Slangbrain to the live server
 
+server="fbot.slangbrain.com"
+server_bin="/home/jorin/bin/slangbrain"
 
 cd $GOPATH/src/github.com/jorinvo/slangbrain
 
@@ -10,12 +12,12 @@ echo - building binary
 GOOS=linux go build -a -ldflags "-s -w  -X main.version=$(git log --format="%H" -n 1)" -o dist/slangbrain
 
 echo - moving old binary
-ssh fbot.slangbrain.com mv /home/jorin/bin/slangbrain /tmp/slangbrain-$(date +%s)
+ssh $server mv $server_bin /tmp/slangbrain-$(date +%s)
 
 echo - uploading to server
-scp dist/slangbrain fbot.slangbrain.com:/home/jorin/bin/slangbrain
+scp dist/slangbrain $server:$server_bin
 
 echo - restarting service
-ssh -t fbot.slangbrain.com sudo systemctl reload slangbrain
+ssh -t $server "sh -c 'sudo systemctl restart slangbrain && sudo journalctl -fu slangbrain'"
 
 echo - all good

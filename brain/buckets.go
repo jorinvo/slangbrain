@@ -6,6 +6,7 @@ var (
 	bucketPhrases        = []byte("phrases")
 	bucketStudytimes     = []byte("studytimes")
 	bucketPhraseAddTimes = []byte("phraseaddtimes")
+	bucketNewPhrases     = []byte("newphrases")
 	bucketReads          = []byte("reads")
 	bucketActivities     = []byte("activities")
 	bucketSubscriptions  = []byte("subscriptions")
@@ -34,6 +35,8 @@ var allBuckets = [][]byte{
 	bucketStudytimes,
 	// id+phrase -> time
 	bucketPhraseAddTimes,
+	// id -> phrase+phrase+phrase+...
+	bucketNewPhrases,
 	// id -> time
 	bucketReads,
 	// id -> time

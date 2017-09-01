@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+# Rollback data to before the last migration
+
+server="fbot.slangbrain.com"
+server_db="${server}:/home/jorin/slangbrain.db"
+migration="$(ls -1 migrations | tail -n1)"
+num="$(echo "$migration" | cut -d_ -f1)"
+before_db="backups/${num}-before.db"
+
+echo - using migration $migration
+
+echo - stopping server
+ssh -t $server sudo systemctl stop slangbrain
+
+echo - uploading backup
+scp $before_db $server_db
+
+echo - starting service
+ssh -t $server "sh -c 'sudo systemctl restart slangbrain && sudo journalctl -fu slangbrain'"
+
+echo - all good

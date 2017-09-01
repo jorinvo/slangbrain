@@ -90,7 +90,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if i >= len(studyIntervals) {
 			i = len(studyIntervals) - 1
 		}
-		next := itob(now.Add(studyIntervals[i] + limitPerDay(tx, prefix) + diffusion()).Unix())
+		next := itob(now.Add(studyIntervals[i] + diffusion()).Unix())
 		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
 			return err
 		}

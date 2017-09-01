@@ -34,7 +34,7 @@ func New(dbFile string) (Store, error) {
 		now := time.Now().Add(-messageIDmaxAge).Unix()
 		bm := tx.Bucket(bucketMessageIDs)
 		bm.ForEach(func(k []byte, v []byte) error {
-			if btoi(v) < now {
+			if len(v) < 8 || btoi(v) < now {
 				return bm.Delete(k)
 			}
 			return nil

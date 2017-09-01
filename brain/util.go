@@ -34,17 +34,6 @@ func (store Store) BackupTo(w http.ResponseWriter) {
 	}
 }
 
-// Limit number of studies per day.
-// The more new phrases there are, the later the studies should be scheduled.
-// Returns an offset to add to a timestamp.
-func limitPerDay(tx *bolt.Tx, key []byte) time.Duration {
-	var zeroScores float64
-	if v := tx.Bucket(bucketZeroscores).Get(key); v != nil {
-		zeroScores = float64(btoi(v))
-	}
-	return time.Duration(zeroScores/newPerDay*24) * time.Hour
-}
-
 // Find the key for the phrase that should be studied next.
 // Key is nil if non could be found.
 // Also returns the total number of due studies and a duration until the next phrase is due.

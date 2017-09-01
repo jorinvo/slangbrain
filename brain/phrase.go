@@ -25,13 +25,15 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) error {
 	return func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
+		bz := tx.Bucket(bucketZeroscores)
 
 		// Get phrase id
 		sequence, err := bp.NextSequence()
 		if err != nil {
 			return err
 		}
-		phraseID := append(prefix, itob(int64(sequence))...)
+		phraseID := itob(int64(sequence))
+		key := append(prefix, phraseID...)
 
 		// Phrase to GOB
 		var buf bytes.Buffer
@@ -40,23 +42,31 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) er
 		}
 
 		// Save phrase
-		if err := bp.Put(phraseID, buf.Bytes()); err != nil {
+		if err := bp.Put(key, buf.Bytes()); err != nil {
 			return err
 		}
 
-		// Update zeroscores
-		if err := updateZeroscore(tx, prefix, 1); err != nil {
+		// Queue as new phrase
+		bn := tx.Bucket(bucketNewPhrases)
+		if err := bn.Put(prefix, append(bn.Get(prefix), phraseID...)); err != nil {
 			return err
 		}
 
-		// Save study time
-		next := itob(createdAt.Add(studyIntervals[0] + limitPerDay(tx, prefix)).Unix())
-		if err := tx.Bucket(bucketStudytimes).Put(phraseID, next); err != nil {
+		// Try to schedule it
+		var zeroscore int64
+		if v := bz.Get(prefix); v != nil {
+			zeroscore = btoi(v)
+		}
+		scheduled, err := scheduleNewPhrases(tx, prefix, time.Now(), int(zeroscore))
+		if err != nil {
+			return err
+		}
+		if err := bz.Put(prefix, itob(zeroscore+int64(scheduled))); err != nil {
 			return err
 		}
 
 		// Save time phrase has been added
-		return tx.Bucket(bucketPhraseAddTimes).Put(phraseID, itob(createdAt.Unix()))
+		return tx.Bucket(bucketPhraseAddTimes).Put(key, itob(createdAt.Unix()))
 	}
 }
 
@@ -134,16 +144,63 @@ func getPhrase(tx *bolt.Tx, key []byte) (Phrase, error) {
 	return p, gob.NewDecoder(bytes.NewReader(v)).Decode(&p)
 }
 
+// Adds a scoreUpdate to the zeroscore of a user.
+// zeroscore cannot be less than zero.
+// With each update we also check if we can schedule new phrases.
 func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
-	zeroscores := int64(scoreUpdate)
+	zeroscore := int64(scoreUpdate)
 	bz := tx.Bucket(bucketZeroscores)
 	if v := bz.Get(prefix); v != nil {
-		zeroscores += btoi(v)
+		zeroscore += btoi(v)
 	}
-	if zeroscores < 0 {
-		zeroscores = 0
+	if zeroscore < 0 {
+		zeroscore = 0
 	}
-	return bz.Put(prefix, itob(zeroscores))
+
+	scheduled, err := scheduleNewPhrases(tx, prefix, time.Now(), int(zeroscore))
+	if err != nil {
+		return err
+	}
+
+	return bz.Put(prefix, itob(zeroscore+int64(scheduled)))
+}
+
+// Schedule new phrases for studying.
+// Pass the number of new phrases already scheduled.
+// Returns the number of phrases that have been additionally scheduled.
+func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int) (int, error) {
+	toSchedule := maxNewStudies - scheduled
+	if toSchedule < 1 {
+		return 0, nil
+	}
+
+	bn := tx.Bucket(bucketNewPhrases)
+	bs := tx.Bucket(bucketStudytimes)
+	v := bn.Get(prefix)
+	var i, o int
+
+	// Schedule as many as allowed to schedule and available from new phrases
+	for i < toSchedule {
+		o = i * 8
+		if o >= len(v) {
+			break
+		}
+		i++
+
+		// Save study time
+		phraseID := append(prefix, v[o:o+8]...)
+		next := itob(now.Add(studyIntervals[0]).Unix())
+		if err := bs.Put(phraseID, next); err != nil {
+			return 0, err
+		}
+	}
+
+	// Remove scheduled phrases from new phrases bucket
+	if err := bn.Put(prefix, v[o:]); err != nil {
+		return 0, err
+	}
+
+	return i, nil
 }
 
 // DeleteStudyPhrase deletes the phrase the user currently has to study.
