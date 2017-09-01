@@ -24,7 +24,6 @@ func New(serverURL string) Translator {
 		defaultLang: en,
 		"en_GB":     en,
 		"de_DE":     de,
-		"th_TH":     th,
 	}
 
 	t := Translator{map[string]Content{}}
