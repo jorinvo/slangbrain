@@ -20,13 +20,26 @@ func New(dbFile string) (Store, error) {
 	if err != nil {
 		return store, fmt.Errorf("failed to open database: %v", err)
 	}
+
 	err = db.Update(func(tx *bolt.Tx) error {
+		// Ensure buckets exist
 		for _, bucket := range allBuckets {
 			_, err = tx.CreateBucketIfNotExists(bucket)
 			if err != nil {
 				return fmt.Errorf("failed to create bucket '%s': %v", bucket, err)
 			}
 		}
+
+		// Clear expired message IDs
+		now := time.Now().Add(-messageIDmaxAge).Unix()
+		bm := tx.Bucket(bucketMessageIDs)
+		bm.ForEach(func(k []byte, v []byte) error {
+			if btoi(v) < now {
+				return bm.Delete(k)
+			}
+			return nil
+		})
+
 		return nil
 	})
 	if err != nil {
@@ -88,9 +101,11 @@ func (store Store) QueueMessage(messageID string) error {
 		if b.Get(key) != nil {
 			return ErrExists
 		}
-		b.Put(key, []byte{})
+
+		b.Put(key, itob(time.Now().Unix()))
 		return nil
 	})
+
 	if err != nil {
 		if err == ErrExists {
 			return err

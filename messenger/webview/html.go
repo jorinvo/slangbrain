@@ -13,9 +13,9 @@ const html = `<!DOCTYPE html>
 			html {
 				padding: 0;
 				margin: 0;
+				background: white;
 			}
 			body {
-				background: white;
 				-webkit-touch-callout: none;
 				-webkit-user-select: none;
 				-khtml-user-select: none;
@@ -151,7 +151,7 @@ const html = `<!DOCTYPE html>
 			}
 		</style>
 	</head>
-	<body>
+	<body class="hide">
 
 		<div class="wrapper">
 			<div class="listing">
@@ -350,6 +350,9 @@ const html = `<!DOCTYPE html>
 			function contains(a, b) {
 				return a.toLowerCase().indexOf(b) !== -1
 			}
+
+
+			document.body.classList.remove('hide')
 
 		</script>
 	</body>

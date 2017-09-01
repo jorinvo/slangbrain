@@ -22,6 +22,8 @@ const (
 	authTokenMaxAge = 30 * 24 * time.Hour
 	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
 	payloadDuplicateInterval = 10 * time.Second
+	// Time after which message IDs are cleared, adjust to keep bucket size from exploding
+	messageIDmaxAge = 24 * time.Hour
 )
 
 var studyIntervals = [14]time.Duration{

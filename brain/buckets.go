@@ -48,7 +48,7 @@ var allBuckets = [][]byte{
 	bucketZeroscores,
 	// id+time -> phrase+scoreupdate+newscore
 	bucketStudies,
-	// string -> []byte{}
+	// string -> time
 	bucketMessageIDs,
 	// token -> id
 	bucketAuthTokens,
