@@ -46,14 +46,14 @@ func newRpl(l labels) Rpl {
 			fbot.Reply{Text: l.SubscribeDeny, Payload: payload.DenySubscribe},
 		},
 		HelpSubscribe: []fbot.Reply{
+			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 			fbot.Reply{Text: l.EnableNotifications, Payload: payload.Subscribe},
 			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
-			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 		},
 		HelpUnsubscribe: []fbot.Reply{
+			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 			fbot.Reply{Text: l.DisableNotifications, Payload: payload.Unsubscribe},
 			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
-			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
 		},
 		Feedback: []fbot.Reply{
 			fbot.Reply{Text: iconDelete + " " + l.CancelFeedback, Payload: payload.Menu},
