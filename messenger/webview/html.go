@@ -13,7 +13,15 @@ const html = `<!DOCTYPE html>
 			html {
 				padding: 0;
 				margin: 0;
+			}
+			body {
 				background: white;
+				-webkit-touch-callout: none;
+				-webkit-user-select: none;
+				-khtml-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
 			}
 			body,
 			textarea {
@@ -109,19 +117,6 @@ const html = `<!DOCTYPE html>
 				background: black;
 				color: white;
 				font-size: 105%;
-			}
-			button,
-			.search,
-			.edit,
-			.update,
-			.total,
-			.empty {
-				-webkit-touch-callout: none;
-				-webkit-user-select: none;
-				-khtml-user-select: none;
-				-moz-user-select: none;
-				-ms-user-select: none;
-				user-select: none;
 			}
 			.phrase {
 				-webkit-tap-highlight-color: rgba(0, 0, 0, .1);
