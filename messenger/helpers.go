@@ -19,8 +19,8 @@ import (
 // See: http://www.fileformat.info/info/unicode/category/index.htm
 var specialChars = regexp.MustCompile(`[^\p{Ll}\p{Lm}\p{Lo}\p{Lu}\p{Nd}\p{Nl}\p{No}\p{Mn}]`)
 
-// inside () or [] or || or {} or <>
-var inParantheses = regexp.MustCompile(`\(.*?\)|\[.*?\]|\|.*?\||\{.*?\}|\<.*?\>`)
+// inside () or [] or || or {} or <> or （）
+var inParantheses = regexp.MustCompile(`\(.*?\)|\[.*?\]|\|.*?\||\{.*?\}|\<.*?\>|（.*?）`)
 
 // Keeping it simple for now.
 // handleLinks() will find the false positives.
