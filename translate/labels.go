@@ -20,8 +20,6 @@ type labels struct {
 	ScoreBad,
 	ScoreGood,
 	StudyNotNow,
-	ConfirmDelete,
-	CancelDelete,
 	Manage,
 	ImportHelp,
 	Export,

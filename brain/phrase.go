@@ -3,7 +3,6 @@ package brain
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -196,27 +195,7 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int
 	}
 
 	// Remove scheduled phrases from new phrases bucket
-	bn.Put(prefix, v[o:])
-	return i, err
-}
-
-// DeleteStudyPhrase deletes the phrase the user currently has to study.
-func (store Store) DeleteStudyPhrase(id int64) error {
-	err := store.db.Update(func(tx *bolt.Tx) error {
-		key, _, _ := findCurrentStudy(tx, itob(id), time.Now())
-
-		// No studies found
-		if key == nil {
-			return errors.New("no study found")
-		}
-
-		return phraseDeleter(tx, key)
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to delete study phrase for id %d: %v", id, err)
-	}
-	return nil
+	return i, bn.Put(prefix, v[o:])
 }
 
 // IDPhrase is a phrase format that also contains ID.

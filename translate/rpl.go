@@ -26,12 +26,11 @@ type Rpl struct {
 
 func newRpl(l labels) Rpl {
 	var (
-		studyDone    = fbot.Reply{Text: l.StudyDone, Payload: payload.Menu}
-		study        = fbot.Reply{Text: iconStudy + " " + l.Study, Payload: payload.Study}
-		add          = fbot.Reply{Text: iconAdd + " " + l.Add, Payload: payload.Add}
-		done         = fbot.Reply{Text: iconDone + " " + l.Done, Payload: payload.Idle}
-		help         = fbot.Reply{Text: iconHelp + " " + l.Help, Payload: payload.Help}
-		deletePhrase = fbot.Reply{Text: iconDelete, Payload: payload.Delete}
+		studyDone = fbot.Reply{Text: l.StudyDone, Payload: payload.Menu}
+		study     = fbot.Reply{Text: iconStudy + " " + l.Study, Payload: payload.Study}
+		add       = fbot.Reply{Text: iconAdd + " " + l.Add, Payload: payload.Add}
+		done      = fbot.Reply{Text: iconDone + " " + l.Done, Payload: payload.Idle}
+		help      = fbot.Reply{Text: iconHelp + " " + l.Help, Payload: payload.Help}
 	)
 
 	return Rpl{
@@ -65,12 +64,10 @@ func newRpl(l labels) Rpl {
 			studyDone,
 		},
 		Show: []fbot.Reply{
-			deletePhrase,
 			studyDone,
 			fbot.Reply{Text: iconShow + " " + l.ShowPhrase, Payload: payload.ShowPhrase},
 		},
 		Score: []fbot.Reply{
-			deletePhrase,
 			fbot.Reply{Text: iconBad + " " + l.ScoreBad, Payload: payload.ScoreBad},
 			fbot.Reply{Text: iconOK, Payload: payload.ScoreOk},
 			fbot.Reply{Text: iconGood + " " + l.ScoreGood, Payload: payload.ScoreGood},
@@ -81,10 +78,6 @@ func newRpl(l labels) Rpl {
 		StudiesDue: []fbot.Reply{
 			study,
 			fbot.Reply{Text: l.StudyNotNow, Payload: payload.Menu},
-		},
-		ConfirmDelete: []fbot.Reply{
-			fbot.Reply{Text: iconDelete + " " + l.ConfirmDelete, Payload: payload.ConfirmDelete},
-			fbot.Reply{Text: l.CancelDelete, Payload: payload.CancelDelete},
 		},
 		ImportHelp: []fbot.Reply{
 			fbot.Reply{Text: l.CloseImportHelp, Payload: payload.Menu},

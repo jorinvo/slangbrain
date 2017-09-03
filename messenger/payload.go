@@ -76,21 +76,6 @@ func (b Bot) handlePayload(u user.User, p, referral string) {
 	case payload.ScoreGood:
 		b.send(b.scoreAndStudy(u, 1))
 
-	case payload.Delete:
-		b.send(u.ID, u.Msg.ConfirmDelete, u.Rpl.ConfirmDelete, nil)
-
-	case payload.ConfirmDelete:
-		if err := b.store.DeleteStudyPhrase(u.ID); err != nil {
-			b.send(u.ID, u.Msg.Error, nil, nil)
-		} else {
-			b.send(u.ID, u.Msg.Deleted, nil, nil)
-		}
-		b.send(b.startStudy(u))
-
-	case payload.CancelDelete:
-		b.send(u.ID, u.Msg.CancelDelete, nil, nil)
-		b.send(b.startStudy(u))
-
 	case payload.Subscribe:
 		if err := b.store.Subscribe(u.ID); err != nil {
 			b.send(u.ID, u.Msg.Error, nil, nil)
