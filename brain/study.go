@@ -65,7 +65,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 
 		// Update zeroscore
 		if (p.Score == 0 && scoreUpdate == 1) || (p.Score == 1 && scoreUpdate == -1) {
-			if err := updateZeroscore(tx, prefix, scoreUpdate); err != nil {
+			if err := updateZeroscore(tx, prefix, -scoreUpdate); err != nil {
 				return err
 			}
 		}

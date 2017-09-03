@@ -68,7 +68,7 @@ func (b Bot) handlePayload(u user.User, p, referral string) {
 		b.send(u.ID, study.Phrase, u.Rpl.Score, nil)
 
 	case payload.ScoreBad:
-		b.send(b.scoreAndStudy(u, -1))
+		b.send(b.scoreAndStudy(u, -2))
 
 	case payload.ScoreOk:
 		b.send(b.scoreAndStudy(u, 0))

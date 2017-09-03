@@ -43,7 +43,7 @@ func (b Bot) handleMessage(u user.User, msg string) {
 		reply := u.Msg.StudyCorrect
 		phraseNormalizedA, phraseNormalizedB := normPhrases(study.Phrase)
 		if msgNormalizedA != phraseNormalizedA && msgNormalizedB != phraseNormalizedB {
-			score = -1
+			score = -2
 			reply = fmt.Sprintf(u.Msg.StudyWrong, study.Phrase)
 		}
 		b.send(u.ID, reply, nil, nil)

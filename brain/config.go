@@ -9,11 +9,11 @@ const (
 	// to mix up the order in which words are studied.
 	studyTimeDiffusion = 30
 	// Maximum number of new studies at a time
-	maxNewStudies = 30
+	maxNewStudies = 20
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 10
 	// Time user has to be inactive before being notified
-	dueMinInactive = 2 * time.Hour
+	dueMinInactive = 1 * time.Hour
 	// Cache profiles for one month
 	profileMaxCacheTime = 30 * 24 * time.Hour
 	// Number of chars a token gets
@@ -27,7 +27,7 @@ const (
 )
 
 var studyIntervals = [14]time.Duration{
-	2 * time.Hour,
+	time.Hour,
 	8 * time.Hour,
 	20 * time.Hour,
 	44 * time.Hour,

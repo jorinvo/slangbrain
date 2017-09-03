@@ -196,11 +196,8 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int
 	}
 
 	// Remove scheduled phrases from new phrases bucket
-	if err := bn.Put(prefix, v[o:]); err != nil {
-		return 0, err
-	}
-
-	return i, nil
+	bn.Put(prefix, v[o:])
+	return i, err
 }
 
 // DeleteStudyPhrase deletes the phrase the user currently has to study.
