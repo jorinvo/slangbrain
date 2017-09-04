@@ -139,8 +139,6 @@ func (store Store) GetNotifyTime(id int64, timezone int) (time.Duration, int, er
 		delay = dueMinInactive
 	}
 
-	fmt.Printf("user: %v, delay: %v, timezone: %v, hour: %v\n", id, delay, timezone, userHour)
-
 	minTime := now.Add(delay).Unix()
 	var nexts sortableInts
 

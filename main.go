@@ -46,8 +46,8 @@ Flags:
 var version = "development"
 
 func main() {
-	errorLogger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
-	infoLogger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile|log.LUTC)
+	errorLogger := log.New(os.Stderr, "", 0)
+	infoLogger := log.New(os.Stdout, "", 0)
 
 	versionFlag := flag.Bool("version", false, "Print the version of the binary.")
 	db := flag.String("db", "", "Required. Path to BoltDB file. Will be created if non-existent.")
