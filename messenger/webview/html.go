@@ -47,12 +47,12 @@ const html = `<!DOCTYPE html>
 				line-height: 120%;
 			}
 			button {
-				border: 1px solid rgba(255, 255, 255, 0);
+				border: 1px solid rgba(0, 0, 0, 0);
 				width: 29.333%;
 				padding: 2.5% 0;
 				cursor: pointer;
 				margin: 1.5%;
-				background: black;
+				background: #ff207e;
 				color: white;
 				font-family: monospace;
 				font-size: 105%;
@@ -81,7 +81,7 @@ const html = `<!DOCTYPE html>
 				font-weight: bold;
 			}
 			.open {
-				background: #f1f1f1;
+				background: rgba(255, 32, 126, 0.5);
 			}
 			.total {
 				margin: 10% 0;
@@ -114,12 +114,12 @@ const html = `<!DOCTYPE html>
 				text-align: center;
 				padding: 6%;
 				box-sizing: border-box;
-				background: black;
+				background: #ff207e;
 				color: white;
 				font-size: 105%;
 			}
 			.phrase {
-				-webkit-tap-highlight-color: rgba(0, 0, 0, .1);
+				-webkit-tap-highlight-color: rgba(255, 32, 126, 0.5);
 			}
 			button {
 				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -130,13 +130,13 @@ const html = `<!DOCTYPE html>
 			button:hover,
 			button:focus {
 				outline: none;
-				border: 1px solid black;
+				border: 1px solid #ff207e;
 				background: white;
-				color: black;
+				color: #ff207e;
 			}
-			.phrase:hover {
+			.phrase:not(.open):hover {
 				outline: none;
-				background-color: #dedede;
+				background-color: rgba(255, 32, 126, 0.1);
 			}
 			input:focus,
 			textarea:focus {
