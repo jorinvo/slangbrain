@@ -14,8 +14,8 @@ const (
 	dueMinCount = 10
 	// Time user has to be inactive before being notified
 	dueMinInactive = 1 * time.Hour
-	// Cache profiles for one month
-	profileMaxCacheTime = 30 * 24 * time.Hour
+	// Cache profiles locally
+	profileMaxCacheTime = 3 * 24 * time.Hour
 	// Number of chars a token gets
 	authTokenLength = 77
 	// Tokens are valid for one month
@@ -24,6 +24,10 @@ const (
 	payloadDuplicateInterval = 10 * time.Second
 	// Time after which message IDs are cleared, adjust to keep bucket size from exploding
 	messageIDmaxAge = 24 * time.Hour
+	// Hour of the day after which no notifications can be sent to the user
+	nightStart = 21
+	// Hour of the day from which on notifications can be sent to the user
+	nightEnd = 7
 )
 
 var studyIntervals = [14]time.Duration{

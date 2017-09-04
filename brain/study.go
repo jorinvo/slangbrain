@@ -120,34 +120,57 @@ func diffusion() time.Duration {
 // Returns the time until the next studies are ready and a count of the ready studies.
 // The returned duration is always at least dueMinInactive.
 // The count is 0 if the chat has no phrases yet.
-func (store Store) GetNotifyTime(id int64) (time.Duration, int, error) {
+// The returned duration gets delayed if it would be in a user's night time.
+// Nighttime is calculated form the passed timezone.
+func (store Store) GetNotifyTime(id int64, timezone int) (time.Duration, int, error) {
 	due := 0
 	now := time.Now()
-	minTime := now.Add(dueMinInactive).Unix()
-	var next sortableInts
+
+	// Delay if night
+	var delay time.Duration
+	userHour := now.Add(delay).UTC().Hour() + timezone
+	if userHour > nightStart {
+		delay = time.Duration(24-userHour+nightEnd)*time.Hour + time.Duration(60-now.Minute())*time.Minute
+	} else if userHour < nightEnd {
+		delay = time.Duration(nightEnd-userHour)*time.Hour - time.Duration(now.Minute())*time.Minute
+	}
+	// Ensure minimum delay
+	if delay < dueMinInactive {
+		delay = dueMinInactive
+	}
+
+	fmt.Printf("user: %v, delay: %v, timezone: %v, hour: %v\n", id, delay, timezone, userHour)
+
+	minTime := now.Add(delay).Unix()
+	var nexts sortableInts
 
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketStudytimes).Cursor()
 		prefix := itob(id)
+
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			timestamp := btoi(v)
 			if timestamp < minTime {
 				due++
 			}
+
 			if due >= dueMinCount {
 				continue
 			}
-			l := len(next)
+
+			l := len(nexts)
 			if l < dueMinCount {
-				next = append(next, timestamp)
-				sort.Sort(next)
+				nexts = append(nexts, timestamp)
+				sort.Sort(nexts)
 				continue
 			}
-			if timestamp < next[l-1] {
-				next = append(next[:l-1], timestamp)
-				sort.Sort(next)
+
+			if timestamp < nexts[l-1] {
+				nexts = append(nexts[:l-1], timestamp)
+				sort.Sort(nexts)
 			}
 		}
+
 		return nil
 	})
 
@@ -155,15 +178,19 @@ func (store Store) GetNotifyTime(id int64) (time.Duration, int, error) {
 		return 0, 0, fmt.Errorf("failed to get next studies for chat %d: %v", id, err)
 	}
 
+	// If user has too little phrases, minCount is ignored
 	minCount := dueMinCount
-	l := len(next)
+	l := len(nexts)
 	if minCount > l {
 		minCount = l
 	}
+
+	// Studies are ready already, notify ASAP
 	if due >= minCount {
-		return dueMinInactive, due, nil
+		return delay, due, nil
 	}
-	return time.Unix(next[l-1], 0).Sub(now), l, nil
+
+	return time.Unix(nexts[l-1], 0).Sub(now), l, nil
 }
 
 // EachActiveChat runs a function for each chat

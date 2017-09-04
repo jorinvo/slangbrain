@@ -20,14 +20,14 @@ type profile struct {
 	data profileData
 }
 type profileData struct {
-	Name     string  `json:"first_name"`
-	Locale   string  `json:"locale"`
-	Timezone float64 `json:"timezone"`
+	Name     string `json:"first_name"`
+	Locale   string `json:"locale"`
+	Timezone int    `json:"timezone"`
 }
 
-func (p profile) Name() string      { return p.data.Name }
-func (p profile) Locale() string    { return p.data.Locale }
-func (p profile) Timezone() float64 { return p.data.Timezone }
+func (p profile) Name() string   { return p.data.Name }
+func (p profile) Locale() string { return p.data.Locale }
+func (p profile) Timezone() int  { return p.data.Timezone }
 
 // GetProfile fetches a user profile for an ID.
 func (c Client) GetProfile(id int64) (common.Profile, error) {

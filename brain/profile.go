@@ -18,13 +18,13 @@ type profile struct {
 type profileData struct {
 	Name      string
 	Locale    string
-	Timezone  float64
+	Timezone  int
 	CacheTime time.Time
 }
 
-func (p profile) Name() string      { return p.data.Name }
-func (p profile) Locale() string    { return p.data.Locale }
-func (p profile) Timezone() float64 { return p.data.Timezone }
+func (p profile) Name() string   { return p.data.Name }
+func (p profile) Locale() string { return p.data.Locale }
+func (p profile) Timezone() int  { return p.data.Timezone }
 
 // GetProfile fetches a cached profile.
 // Returns ErrNotFound if none found or cache is older than profileMaxCacheTime.

@@ -29,7 +29,8 @@ func (b Bot) scheduleNotify(id int64) {
 		// Don't care if timer is active or not
 		_ = timer.Stop()
 	}
-	d, count, err := b.store.GetNotifyTime(id)
+	u := user.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	d, count, err := b.store.GetNotifyTime(id, u.Timezone())
 	if err != nil {
 		b.err.Println(err)
 		return
