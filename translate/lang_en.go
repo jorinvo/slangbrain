@@ -108,6 +108,7 @@ A valid file could look like this:`,
 		Manage:               "manage phrases",
 		ConfirmImport:        "yes",
 		CancelImport:         "cancel",
+		Homepage:             "slangbrain.com",
 	}
 
 	w := Web{

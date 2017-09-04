@@ -104,6 +104,7 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		Manage:               "Vokabeln bearbeiten",
 		ConfirmImport:        "ja",
 		CancelImport:         "abbrechen",
+		Homepage:             "slangbrain.com",
 	}
 
 	w := Web{

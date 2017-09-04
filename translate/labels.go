@@ -25,5 +25,6 @@ type labels struct {
 	Export,
 	CloseImportHelp,
 	ConfirmImport,
-	CancelImport string
+	CancelImport,
+	Homepage string
 }

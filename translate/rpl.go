@@ -26,11 +26,14 @@ type Rpl struct {
 
 func newRpl(l labels) Rpl {
 	var (
-		studyDone = fbot.Reply{Text: l.StudyDone, Payload: payload.Menu}
-		study     = fbot.Reply{Text: iconStudy + " " + l.Study, Payload: payload.Study}
-		add       = fbot.Reply{Text: iconAdd + " " + l.Add, Payload: payload.Add}
-		done      = fbot.Reply{Text: iconDone + " " + l.Done, Payload: payload.Idle}
-		help      = fbot.Reply{Text: iconHelp + " " + l.Help, Payload: payload.Help}
+		studyDone  = fbot.Reply{Text: l.StudyDone, Payload: payload.Menu}
+		study      = fbot.Reply{Text: iconStudy + " " + l.Study, Payload: payload.Study}
+		add        = fbot.Reply{Text: iconAdd + " " + l.Add, Payload: payload.Add}
+		done       = fbot.Reply{Text: iconDone + " " + l.Done, Payload: payload.Idle}
+		help       = fbot.Reply{Text: iconHelp + " " + l.Help, Payload: payload.Help}
+		importHelp = fbot.Reply{Text: l.ImportHelp, Payload: payload.ImportHelp}
+		quitHelp   = fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu}
+		feedback   = fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback}
 	)
 
 	return Rpl{
@@ -45,14 +48,16 @@ func newRpl(l labels) Rpl {
 			fbot.Reply{Text: l.SubscribeDeny, Payload: payload.DenySubscribe},
 		},
 		HelpSubscribe: []fbot.Reply{
-			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
+			quitHelp,
 			fbot.Reply{Text: l.EnableNotifications, Payload: payload.Subscribe},
-			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
+			feedback,
+			importHelp,
 		},
 		HelpUnsubscribe: []fbot.Reply{
-			fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu},
+			quitHelp,
 			fbot.Reply{Text: l.DisableNotifications, Payload: payload.Unsubscribe},
-			fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback},
+			feedback,
+			importHelp,
 		},
 		Feedback: []fbot.Reply{
 			fbot.Reply{Text: iconDelete + " " + l.CancelFeedback, Payload: payload.Menu},
