@@ -21,7 +21,7 @@ func (b Bot) handleLinks(u user.User, links []string) {
 
 	var queued int
 	phrases, files, userErr, err := b.extractPhrases(u, links)
-	if err != nil && userErr != "" {
+	if err == nil && userErr == "" {
 		queued, err = b.store.QueueImport(u.ID, phrases)
 	}
 	if err != nil || userErr != "" || files == "" {
@@ -52,7 +52,8 @@ func (b Bot) handleLinks(u user.User, links []string) {
 // This function doesn't send anything back to the user,
 // but returns information that should be used to generate a reply.
 //
-// For now we only handle CSV files.
+// For now we only handle .csv, .txt and .tsv files.
+// .txt and .tsv files are handled with the CSV parser, only that they use a tab instead of a comma as separator.
 // For all other links admins are notified to look into them manually.
 //
 // Returns a list of phrases that afterwards can be queued or imported directly,
@@ -62,8 +63,8 @@ func (b Bot) handleLinks(u user.User, links []string) {
 //
 // It is possible to have user error but no application error and also the other way around.
 func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string, string, error) {
-	// Collect CSV files from links
-	var csvFiles []struct{ Name, URL string }
+	// Collect files from links
+	var files []struct{ Name, URL, Ext string }
 	for _, link := range links {
 		// Parse URL
 		f, err := url.ParseRequestURI(link)
@@ -72,8 +73,9 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 			continue
 		}
 
-		// Notify admin for non-csv files
-		if strings.ToLower(path.Ext(f.Path)) != ".csv" {
+		// Notify admin for unsupported files
+		ext := strings.ToLower(path.Ext(f.Path))
+		if ext != ".csv" && ext != ".txt" && ext != ".tsv" {
 			if b.feedback != nil {
 				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: fmt.Sprintf("[unhandled link: %s]", link)}
 			} else {
@@ -82,17 +84,17 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 			continue
 		}
 
-		csvFiles = append(csvFiles, struct{ Name, URL string }{path.Base(f.Path), link})
+		files = append(files, struct{ Name, URL, Ext string }{path.Base(f.Path), link, ext})
 	}
 
-	if len(csvFiles) == 0 {
+	if len(files) == 0 {
 		return nil, "", "", nil
 	}
 
-	// Get contents and parse CSV files
+	// Get contents and parse files
 	var allRecords [][]string
 	var fileNames []string
-	for _, file := range csvFiles {
+	for _, file := range files {
 		req, err := http.NewRequest("GET", file.URL, nil)
 		if err != nil {
 			return nil, "", "", fmt.Errorf("failed to create request to file %s: %v", file.URL, err)
@@ -108,16 +110,22 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 			}
 		}(file.URL)
 
-		records, err := csv.NewReader(res.Body).ReadAll()
+		// Separate .tsv and .txt files by tab
+		csvReader := csv.NewReader(res.Body)
+		if file.Ext == "tsv" || file.Ext == ".txt" {
+			csvReader.Comma = '\t'
+		}
+
+		records, err := csvReader.ReadAll()
 		if err != nil {
 			msg := fmt.Sprintf(u.Msg.ImportErrParse, file.Name, err)
-			return nil, "", msg, fmt.Errorf("failed to parse CSV file %s: %v", file.URL, err)
+			return nil, "", msg, fmt.Errorf("failed to parse file %s: %v", file.URL, err)
 		}
 
 		if len(records) == 0 {
 			continue
 		}
-		// Check CSV formatting
+		// Check formatting
 		if cols := len(records[0]); cols < 2 {
 			return nil, "", fmt.Sprintf(u.Msg.ImportErrCols, file.Name, cols), nil
 		}
@@ -146,11 +154,11 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 	}
 
 	// List file names
-	files := fileNames[0]
+	fileList := fileNames[0]
 	if l := len(fileNames); l > 1 {
-		files = strings.Join(fileNames[:l-1], ", ") + " " + u.Msg.And + " " + fileNames[l-1]
+		fileList = strings.Join(fileNames[:l-1], ", ") + " " + u.Msg.And + " " + fileNames[l-1]
 	}
 
 	// Queue import
-	return phrases, files, "", nil
+	return phrases, fileList, "", nil
 }
