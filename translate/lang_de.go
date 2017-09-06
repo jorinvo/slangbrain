@@ -71,13 +71,12 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		ImportEmpty:        "Die CSV Datei ist leer.",
 		ImportErrParse: `Die Datei '%s' is nicht richtig formatiert. Bitte überprüfe die Datei und versuche es noch einmal. Folgender Fehler ist aufgetreten:
 '%v'`,
-		ImportErrCols:      "Die CSV Dateien muss mindestens 2 Spalten haben, aber die Datei '%s' hat %d Spalten. Die erste Spalte ist für Vokabeln und die zweite für deren Erklärungen.",
-		ImportErrDuplicate: "Es gibt zwei Zeilen mit der gleichen Erklärung '%s'. Bitte bearbeite eine der beiden und versuche es noch einmal.",
-		AnHour:             "einer Stunde",
-		Hours:              "Stunden",
-		AMinute:            "einer Minute",
-		Minutes:            "Minuten",
-		And:                "und",
+		ImportErrCols: "Die CSV Dateien muss mindestens 2 Spalten haben, aber die Datei '%s' hat %d Spalten. Die erste Spalte ist für Vokabeln und die zweite für deren Erklärungen.",
+		AnHour:        "einer Stunde",
+		Hours:         "Stunden",
+		AMinute:       "einer Minute",
+		Minutes:       "Minuten",
+		And:           "und",
 	}
 
 	l := labels{

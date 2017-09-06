@@ -145,11 +145,15 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 			Phrase:      strings.TrimSpace(r[0]),
 			Explanation: strings.TrimSpace(r[1]),
 		}
+
+		// Merge, if duplicate
 		for _, prev := range phrases {
 			if p.Explanation == prev.Explanation {
-				return nil, "", fmt.Sprintf(u.Msg.ImportErrDuplicate, p.Explanation), nil
+				prev.Phrase += " (" + p.Phrase + ")"
+				continue
 			}
 		}
+
 		phrases = append(phrases, p)
 	}
 

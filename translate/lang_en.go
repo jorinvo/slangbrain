@@ -75,13 +75,12 @@ A valid file could look like this:`,
 		ImportEmpty:        "The CSV file is empty. Nothing has been imported.",
 		ImportErrParse: `The file '%s' is not formatted correctly. Please check the file and try it again. Parsing the file failed with the error:
 '%v'`,
-		ImportErrCols:      "Expecting CSV files to have at least 2 columns, but file '%s' has %d. The first one should contain the phrase, the second an explanation.",
-		ImportErrDuplicate: "There are multiple phrases with the explantion '%s'. Please solve the conflict and try again.",
-		AnHour:             "an hour",
-		Hours:              "hours",
-		AMinute:            "a minute",
-		Minutes:            "minutes",
-		And:                "and",
+		ImportErrCols: "Expecting CSV files to have at least 2 columns, but file '%s' has %d. The first one should contain the phrase, the second an explanation.",
+		AnHour:        "an hour",
+		Hours:         "hours",
+		AMinute:       "a minute",
+		Minutes:       "minutes",
+		And:           "and",
 	}
 
 	l := labels{
@@ -108,7 +107,7 @@ A valid file could look like this:`,
 		Manage:               "manage phrases",
 		ConfirmImport:        "yes",
 		CancelImport:         "cancel",
-		Homepage:             "slangbrain.com",
+		Homepage:             "learn more",
 	}
 
 	w := Web{
