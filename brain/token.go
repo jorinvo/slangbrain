@@ -12,6 +12,7 @@ import (
 // GenerateToken creates and returns the token for a user.
 // It can be used to authenticate the user after.
 // If a token already exists, it is reused instead of generating a new one.
+// There is no way to expire tokens for now, because links should be shareable and token should be useable for automation.
 func (store Store) GenerateToken(id int64) (string, error) {
 	var token string
 	err := store.db.Update(func(tx *bolt.Tx) error {
@@ -19,20 +20,13 @@ func (store Store) GenerateToken(id int64) (string, error) {
 		bu := tx.Bucket(bucketAuthUsers)
 		bt := tx.Bucket(bucketAuthTokens)
 		now := time.Now()
+
 		// Lookup existing
 		if v := bu.Get(bid); v != nil {
-			if time.Duration(now.Sub(time.Unix(btoi(v[:8]), 0))) < authTokenMaxAge {
-				token = string(v[8:])
-				return nil
-			}
-			// Or clear expired
-			if err := bu.Delete(bid); err != nil {
-				return err
-			}
-			if err := bt.Delete(v[8:]); err != nil {
-				return err
-			}
+			token = string(v[8:])
+			return nil
 		}
+
 		// Or create new
 		t, err := random(authTokenLength)
 		if err != nil {
@@ -42,8 +36,10 @@ func (store Store) GenerateToken(id int64) (string, error) {
 		if err := bt.Put([]byte(token), bid); err != nil {
 			return err
 		}
+
 		return bu.Put(bid, append(itob(now.Unix()), []byte(token)...))
 	})
+
 	if err != nil {
 		return "", fmt.Errorf("failed to get auth token for %d: %v", id, err)
 	}

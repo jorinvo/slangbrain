@@ -18,10 +18,8 @@ const (
 	profileMaxCacheTime = 3 * 24 * time.Hour
 	// Number of chars a token gets
 	authTokenLength = 77
-	// Tokens are valid for one month
-	authTokenMaxAge = 30 * 24 * time.Hour
 	// Handle same payload only once in the given interval to prevent accidentally sending payloads twice
-	payloadDuplicateInterval = 10 * time.Second
+	payloadDuplicateInterval = 5 * time.Second
 	// Time after which message IDs are cleared, adjust to keep bucket size from exploding
 	messageIDmaxAge = 24 * time.Hour
 	// Hour of the day after which no notifications can be sent to the user
