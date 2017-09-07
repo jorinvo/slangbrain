@@ -13,6 +13,8 @@ var (
 	ErrExists = errors.New("already exists")
 	// ErrNotFound signals that the requested entry couldn't be found.
 	ErrNotFound = errors.New("not found")
+	// ErrNotReady signals that the requested data is not ready.
+	ErrNotReady = errors.New("not ready")
 )
 
 // Mode is the state of a chat.
@@ -50,4 +52,16 @@ type Phrase struct {
 	Phrase      string
 	Explanation string
 	Score       int
+}
+
+// Stats describes statistics for a single user.
+type Stats struct {
+	// Added is the number of phrases added in the last interval.
+	Added int
+	// Studied is the number of phrases studied in the last interval.
+	Studied int
+	// Score is the total score of all phrases of a user.
+	Score int
+	// Rank is the rank by score of a user compared to all other users.
+	Rank int
 }

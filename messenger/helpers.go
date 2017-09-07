@@ -27,11 +27,21 @@ var inParantheses = regexp.MustCompile(`\(.*?\)|\[.*?\]|\|.*?\||\{.*?\}|\<.*?\>|
 var matchURL = regexp.MustCompile(`https?://\S+\.\S+`)
 
 // Change to menu mode.
+// Also sends stats to user if they are ready.
 // Return values can be passed directly to b.send().
 func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) {
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
+
+	s, err := b.store.GetStats(u.ID)
+	if err == nil {
+		msg := fmt.Sprintf(u.Msg.WeeklyStats, s.Added, s.Studied, s.Score, s.Rank)
+		b.send(u.ID, msg, nil, nil)
+	} else if err != brain.ErrNotReady {
+		b.err.Println(err)
+	}
+
 	return u.ID, u.Msg.Menu, u.Rpl.MenuMode, nil
 }
 

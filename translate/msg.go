@@ -41,6 +41,7 @@ type Msg struct {
 	ImportEmpty,
 	ImportErrParse,
 	ImportErrCols,
+	WeeklyStats,
 	AnHour,
 	Hours,
 	AMinute,

@@ -71,9 +71,15 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		}
 
 		// Update score
+		prevScore := p.Score
 		p.Score += scoreUpdate
 		if p.Score < 0 {
 			p.Score = 0
+		}
+
+		// Update scoretotal
+		if err := updateScoreTotal(tx, prefix, p.Score-prevScore); err != nil {
+			return err
 		}
 
 		// Save phrase
@@ -94,6 +100,8 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
 			return err
 		}
+
+		fmt.Printf("phrase: %s; new score: %v; update: %v; next study: %v\n", p.Phrase, p.Score, scoreUpdate, time.Unix(btoi(next), 0).Sub(now))
 
 		// Save study for reference and to analyze them later
 		idAndTime := append(prefix, itob(now.Unix())...)

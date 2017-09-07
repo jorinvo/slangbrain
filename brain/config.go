@@ -26,6 +26,8 @@ const (
 	nightStart = 21
 	// Hour of the day from which on notifications can be sent to the user
 	nightEnd = 7
+	// Show user stats once a week
+	statInterval = 7 * 24 * time.Hour
 )
 
 var studyIntervals = [14]time.Duration{
