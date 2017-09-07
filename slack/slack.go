@@ -105,13 +105,15 @@ func (a Slack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleMessage can be called to send a user message to Slack.
-func (a Slack) HandleMessage(id int64, name, msg string) {
+func (a Slack) HandleMessage(id int64, name, msg, channel string) {
 	slackMsg := struct {
 		Username string `json:"username"`
 		Text     string `json:"text"`
+		Channel  string `json:"channel,omitempty"`
 	}{
 		Username: name,
 		Text:     fmt.Sprintf("%d\n\n%s", id, msg),
+		Channel:  channel,
 	}
 	buf, err := json.Marshal(slackMsg)
 	if err != nil {

@@ -76,10 +76,11 @@ func (b Bot) extractPhrases(u user.User, links []string) ([]brain.Phrase, string
 		// Notify admin for unsupported files
 		ext := strings.ToLower(path.Ext(f.Path))
 		if ext != ".csv" && ext != ".txt" && ext != ".tsv" {
-			if b.feedback != nil {
-				b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: fmt.Sprintf("[unhandled link: %s]", link)}
-			} else {
-				b.err.Printf("[id=%d] unhandled link from %s: %s", u.ID, u.Name(), link)
+			b.feedback <- Feedback{
+				ChatID:   u.ID,
+				Username: u.Name(),
+				Message:  fmt.Sprintf("[unhandled link: %s]", link),
+				Channel:  slackUnhandled,
 			}
 			continue
 		}

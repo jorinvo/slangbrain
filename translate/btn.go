@@ -13,7 +13,7 @@ type Btn struct {
 }
 
 func newBtn(l labels, serverURL string) Btn {
-	homepage := fbot.LinkButton(l.Homepage, "https://slangbrain.com")
+	homepage := fbot.LinkButton(l.Homepage, l.BlogURL)
 	normURL := strings.TrimSuffix(serverURL, "/")
 	manager := normURL + "/webview/manage/"
 	exporter := normURL + "/api/phrases.csv?token="

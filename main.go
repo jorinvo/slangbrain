@@ -144,7 +144,7 @@ func main() {
 	)
 	go func() {
 		for f := range feedback {
-			slackHandler.HandleMessage(f.ChatID, f.Username, f.Message)
+			slackHandler.HandleMessage(f.ChatID, f.Username, f.Message, f.Channel)
 		}
 	}()
 

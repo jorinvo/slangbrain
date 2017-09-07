@@ -1,6 +1,7 @@
 package messenger
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/jorinvo/slangbrain/fbot"
@@ -36,11 +37,13 @@ func (b Bot) handleAttachments(u user.User, attachments []fbot.Attachment) {
 
 		// Notify admin for non-file and non-fallback attachments
 		if a.Type != "file" {
-			if b.feedback == nil {
-				b.err.Printf("[id=%d] got unhandled '%s' from %s", u.ID, a.Type, u.Name())
-				continue
+			b.feedback <- Feedback{
+				ChatID:   u.ID,
+				Username: u.Name(),
+				Message:  fmt.Sprintf("[ user sent unhandled '%s' (sticker %d): %s ]", a.Type, a.Sticker, a.URL),
+				Channel:  slackUnhandled,
 			}
-			b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: "[user sent unhandled '" + a.Type + "']"}
+
 			continue
 		}
 

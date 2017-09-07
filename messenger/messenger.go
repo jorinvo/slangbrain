@@ -16,11 +16,16 @@ import (
 	"github.com/jorinvo/slangbrain/user"
 )
 
-// Feedback describes a message from a user a human has to react to
+// Channel to send unhandled user messages and attachments to
+const slackUnhandled = "#slangbrain-unhandled"
+
+// Feedback describes a message from a user a human has to react to.
+// Channel is optional and make sure to not forget the "#" in the beginning.
 type Feedback struct {
 	ChatID   int64
 	Username string
 	Message  string
+	Channel  string
 }
 
 // Bot is a messenger bot handling webhook events and notifications.
@@ -148,6 +153,15 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 		b.client = fbot.New(token, fbot.API(b.furl))
 	}
 	b.Handler = b.client.Webhook(b.HandleEvent, secret, b.verifyToken)
+	if b.feedback == nil {
+		feedback := make(chan Feedback)
+		b.feedback = feedback
+		go func() {
+			for f := range feedback {
+				b.err.Printf("[id=%d, name=%s, channel=%s] got unhandled feedback: %s", f.ChatID, f.Username, f.Channel, f.Message)
+			}
+		}()
+	}
 
 	if b.setup {
 		greetings := []fbot.Greeting{

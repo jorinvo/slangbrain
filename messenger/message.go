@@ -85,15 +85,17 @@ func (b Bot) handleMessage(u user.User, msg string) {
 		b.messageWelcome(u, "")
 
 	case brain.ModeFeedback:
-		if b.feedback != nil {
-			b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: msg}
-		} else {
-			b.err.Printf("got unhandled feedback from %s (%d): %s", u.Name(), u.ID, msg)
-		}
+		b.feedback <- Feedback{ChatID: u.ID, Username: u.Name(), Message: msg}
 		b.send(u.ID, fmt.Sprintf(u.Msg.FeedbackDone, u.Name()), nil, nil)
 		b.send(b.messageStartMenu(u))
 
 	default:
+		b.feedback <- Feedback{
+			ChatID:   u.ID,
+			Username: u.Name(),
+			Message:  msg,
+			Channel:  slackUnhandled,
+		}
 		b.send(b.messageStartMenu(u))
 	}
 }

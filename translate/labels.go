@@ -26,5 +26,6 @@ type labels struct {
 	CloseImportHelp,
 	ConfirmImport,
 	CancelImport,
+	BlogURL,
 	Homepage string
 }
