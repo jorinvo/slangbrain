@@ -162,11 +162,13 @@ func main() {
 
 	apiHandler := api.Phrases(store, errorLogger)
 	csvHandler := api.CSV(store, errorLogger)
+	jsonHandler := api.JSON(store, errorLogger)
 	webviewHandler := webview.New(store, errorLogger, translator, "/api/")
 
 	mux := http.NewServeMux()
 	mux.Handle("/webhook", webhookHandler)
 	mux.Handle("/api/phrases.csv", csvHandler)
+	mux.Handle("/api/phrases.json", jsonHandler)
 	mux.Handle("/api/phrases/", http.StripPrefix("/api/phrases/", apiHandler))
 	mux.Handle("/webview/manage/", http.StripPrefix("/webview/manage/", webviewHandler))
 	mux.Handle("/slack", slackHandler)

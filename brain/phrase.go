@@ -218,55 +218,57 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int
 
 // IDPhrase is a phrase format that also contains ID.
 type IDPhrase struct {
-	ID          int64
-	Phrase      string
-	Explanation string
-	Score       int
+	ID          int64  `json:"id"`
+	Phrase      string `json:"phrase"`
+	Explanation string `json:"explanation"`
+	Score       int    `json:"score"`
+	Added       int    `json:"added"`
 }
 
-type idPhrases struct {
-	p []IDPhrase
-	t map[int64]int64
-}
+type idPhrases []IDPhrase
 
 func (p idPhrases) Len() int {
-	return len(p.p)
+	return len(p)
 }
 
 func (p idPhrases) Less(i, j int) bool {
-	return p.t[p.p[i].ID] > p.t[p.p[j].ID]
+	return p[i].Added > p[j].Added
 }
 
 func (p idPhrases) Swap(i, j int) {
-	p.p[j], p.p[i] = p.p[i], p.p[j]
+	p[j], p[i] = p[i], p[j]
 }
 
 // GetAllPhrases returns all phrases for a given user sorted by the time they have been added.
 // Need to load all of the user's phrases in memory to be able to sort them.
 func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
-	var phrases []IDPhrase
-	addTimes := map[int64]int64{}
+	var phrases idPhrases
+
 	err := store.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(bucketPhrases).Cursor()
 		bt := tx.Bucket(bucketPhraseAddTimes)
 		prefix := itob(id)
+
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var p Phrase
 			if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&p); err != nil {
 				return err
 			}
+
 			seq := btoi(k[8:])
-			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation, p.Score})
-			var t int64
-			tb := bt.Get(k)
-			if tb != nil {
-				t = btoi(tb)
+			var t int
+			if tb := bt.Get(k); tb != nil {
+				t = int(btoi(tb))
 			}
-			addTimes[seq] = t
+
+			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation, p.Score, t})
 		}
+
 		return nil
 	})
-	sort.Sort(idPhrases{phrases, addTimes})
+
+	sort.Sort(phrases)
+
 	if err != nil {
 		return phrases, fmt.Errorf("failed to get all phrases for %d: %v", id, err)
 	}
