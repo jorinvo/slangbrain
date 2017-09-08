@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/jorinvo/slangbrain/brain"
 )
@@ -35,7 +34,7 @@ func CSV(store brain.Store, errorLogger *log.Logger) http.Handler {
 		}
 
 		for _, p := range phrases {
-			if err := csvW.Write([]string{p.Phrase, p.Explanation, strconv.Itoa(p.Score)}); err != nil {
+			if err := csvW.Write([]string{p.Phrase, p.Explanation}); err != nil {
 				errorLogger.Printf("failed generating CSV file for %d, at phrase '%s': %v", id, p.Phrase, err)
 				http.Error(w, "failed generating CSV file", http.StatusInternalServerError)
 			}

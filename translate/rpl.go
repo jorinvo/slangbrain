@@ -34,6 +34,7 @@ func newRpl(l labels) Rpl {
 		importHelp = fbot.Reply{Text: l.ImportHelp, Payload: payload.ImportHelp}
 		quitHelp   = fbot.Reply{Text: l.QuitHelp, Payload: payload.Menu}
 		feedback   = fbot.Reply{Text: l.SendFeedback, Payload: payload.Feedback}
+		getToken   = fbot.Reply{Text: l.GetToken, Payload: payload.GetToken}
 	)
 
 	return Rpl{
@@ -52,12 +53,14 @@ func newRpl(l labels) Rpl {
 			fbot.Reply{Text: l.EnableNotifications, Payload: payload.Subscribe},
 			feedback,
 			importHelp,
+			getToken,
 		},
 		HelpUnsubscribe: []fbot.Reply{
 			quitHelp,
 			fbot.Reply{Text: l.DisableNotifications, Payload: payload.Unsubscribe},
 			feedback,
 			importHelp,
+			getToken,
 		},
 		Feedback: []fbot.Reply{
 			fbot.Reply{Text: iconDelete + " " + l.CancelFeedback, Payload: payload.Menu},

@@ -116,6 +116,11 @@ func (b Bot) handlePayload(u user.User, p, referral string) {
 	case payload.CancelImport:
 		b.send(u.ID, u.Msg.ImportCancel+"\n\n"+u.Msg.Menu, u.Rpl.MenuMode, b.store.ClearImport(u.ID))
 
+	case payload.GetToken:
+		t, err := b.store.GenerateToken(u.ID)
+		b.send(u.ID, fmt.Sprintf(u.Msg.APIToken, t), nil, err)
+		b.send(b.messageStartMenu(u))
+
 	case payload.Menu:
 		fallthrough
 	default:

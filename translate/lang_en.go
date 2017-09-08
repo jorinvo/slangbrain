@@ -77,11 +77,16 @@ A valid file could look like this:`,
 '%v'`,
 		ImportErrCols: "Expecting CSV files to have at least 2 columns, but file '%s' has %d. The first one should contain the phrase, the second an explanation.",
 		WeeklyStats:   "This week you added %d phrases and studied %d. Your total score is %d now and you are #%d of all Slangbrain users.",
-		AnHour:        "an hour",
-		Hours:         "hours",
-		AMinute:       "a minute",
-		Minutes:       "minutes",
-		And:           "and",
+		APIToken: `Here is your API token:
+
+%s
+
+Keep it secret!`,
+		AnHour:  "an hour",
+		Hours:   "hours",
+		AMinute: "a minute",
+		Minutes: "minutes",
+		And:     "and",
 	}
 
 	l := labels{
@@ -91,6 +96,7 @@ A valid file could look like this:`,
 		Done:                 "done",
 		Help:                 "help",
 		ImportHelp:           "import phrases",
+		GetToken:             "get API token",
 		Export:               "export phrases",
 		CloseImportHelp:      "ok",
 		SubscribeConfirm:     "sounds good",

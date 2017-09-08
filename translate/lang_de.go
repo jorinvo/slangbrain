@@ -73,11 +73,16 @@ Eine CSV Datei kann z.B. so aussehen:`,
 '%v'`,
 		ImportErrCols: "Die CSV Dateien muss mindestens 2 Spalten haben, aber die Datei '%s' hat %d Spalten. Die erste Spalte ist für Vokabeln und die zweite für deren Erklärungen.",
 		WeeklyStats:   "Diese Woche hast du %d Vokabeln hinzugefügt und %d Vokabeln wiederholt. Du hast jetzt insgesammt %d Punkte und bist auf Platz %d von allen Slangbrain Nutzern.",
-		AnHour:        "einer Stunde",
-		Hours:         "Stunden",
-		AMinute:       "einer Minute",
-		Minutes:       "Minuten",
-		And:           "und",
+		APIToken: `Hier ist dein API Token:
+
+%s
+
+Pass' gut darauf auf!`,
+		AnHour:  "einer Stunde",
+		Hours:   "Stunden",
+		AMinute: "einer Minute",
+		Minutes: "Minuten",
+		And:     "und",
 	}
 
 	l := labels{
@@ -87,6 +92,7 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		Done:                 "fertig",
 		Help:                 "Hilfe",
 		ImportHelp:           "Vokabeln importieren",
+		GetToken:             "API Token",
 		Export:               "Vokabeln exportieren",
 		CloseImportHelp:      "ok",
 		SubscribeConfirm:     "gerne",

@@ -22,6 +22,7 @@ type labels struct {
 	StudyNotNow,
 	Manage,
 	ImportHelp,
+	GetToken,
 	Export,
 	CloseImportHelp,
 	ConfirmImport,

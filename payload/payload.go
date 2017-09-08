@@ -16,6 +16,7 @@ const (
 	DenySubscribe = "PAYLOAD_NOSUBSCRIPTION"
 	Feedback      = "PAYLOAD_FEEDBACK"
 	ImportHelp    = "PAYLOAD_IMPORTHELP"
+	GetToken      = "PAYLOAD_GETTOKEN"
 	ConfirmImport = "PAYLOAD_CONFIRMIMPORT"
 	CancelImport  = "PAYLOAD_CANCELIMPORT"
 )
