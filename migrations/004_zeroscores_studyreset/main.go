@@ -45,7 +45,7 @@ var studyIntervals = [14]time.Duration{
 	(15*30*24 - 2) * time.Hour,
 }
 
-type Phrase struct {
+type phrase struct {
 	Phrase      string
 	Explanation string
 	Score       int
@@ -70,7 +70,7 @@ func main() {
 		err = tx.Bucket(bucketPhrases).ForEach(func(k []byte, v []byte) error {
 			prefix := k[:8]
 
-			var p Phrase
+			var p phrase
 			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}

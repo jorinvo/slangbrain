@@ -11,20 +11,23 @@ import (
 )
 
 // AddPhrase stores a new phrase.
-// Pass time the phrase should be created at.
+// Pass time the phrase should be created at. Phrase will be scheduled for studying with a delay.
 func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt time.Time) error {
 	p := Phrase{Phrase: phrase, Explanation: explanation}
-	if err := store.db.Update(phraseAdder(itob(id), p, createdAt)); err != nil {
+	if err := store.db.Update(phraseAdder(itob(id), p, createdAt, createdAt.Add(studyIntervals[0]))); err != nil {
 		return fmt.Errorf("failed to add phrase for id %d: %s - %s: %v", id, phrase, explanation, err)
 	}
 	return nil
 }
 
 // Abstract adding to reuse it for import.
-func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) error {
+func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Time) func(*bolt.Tx) error {
 	return func(tx *bolt.Tx) error {
 		bp := tx.Bucket(bucketPhrases)
 		bz := tx.Bucket(bucketZeroscores)
+
+		// Ensure score is zero
+		p.Score = 0
 
 		// Get phrase id
 		sequence, err := bp.NextSequence()
@@ -32,7 +35,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) er
 			return err
 		}
 		phraseID := itob(int64(sequence))
-		key := append(prefix, phraseID...)
+		key := append(append([]byte{}, prefix...), phraseID...)
 
 		// Phrase to GOB
 		var buf bytes.Buffer
@@ -56,7 +59,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time) func(*bolt.Tx) er
 		if v := bz.Get(prefix); v != nil {
 			zeroscore = btoi(v)
 		}
-		scheduled, err := scheduleNewPhrases(tx, prefix, time.Now(), int(zeroscore))
+		scheduled, err := scheduleNewPhrases(tx, prefix, studyTime, int(zeroscore))
 		if err != nil {
 			return err
 		}
@@ -95,15 +98,16 @@ func (store Store) FindPhrase(id int64, fn func(Phrase) bool) (Phrase, error) {
 }
 
 // DeletePhrase removes a phrase.
+// Returns ErrNotFound if phrase doesn't exist.
 func (store Store) DeletePhrase(id int64, seq int) error {
 	key := append(itob(id), itob(int64(seq))...)
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		return phraseDeleter(tx, key)
 	})
-	if err != nil {
-		return fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
+	if err != nil && err != ErrNotFound {
+		err = fmt.Errorf("failed to delete phrase for key %x: %v", key, err)
 	}
-	return nil
+	return err
 }
 
 // Reuse deleting functionality to only have one place
@@ -172,7 +176,7 @@ func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
 		zeroscore = 0
 	}
 
-	scheduled, err := scheduleNewPhrases(tx, prefix, time.Now(), int(zeroscore))
+	scheduled, err := scheduleNewPhrases(tx, prefix, time.Now().Add(studyIntervals[0]), int(zeroscore))
 	if err != nil {
 		return err
 	}
@@ -185,7 +189,7 @@ func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
 // Schedule new phrases for studying.
 // Pass the number of new phrases already scheduled.
 // Returns the number of phrases that have been additionally scheduled.
-func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int) (int, error) {
+func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, studyTime time.Time, scheduled int) (int, error) {
 	toSchedule := maxNewStudies - scheduled
 	if toSchedule < 1 {
 		return 0, nil
@@ -194,6 +198,7 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int
 	bn := tx.Bucket(bucketNewPhrases)
 	bs := tx.Bucket(bucketStudytimes)
 	v := bn.Get(prefix)
+	next := itob(studyTime.Unix())
 	var i, o int
 
 	// Schedule as many as allowed to schedule and available from new phrases
@@ -205,8 +210,7 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, now time.Time, scheduled int
 		i++
 
 		// Save study time
-		phraseID := append(prefix, v[o:o+8]...)
-		next := itob(now.Add(studyIntervals[0]).Unix())
+		phraseID := append(append([]byte{}, prefix...), v[o:o+8]...)
 		if err := bs.Put(phraseID, next); err != nil {
 			return 0, err
 		}
@@ -222,7 +226,7 @@ type IDPhrase struct {
 	Phrase      string `json:"phrase"`
 	Explanation string `json:"explanation"`
 	Score       int    `json:"score"`
-	Added       int    `json:"added"`
+	Added       int64  `json:"added"`
 }
 
 type idPhrases []IDPhrase
@@ -232,7 +236,7 @@ func (p idPhrases) Len() int {
 }
 
 func (p idPhrases) Less(i, j int) bool {
-	return p[i].Added > p[j].Added
+	return p[i].Added < p[j].Added
 }
 
 func (p idPhrases) Swap(i, j int) {
@@ -256,9 +260,9 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 			}
 
 			seq := btoi(k[8:])
-			var t int
+			var t int64
 			if tb := bt.Get(k); tb != nil {
-				t = int(btoi(tb))
+				t = btoi(tb)
 			}
 
 			phrases = append(phrases, IDPhrase{seq, p.Phrase, p.Explanation, p.Score, t})

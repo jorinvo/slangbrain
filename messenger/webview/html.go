@@ -322,7 +322,7 @@ const html = `<!DOCTYPE html>
 				};
 				request.onerror = function(msg) {
 				};
-				request.send(JSON.stringify({ phrase: p, explanation: e }));
+				request.send(JSON.stringify({ data: { phrase: p, explanation: e }}));
 			})
 
 			var search = document.getElementById('search')

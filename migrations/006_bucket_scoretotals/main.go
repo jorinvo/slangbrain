@@ -19,7 +19,7 @@ var (
 	bucketScoretotals = []byte("scoretotals")
 )
 
-type Phrase struct {
+type phrase struct {
 	Phrase      string
 	Explanation string
 	Score       int
@@ -43,7 +43,7 @@ func main() {
 
 		// Sum scores per user
 		err = tx.Bucket(bucketPhrases).ForEach(func(k, v []byte) error {
-			var p Phrase
+			var p phrase
 			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 				return err
 			}

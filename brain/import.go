@@ -41,37 +41,47 @@ func (store Store) QueueImport(id int64, phrases []Phrase) (int, error) {
 	return len(phrases), nil
 }
 
-// Add a list of phrases.
+// Import a list of phrases.
 // Ingores phrases that already exist in DB.
+// Ignores score of phrases.
 // Sets the studytime of the phrases to now.
+// Returns the number of actually imported phrases.
 func (store Store) Import(id int64, phrases []Phrase) (int, error) {
-	prefix := itob(id)
+	count := 0
 
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		var err error
-		phrases, err = removeDuplicates(tx, prefix, phrases)
-		if err != nil {
-			return err
-		}
-
-		for _, p := range phrases {
-			if err := phraseAdder(prefix, p, time.Now().Add(-studyIntervals[0]))(tx); err != nil {
-				return nil
-			}
-		}
-
-		return nil
+		count, err = phraseImporter(tx, itob(id), phrases)
+		return err
 	})
 
 	if err != nil {
-		return len(phrases), fmt.Errorf("[id=%d] failed to import phrases: %v", id, err)
+		err = fmt.Errorf("[id=%d] failed to import phrases: %v", id, err)
 	}
-	return len(phrases), nil
+	return count, err
+}
+
+func phraseImporter(tx *bolt.Tx, prefix []byte, phrases []Phrase) (int, error) {
+	ps, err := removeDuplicates(tx, prefix, phrases)
+	if err != nil {
+		return 0, err
+	}
+
+	now := time.Now()
+
+	for _, p := range ps {
+		if err := phraseAdder(prefix, p, now, now)(tx); err != nil {
+			return 0, err
+		}
+	}
+
+	return len(ps), nil
 }
 
 // Go through existing phrases, find duplicates and remove them from phrases
 func removeDuplicates(tx *bolt.Tx, prefix []byte, phrases []Phrase) ([]Phrase, error) {
 	c := tx.Bucket(bucketPhrases).Cursor()
+
 	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 		var e Phrase
 		if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&e); err != nil {
@@ -84,6 +94,7 @@ func removeDuplicates(tx *bolt.Tx, prefix []byte, phrases []Phrase) ([]Phrase, e
 			}
 		}
 	}
+
 	return phrases, nil
 }
 
@@ -96,21 +107,19 @@ func (store Store) ApplyImport(id int64) (int, error) {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bi := tx.Bucket(bucketPendingImports)
 
-		b := bi.Get(prefix)
-		if b == nil {
+		var phrases []Phrase
+		if b := bi.Get(prefix); b != nil {
+			if err := gob.NewDecoder(bytes.NewReader(b)).Decode(&phrases); err != nil {
+				return err
+			}
+		} else {
 			return ErrNotFound
 		}
-		var phrases []Phrase
-		if err := gob.NewDecoder(bytes.NewBuffer(b)).Decode(&phrases); err != nil {
+
+		var err error
+		count, err = phraseImporter(tx, prefix, phrases)
+		if err != nil {
 			return err
-		}
-
-		count = len(phrases)
-
-		for _, p := range phrases {
-			if err := phraseAdder(prefix, p, time.Now())(tx); err != nil {
-				return nil
-			}
 		}
 
 		return bi.Delete(prefix)

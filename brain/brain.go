@@ -49,9 +49,9 @@ type Study struct {
 
 // Phrase describes a phrase the user saved.
 type Phrase struct {
-	Phrase      string
-	Explanation string
-	Score       int
+	Phrase      string `json:"phrase,omitempty"`
+	Explanation string `json:"explanation,omitempty"`
+	Score       int    `json:"score,omitempty"`
 }
 
 // Stats describes statistics for a single user.

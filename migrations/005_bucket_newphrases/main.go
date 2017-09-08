@@ -22,7 +22,7 @@ var (
 	bucketZeroscores = []byte("zeroscores")
 )
 
-type Phrase struct {
+type phrase struct {
 	Phrase      string
 	Explanation string
 	Score       int
@@ -53,7 +53,7 @@ func main() {
 			pc := 0
 			var newPhrases []byte
 			for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-				var p Phrase
+				var p phrase
 				if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
 					return err
 				}

@@ -8,6 +8,9 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// GetStats returns the Stats object for a user
+// if GetStats hasn't been called for a time of at least statInterval.
+// Otherwise returns ErrNotReady.
 func (store Store) GetStats(id int64) (Stats, error) {
 	var stats Stats
 	err := store.db.Update(func(tx *bolt.Tx) error {
@@ -15,25 +18,24 @@ func (store Store) GetStats(id int64) (Stats, error) {
 		prefix := itob(id)
 		now := time.Now()
 
-		var stattime time.Time
 		if v := b.Get(prefix); v != nil {
-			stattime = time.Unix(btoi(v), 0)
-		}
+			stattime := time.Unix(btoi(v), 0)
 
-		if now.Sub(stattime) < statInterval {
-			return ErrNotReady
-		}
+			if now.Sub(stattime) < statInterval {
+				return ErrNotReady
+			}
 
-		score, rank, err := scoreAndRank(tx, prefix)
-		if err != nil {
-			return err
-		}
+			score, rank, err := scoreAndRank(tx, prefix)
+			if err != nil {
+				return err
+			}
 
-		stats = Stats{
-			Added:   countAdds(tx, prefix, now),
-			Studied: countStudies(tx, prefix, now),
-			Score:   score,
-			Rank:    rank,
+			stats = Stats{
+				Added:   countAdds(tx, prefix, now),
+				Studied: countStudies(tx, prefix, now),
+				Score:   score,
+				Rank:    rank,
+			}
 		}
 
 		return b.Put(prefix, itob(now.Unix()))

@@ -61,6 +61,7 @@ func (b Bot) handleMessage(u user.User, msg string) {
 			return
 		}
 		explanation := strings.TrimSpace(parts[1])
+
 		// Check for existing explanation
 		p, err := b.store.FindPhrase(u.ID, func(p brain.Phrase) bool {
 			return p.Explanation == explanation
@@ -73,11 +74,13 @@ func (b Bot) handleMessage(u user.User, msg string) {
 			b.send(u.ID, fmt.Sprintf(u.Msg.ExplanationExists, p.Phrase, p.Explanation), u.Rpl.AddMode, nil)
 			return
 		}
+
 		// Save phrase
 		if err = b.store.AddPhrase(u.ID, phrase, explanation, time.Now()); err != nil {
 			b.send(u.ID, u.Msg.Error, u.Rpl.AddMode, fmt.Errorf("failed to save phrase: %v", err))
 			return
 		}
+
 		b.send(u.ID, fmt.Sprintf(u.Msg.AddDone, phrase, explanation), nil, nil)
 		b.send(u.ID, u.Msg.AddNext, u.Rpl.AddMode, nil)
 
