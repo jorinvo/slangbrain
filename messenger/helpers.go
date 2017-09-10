@@ -34,7 +34,7 @@ func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) 
 		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
 
-	s, err := b.store.GetStats(u.ID)
+	s, err := b.store.UserStats(u.ID)
 	if err == nil {
 		msg := fmt.Sprintf(u.Msg.WeeklyStats, s.Added, s.Studied, s.Score, s.Rank)
 		b.send(u.ID, msg, nil, nil)

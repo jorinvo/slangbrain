@@ -75,7 +75,7 @@ func phraseImporter(tx *bolt.Tx, prefix []byte, phrases []Phrase) (int, error) {
 		}
 	}
 
-	return len(ps), nil
+	return len(ps), addCountToBucket(tx.Bucket(bucketImports), prefix, 1)
 }
 
 // Go through existing phrases, find duplicates and remove them from phrases

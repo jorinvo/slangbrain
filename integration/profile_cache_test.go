@@ -14,9 +14,9 @@ import (
 
 type profile struct{}
 
-func (p profile) Name() string      { return "Martin" }
-func (p profile) Locale() string    { return "en_US" }
-func (p profile) Timezone() float64 { return 2 }
+func (p profile) Name() string   { return "Martin" }
+func (p profile) Locale() string { return "en_US" }
+func (p profile) Timezone() int  { return 2 }
 
 func TestProfileCache(t *testing.T) {
 	store, cleanup := initDB(t)

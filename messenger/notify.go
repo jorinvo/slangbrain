@@ -58,7 +58,7 @@ func (b Bot) notify(id int64, count int) {
 	// Track last sending of a notification
 	// to stop sending notifications
 	// when user hasn't read the last notification.
-	if err := b.store.SetActivity(u.ID, time.Now()); err != nil {
+	if err := b.store.TrackNotify(u.ID, time.Now()); err != nil {
 		b.err.Println(err)
 	}
 }

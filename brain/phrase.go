@@ -63,6 +63,9 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Ti
 		if err != nil {
 			return err
 		}
+
+		fmt.Printf("prev zeroscore: %d, new phrases: %d, newly scheduled: %d\n", zeroscore, btoi(bn.Get(prefix)), scheduled)
+
 		if err := bz.Put(prefix, itob(zeroscore+int64(scheduled))); err != nil {
 			return err
 		}
@@ -133,7 +136,7 @@ func phraseDeleter(tx *bolt.Tx, key []byte) error {
 			return err
 		}
 	} else {
-		if err := updateScoreTotal(tx, key[:8], p.Score); err != nil {
+		if err := addCountToBucket(tx.Bucket(bucketScoretotals), key[:8], p.Score); err != nil {
 			return err
 		}
 	}
@@ -149,18 +152,6 @@ func getPhrase(tx *bolt.Tx, key []byte) (Phrase, error) {
 		return p, ErrNotFound
 	}
 	return p, gob.NewDecoder(bytes.NewReader(v)).Decode(&p)
-}
-
-func updateScoreTotal(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
-	b := tx.Bucket(bucketScoretotals)
-	scoretotal := scoreUpdate
-	if v := b.Get(prefix); v != nil {
-		scoretotal = int(btoi(v))
-	}
-	if scoretotal < 0 {
-		scoretotal = 0
-	}
-	return b.Put(prefix, itob(int64(scoretotal)))
 }
 
 // Adds a scoreUpdate to the zeroscore of a user.

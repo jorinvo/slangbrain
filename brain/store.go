@@ -59,10 +59,14 @@ func (store *Store) Close() error {
 	return nil
 }
 
-// SetActivity sets the last time a message was sent to a user.
-func (store Store) SetActivity(id int64, t time.Time) error {
+// TrackNotify sets the last time a notifications was sent to a user.
+func (store Store) TrackNotify(id int64, t time.Time) error {
+	key := itob(id)
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketActivities).Put(itob(id), itob(t.Unix()))
+		if err := tx.Bucket(bucketActivities).Put(key, itob(t.Unix())); err != nil {
+			return err
+		}
+		return addCountToBucket(tx.Bucket(bucketNotifies), key, 1)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set activity for id %d: %v: %v", id, t, err)

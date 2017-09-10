@@ -51,7 +51,7 @@ func main() {
 
 	versionFlag := flag.Bool("version", false, "Print the version of the binary.")
 	db := flag.String("db", "", "Required. Path to BoltDB file. Will be created if non-existent.")
-	port := flag.Int("port", 8080, "Port Facebook webhook listens on.")
+	port := flag.Int("port", 8080, "Port server listens on.")
 	verifyToken := flag.String("verify", "", "Required. Messenger bot verify token.")
 	token := flag.String("token", "", "Required. Messenger bot token.")
 	secret := flag.String("secret", "", "Required. Facebook app secret.")

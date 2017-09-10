@@ -21,6 +21,8 @@ var (
 	bucketAuthUsers      = []byte("authusers")
 	bucketPendingImports = []byte("pendingimports")
 	bucketPrevPayloads   = []byte("prevpayloads")
+	bucketImports        = []byte("imports")
+	bucketNotifies       = []byte("notifies")
 )
 
 // id is a chat id as int64
@@ -67,4 +69,8 @@ var allBuckets = [][]byte{
 	bucketPendingImports,
 	// id -> time+string(payload)
 	bucketPrevPayloads,
+	// id -> int64
+	bucketImports,
+	// id -> int64
+	bucketNotifies,
 }

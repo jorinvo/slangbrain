@@ -63,13 +63,6 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 			return err
 		}
 
-		// Update zeroscore
-		if (p.Score == 0 && scoreUpdate == 1) || (p.Score == 1 && scoreUpdate == -1) {
-			if err := updateZeroscore(tx, prefix, -scoreUpdate); err != nil {
-				return err
-			}
-		}
-
 		// Update score
 		prevScore := p.Score
 		p.Score += scoreUpdate
@@ -77,8 +70,19 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 			p.Score = 0
 		}
 
+		// Update zeroscore
+		if prevScore == 0 && p.Score != 0 {
+			if err := updateZeroscore(tx, prefix, -1); err != nil {
+				return err
+			}
+		} else if prevScore != 0 && p.Score == 0 {
+			if err := updateZeroscore(tx, prefix, 1); err != nil {
+				return err
+			}
+		}
+
 		// Update scoretotal
-		if err := updateScoreTotal(tx, prefix, p.Score-prevScore); err != nil {
+		if err := addCountToBucket(tx.Bucket(bucketScoretotals), prefix, p.Score-prevScore); err != nil {
 			return err
 		}
 

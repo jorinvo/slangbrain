@@ -58,3 +58,15 @@ func findCurrentStudy(tx *bolt.Tx, prefix []byte, now time.Time) ([]byte, int, t
 
 	return key, total, time.Unix(keyTime, 0).Sub(now)
 }
+
+// Add a count to a bucket value.
+// Limits to >= 0.
+func addCountToBucket(b *bolt.Bucket, key []byte, count int) error {
+	if v := b.Get(key); v != nil {
+		count = int(btoi(v))
+	}
+	if count < 0 {
+		count = 0
+	}
+	return b.Put(key, itob(int64(count)))
+}
