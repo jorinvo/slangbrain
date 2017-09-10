@@ -12,7 +12,8 @@ users:        %4d
 subscriptions:%4d
 dbsize:       %5.2fmb
 
-[format:        total (avg)]
+format:         total (avg)
+---------------------------
 phrases:     %8d (%d)
 scoretotal:  %8d (%d)
 studies:     %8d (%d)
@@ -20,7 +21,7 @@ imports:     %8d (%d)
 notifies:    %8d (%d)
 zeroscore:   %8d (%d)
 new phrases: %8d (%d)
-` + "```"
+%s` + "```"
 
 // WriteStat writes plain text statistics for the whole DB to the given Writer.
 // The formatting is intended for markdown usage such as in Slack.
@@ -66,6 +67,15 @@ func (store Store) WriteStat(w io.Writer) error {
 		}
 		newphrasesAvg := newphrasesTotal / users
 
+		warnings := ""
+		notNewPhrases := phrasesTotal - newphrasesTotal
+		if n := tx.Bucket(bucketStudytimes).Stats().KeyN; n != notNewPhrases {
+			warnings += fmt.Sprintf("\nWARNING: Number of studytimes (%d) does not match number of phrases - new phrases (%d).", n, notNewPhrases)
+		}
+		if n := tx.Bucket(bucketPhraseAddTimes).Stats().KeyN; n != phrasesTotal {
+			warnings += fmt.Sprintf("\nWARNING: Number of phraseaddtimes (%d) does not match number of phrases (%d).", n, phrasesTotal)
+		}
+
 		fmt.Fprintf(
 			w, statmsg, users, subscriptions, dbSize,
 			phrasesTotal, phrasesAvg,
@@ -75,6 +85,7 @@ func (store Store) WriteStat(w io.Writer) error {
 			notifiesTotal, notifiesAvg,
 			zeroscore, zeroscoreAvg,
 			newphrasesTotal, newphrasesAvg,
+			warnings,
 		)
 		return nil
 	})

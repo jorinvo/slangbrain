@@ -29,7 +29,7 @@ func (store Store) GetStudy(id int64) (Study, error) {
 		// Get study from phrase
 		p, err := getPhrase(tx, key)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot get phrase for key '%x' %#v: %v", key, key, err)
 		}
 		study = Study{
 			Phrase:      p.Phrase,

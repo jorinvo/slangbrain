@@ -19,6 +19,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
 			b.err.Println(err)
 		}
+		b.scheduleNotify(e.ChatID)
 		return
 	}
 
@@ -40,7 +41,6 @@ func (b Bot) HandleEvent(e fbot.Event) {
 
 	if e.Type == fbot.EventPayload {
 		b.handlePayload(u, e.Payload, e.Ref)
-		b.scheduleNotify(e.ChatID)
 		return
 	}
 
@@ -55,7 +55,6 @@ func (b Bot) HandleEvent(e fbot.Event) {
 
 	if e.Type == fbot.EventMessage {
 		b.handleMessage(u, e.Text)
-		b.scheduleNotify(e.ChatID)
 		return
 	}
 
