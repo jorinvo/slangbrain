@@ -20,7 +20,7 @@ func (store Store) QueueImport(id int64, phrases []Phrase) (int, error) {
 		var err error
 		phrases, err = removeDuplicates(tx, prefix, phrases)
 		if err != nil {
-			return err
+			return fmt.Errorf("remove duplicates for %d: %v", id, err)
 		}
 
 		if len(phrases) == 0 {
@@ -29,16 +29,15 @@ func (store Store) QueueImport(id int64, phrases []Phrase) (int, error) {
 
 		var buf bytes.Buffer
 		if err := gob.NewEncoder(&buf).Encode(phrases); err != nil {
-			return err
+			return fmt.Errorf("gob of phrases %#v for %d: %v", phrases, id, err)
 		}
 
-		return tx.Bucket(bucketPendingImports).Put(prefix, buf.Bytes())
+		if err := tx.Bucket(bucketPendingImports).Put(prefix, buf.Bytes()); err != nil {
+			return fmt.Errorf("put pending import %#v for %d: %v", phrases, id, err)
+		}
+		return nil
 	})
-
-	if err != nil {
-		return len(phrases), fmt.Errorf("failed to queue import for %d: %v", id, err)
-	}
-	return len(phrases), nil
+	return len(phrases), err
 }
 
 // Import a list of phrases.
@@ -52,12 +51,13 @@ func (store Store) Import(id int64, phrases []Phrase) (int, error) {
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		var err error
 		count, err = phraseImporter(tx, itob(id), phrases)
-		return err
+		if err != nil {
+			return fmt.Errorf("import phrases for %d: %v", id, err)
+		}
+
+		return nil
 	})
 
-	if err != nil {
-		err = fmt.Errorf("[id=%d] failed to import phrases: %v", id, err)
-	}
 	return count, err
 }
 
@@ -85,8 +85,9 @@ func removeDuplicates(tx *bolt.Tx, prefix []byte, phrases []Phrase) ([]Phrase, e
 	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 		var e Phrase
 		if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&e); err != nil {
-			return nil, err
+			return nil, fmt.Errof("gob decode phrase at %#v: %v", k, err)
 		}
+
 		for i, p := range phrases {
 			if e.Explanation == p.Explanation {
 				phrases = append(phrases[:i], phrases[i+1:]...)

@@ -117,7 +117,7 @@ func (a Slack) HandleMessage(id int64, name, msg, channel string) {
 	}
 	buf, err := json.Marshal(slackMsg)
 	if err != nil {
-		a.err.Printf("failed to marshal slack message (%v): %v", slackMsg, err)
+		a.err.Printf("json marshal %#v: %v", slackMsg, err)
 		return
 	}
 	resp, err := http.Post(a.hook, "application/json", bytes.NewBuffer(buf))

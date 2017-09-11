@@ -34,7 +34,7 @@ func (c Client) GetProfile(id int64) (common.Profile, error) {
 	url := fmt.Sprintf(profileURL, c.api, id, c.token)
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get %#v: %v", url, err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -42,12 +42,12 @@ func (c Client) GetProfile(id int64) (common.Profile, error) {
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read body: %v", err)
 	}
 
 	var p profileData
 	if err = json.Unmarshal(content, &p); err != nil {
-		return profile{p}, err
+		return profile{p}, fmt.Errof("parse json from \"%s\": %v", content, err)
 	}
 
 	return profile{p}, checkError(bytes.NewReader(content))

@@ -102,7 +102,7 @@ func (c Client) Webhook(handler func(Event), secret, verifyToken string) http.Ha
 		var rec receive
 		if err := json.Unmarshal(data, &rec); err != nil {
 			http.Error(w, "JSON invalid", http.StatusBadRequest)
-			handler(Event{Type: EventError, Text: fmt.Sprintf("invalid JSON: %v\n\n%s\n\n", err, data)})
+			handler(Event{Type: EventError, Text: fmt.Sprintf("invalid JSON: \"%s\"", err, data)})
 			return
 		}
 		_ = r.Body.Close()

@@ -28,7 +28,7 @@ type fetcher func(int64) (common.Profile, error)
 func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f fetcher) User {
 	p, err := getProfile(id, s, l, f)
 	if err != nil {
-		l.Printf("failed to get profile for id %d: %v", id, err)
+		l.Printf("failed to get profile: %v\n", err)
 	}
 	return User{
 		ID:      id,
@@ -45,19 +45,23 @@ func getProfile(id int64, s brain.Store, l *log.Logger, f fetcher) (common.Profi
 		return p, nil
 	}
 	if err != brain.ErrNotFound {
-		l.Println(err)
+		l.Printf("failed to get profile for %d from cache: %v\n", id, err)
 	}
+
+	// Cancel if no fetcher given
 	if f == nil {
-		return p, err
+		return p, fmt.Errorf("no cached profile for %d and no fetcher: %v", id, err)
 	}
-	// Fetch from Facebook
+
+	// Not in cache, fetch from Facebook
 	p, err = f(id)
 	if err != nil {
-		return p, fmt.Errorf("failed to fetch profile: %v", err)
+		return p, fmt.Errorf("failed to fetch profile for %d: %v", id, err)
 	}
+
 	// Update cache
 	if err := s.SetProfile(id, p, time.Now()); err != nil {
-		l.Println(err)
+		l.Printf("failed to set profile %#v for %d: %v\n", p, id, err)
 	}
 	return p, nil
 }

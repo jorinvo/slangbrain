@@ -11,13 +11,13 @@ import (
 // HandleEvent handles a Messenger event.
 func (b Bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
-		b.err.Println(e.Text)
+		b.err.Println("webhook error:", e.Text)
 		return
 	}
 
 	if e.Type == fbot.EventRead {
 		if err := b.store.SetRead(e.ChatID, e.Time); err != nil {
-			b.err.Println(err)
+			b.err.Printf("set read fail: %d, %v\n", e.ChatID, e.Time)
 		}
 		b.scheduleNotify(e.ChatID)
 		return
@@ -28,14 +28,14 @@ func (b Bot) HandleEvent(e fbot.Event) {
 	if e.Type == fbot.EventReferral {
 		ref, err := url.QueryUnescape(e.Ref)
 		if err != nil {
-			b.err.Printf("[id=%d] failed to unescape ref %s: %v", u.ID, e.Ref, err)
+			b.err.Printf("non-unescapeable ref %#v for %d: %v\n", e.Ref, u.ID, err)
 			return
 		}
 		if links := getLinks(ref); links != nil {
 			b.handleLinks(u, links)
 			return
 		}
-		b.err.Printf("[id=%d] got unhandled ref: %s", u.ID, e.Ref)
+		b.err.Printf("unhandled ref for %d: %#v\n", u.ID, e.Ref)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 			b.info.Printf("Message already processed: %v", e.MessageID)
 			return
 		}
-		b.err.Println("failed to save message ID:", err)
+		b.err.Println("unqueued message ID:", err)
 		return
 	}
 
@@ -63,5 +63,5 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	b.err.Printf("unhandled event: %#v", e)
+	b.err.Printf("unhandled event: %#v\n", e)
 }

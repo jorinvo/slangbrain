@@ -39,7 +39,7 @@ func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) 
 		msg := fmt.Sprintf(u.Msg.WeeklyStats, s.Added, s.Studied, s.Score, s.Rank)
 		b.send(u.ID, msg, nil, nil)
 	} else if err != brain.ErrNotReady {
-		b.err.Println(err)
+		b.err.Println("failed to get user stats for %d: %v", u.ID, err)
 	}
 
 	return u.ID, u.Msg.Menu, u.Rpl.MenuMode, nil

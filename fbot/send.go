@@ -41,13 +41,13 @@ func (c Client) send(id int64, message interface{}) error {
 	}
 	data, err := json.Marshal(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("json of %#v: %v", m, err)
 	}
 
 	url := fmt.Sprintf(sendMessageURL, c.api, c.token)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return err
+		return fmt.Errorf("post \"%s\" to %#v: %v", m, url, err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
