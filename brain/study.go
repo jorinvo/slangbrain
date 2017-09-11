@@ -100,7 +100,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if i >= len(studyIntervals) {
 			i = len(studyIntervals) - 1
 		}
-		next := itob(now.Add(studyIntervals[i] + diffusion()).Unix())
+		next := itob(now.Add(diffusion(studyIntervals[i])).Unix())
 		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
 			return err
 		}
@@ -124,8 +124,8 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 }
 
 // Randomize order by spreading studies over a period of time
-func diffusion() time.Duration {
-	return time.Duration(rand.Intn(studyTimeDiffusion)) * time.Minute
+func diffusion(t time.Duration) time.Duration {
+	return t + time.Duration(rand.Float64()*float64(t)*studyTimeDiffusion)
 }
 
 // GetNotifyTime gets the time until the user should be notified to study.

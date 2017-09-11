@@ -3,11 +3,10 @@ package brain
 import "time"
 
 const (
-	// Time in minutes
 	// When study times are updated they are randomly placed
-	// somewhere between the new time and new time + studyTimeDiffusion
+	// somewhere between the new time and new time + studyTimeDiffusion*studyIntervals[i]
 	// to mix up the order in which words are studied.
-	studyTimeDiffusion = 30
+	studyTimeDiffusion = 0.2
 	// Maximum number of new studies at a time
 	maxNewStudies = 20
 	// Minimum number of studies needed to be due before notifying user
