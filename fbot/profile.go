@@ -47,7 +47,7 @@ func (c Client) GetProfile(id int64) (common.Profile, error) {
 
 	var p profileData
 	if err = json.Unmarshal(content, &p); err != nil {
-		return profile{p}, fmt.Errof("parse json from \"%s\": %v", content, err)
+		return profile{p}, fmt.Errorf("parse json from \"%s\": %v", content, err)
 	}
 
 	return profile{p}, checkError(bytes.NewReader(content))

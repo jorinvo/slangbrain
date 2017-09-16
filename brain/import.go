@@ -85,7 +85,7 @@ func removeDuplicates(tx *bolt.Tx, prefix []byte, phrases []Phrase) ([]Phrase, e
 	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 		var e Phrase
 		if err := gob.NewDecoder(bytes.NewBuffer(v)).Decode(&e); err != nil {
-			return nil, fmt.Errof("gob decode phrase at %#v: %v", k, err)
+			return nil, fmt.Errorf("gob decode phrase at %#v: %v", k, err)
 		}
 
 		for i, p := range phrases {

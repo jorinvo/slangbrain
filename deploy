@@ -5,11 +5,12 @@ set -e
 
 server="fbot.slangbrain.com"
 server_bin="/home/jorin/bin/slangbrain"
+version="$(go version | cut -d' ' -f3)_commit_$(git log --format="%H" -n 1)"
 
 cd $GOPATH/src/github.com/jorinvo/slangbrain
 
 echo - building binary
-GOOS=linux go build -a -ldflags "-s -w  -X main.version=$(git log --format="%H" -n 1)" -o dist/slangbrain
+GOOS=linux go build -a -ldflags "-s -w  -X main.version=${version}" -o dist/slangbrain
 
 echo - moving old binary
 ssh $server mv $server_bin /tmp/slangbrain-$(date +%s)

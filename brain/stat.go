@@ -70,10 +70,10 @@ func (store Store) WriteStat(w io.Writer) error {
 		warnings := ""
 		notNewPhrases := phrasesTotal - newphrasesTotal
 		if n := tx.Bucket(bucketStudytimes).Stats().KeyN; n != notNewPhrases {
-			warnings += fmt.Sprintf("\nWARNING: Number of studytimes (%d) does not match number of phrases - new phrases (%d).", n, notNewPhrases)
+			warnings += fmt.Sprintf("\nWARNING: Number of studytimes (%d) does not match phrases - newphrases (%d).\n", n, notNewPhrases)
 		}
 		if n := tx.Bucket(bucketPhraseAddTimes).Stats().KeyN; n != phrasesTotal {
-			warnings += fmt.Sprintf("\nWARNING: Number of phraseaddtimes (%d) does not match number of phrases (%d).", n, phrasesTotal)
+			warnings += fmt.Sprintf("\nWARNING: Number of phraseaddtimes (%d) does not match number of phrases (%d).\n", n, phrasesTotal)
 		}
 
 		fmt.Fprintf(
