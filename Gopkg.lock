@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/NYTimes/gziphandler"
+  packages = ["."]
+  revision = "97ae7fbaf81620fe97840685304a78a306a39c64"
+
+[[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
@@ -15,13 +21,19 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["acme","acme/autocert"]
+  revision = "7d9177d70076375b9a59c8fde23d52d9c4a7ecd5"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "d6c3f2be455466eedffcfc91793e2c808b7a7410"
+  revision = "062cd7e4e68206d8bab9b18396626e855c992658"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "96be0d4907e83fe5a3d1692f59b5ced90edbad10e199267143508914d2ce0ccb"
+  inputs-digest = "bbd781de0d590d5988091a4718eb17162f41a9d6242496d3d1ad04cb47afb6c7"
   solver-name = "gps-cdcl"
   solver-version = 1

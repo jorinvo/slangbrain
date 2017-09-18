@@ -1,4 +1,0 @@
-#!/bin/bash
-set -e
-
-go test -v -coverpkg ./api,./brain,./common,./fbot,./messenger,./payload,./slack,./translate,./user ./integration
