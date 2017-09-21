@@ -54,7 +54,7 @@ deploy:
 	GOOS=linux go build -a -ldflags "-s -w -X main.version=$(VERSION)" -o dist/slangbrain
 	scp dist/slangbrain $(PROD):/tmp/slangbrain
 	@echo "switch to new binary and restart service"
-	@ssh -t $(PROD) "sh -c 'sudo mv $(PROD_BIN) /tmp/slangbrain-$(shell date +%s)' && sudo mv /tmp/slangbrain $(PROD_BIN) && sudo systemctl restart slangbrain && sudo journalctl -fu slangbrain"
+	@ssh -t $(PROD) "sh -c 'sudo mv $(PROD_BIN) /tmp/slangbrain-$(shell date +%s)' && sudo mv /tmp/slangbrain $(PROD_BIN) && sudo systemctl reload slangbrain.service && sudo journalctl -fu slangbrain"
 
 .PHONY: deploy
 

@@ -63,7 +63,7 @@ func findCurrentStudy(tx *bolt.Tx, prefix []byte, now time.Time) ([]byte, int, t
 // Limits to >= 0.
 func addCountToBucket(b *bolt.Bucket, key []byte, count int) error {
 	if v := b.Get(key); v != nil {
-		count = int(btoi(v))
+		count += int(btoi(v))
 	}
 	if count < 0 {
 		count = 0

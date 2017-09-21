@@ -14,6 +14,12 @@
   version = "v1.3.1"
 
 [[projects]]
+  name = "github.com/coreos/go-systemd"
+  packages = ["activation"]
+  revision = "d2196463941895ee908e13531a23a39feb9e1243"
+  version = "v15"
+
+[[projects]]
   name = "github.com/kyokomi/emoji"
   packages = ["."]
   revision = "7e06b236c489543f53868841f188a294e3383eab"
@@ -34,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bbd781de0d590d5988091a4718eb17162f41a9d6242496d3d1ad04cb47afb6c7"
+  inputs-digest = "b65b9e166c7d48c6a605229ee0aa2cb1b70a6c784a3028785117e2523e71d0b7"
   solver-name = "gps-cdcl"
   solver-version = 1

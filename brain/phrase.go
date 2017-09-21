@@ -136,7 +136,7 @@ func phraseDeleter(tx *bolt.Tx, key []byte) error {
 			return err
 		}
 	} else {
-		if err := addCountToBucket(tx.Bucket(bucketScoretotals), key[:8], p.Score); err != nil {
+		if err := addCountToBucket(tx.Bucket(bucketScoretotals), key[:8], -p.Score); err != nil {
 			return err
 		}
 	}
@@ -227,7 +227,7 @@ func (p idPhrases) Len() int {
 }
 
 func (p idPhrases) Less(i, j int) bool {
-	return p[i].Added < p[j].Added
+	return p[i].Added > p[j].Added
 }
 
 func (p idPhrases) Swap(i, j int) {

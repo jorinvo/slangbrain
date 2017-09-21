@@ -188,10 +188,10 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 	}
 
 	if b.notifyTimers != nil {
+		b.info.Println("Notifications enabled")
 		if err := b.store.EachActiveChat(b.scheduleNotify); err != nil {
 			return b, err
 		}
-		b.info.Println("Notifications enabled")
 	}
 
 	return b, nil

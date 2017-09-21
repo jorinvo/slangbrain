@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/jorinvo/slangbrain/api"
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/messenger"
@@ -31,7 +33,7 @@ Data is stored in a single file. No external system is needed.
 However, only one application can access the database at a time.
 
 Slangbrain starts a server to serve a webhook handler at /webhook that can be registered as a Messenger bot.
-If -http PORT is passed an HTTP-only server is started. Otherwise a production server listening on :80 and :443 is started,
+If -http PORT is passed an HTTP-only server is started. Otherwise a production server is started with sockets activation via systemd,
 redirecting all traffic to HTTPS. Let's Encrypt is used for automatic certificate loading.
 
 Certain features are better done with a custom web view.
@@ -60,7 +62,7 @@ func main() {
 
 	versionFlag := flag.Bool("version", false, "Print the version of the binary.")
 	db := flag.String("db", "", "Required. Path to BoltDB file. Will be created if non-existent.")
-	httpPort := flag.Int("http", -1, "Address http server listens on. If given, runs http only. If empty runs https on 443 and redirects http on 80.")
+	httpPort := flag.Int("http", -1, "Address http server listens on. If given, runs http only. If empty runs http and https on ports provided by systemd.")
 	email := flag.String("email", "", "Requrired unless -http. Email address to use as contact for Let's Encrypt.")
 	certCache := flag.String("certdir", "", "Requrired unless -http. Directory to cache certificates.")
 	verifyToken := flag.String("verify", "", "Required. Messenger bot verify token.")
@@ -207,15 +209,29 @@ func main() {
 		mux.ServeHTTP(w, r)
 	}))
 
-	httpAddr := ":" + strconv.Itoa(*httpPort)
 	httpHandler := handler
+	var httpListener net.Listener
 	var httpsServer *http.Server
 
-	if *httpPort < 0 {
-		httpAddr = ":80"
+	if *httpPort > 0 {
+		var err error
+		httpListener, err = net.Listen("tcp", ":"+strconv.Itoa(*httpPort))
+		if err != nil {
+			errorLogger.Fatalln(err)
+		}
+	} else {
+		listeners, err := activation.Listeners(true)
+		if err != nil {
+			errorLogger.Fatalln(err)
+		}
+		if len(listeners) != 2 {
+			errorLogger.Fatalln("Unexpected number of socket activation fds", len(listeners), listeners)
+		}
+
 		httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
 		})
+		httpListener = listeners[0]
 
 		certManager := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
@@ -229,7 +245,6 @@ func main() {
 			WriteTimeout: writeTimeout,
 			IdleTimeout:  idleTimeout,
 			ErrorLog:     infoLogger,
-			Addr:         ":443",
 			Handler:      handler,
 			TLSConfig: &tls.Config{
 				GetCertificate: certManager.GetCertificate,
@@ -237,8 +252,8 @@ func main() {
 		}
 
 		go func() {
-			infoLogger.Printf("HTTPS server running at %s for domain %s", httpsServer.Addr, *domain)
-			if err = httpsServer.ListenAndServeTLS("", ""); err != nil {
+			infoLogger.Printf("HTTPS server running at %s for domain %s", listeners[1].Addr(), *domain)
+			if err = httpsServer.ServeTLS(listeners[1], "", ""); err != nil {
 				errorLogger.Fatalln("failed to start HTTPS server:", err)
 			}
 		}()
@@ -249,13 +264,12 @@ func main() {
 		WriteTimeout: writeTimeout,
 		IdleTimeout:  idleTimeout,
 		ErrorLog:     infoLogger,
-		Addr:         httpAddr,
 		Handler:      httpHandler,
 	}
 
 	go func() {
-		infoLogger.Printf("HTTP server running at %s", httpServer.Addr)
-		if err = httpServer.ListenAndServe(); err != nil {
+		infoLogger.Printf("HTTP server running at %s", httpListener.Addr())
+		if err = httpServer.Serve(httpListener); err != nil {
 			errorLogger.Fatalln("failed to start HTTP server:", err)
 		}
 	}()

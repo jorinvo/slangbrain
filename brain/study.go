@@ -71,11 +71,11 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		}
 
 		// Update zeroscore
-		if prevScore == 0 && p.Score != 0 {
+		if prevScore == 0 && p.Score > 0 {
 			if err := updateZeroscore(tx, prefix, -1); err != nil {
 				return err
 			}
-		} else if prevScore != 0 && p.Score == 0 {
+		} else if prevScore > 0 && p.Score == 0 {
 			if err := updateZeroscore(tx, prefix, 1); err != nil {
 				return err
 			}
@@ -108,8 +108,8 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		fmt.Printf("phrase: %s; new score: %v; update: %v; next study: %v\n", p.Phrase, p.Score, scoreUpdate, time.Unix(btoi(next), 0).Sub(now))
 
 		// Save study for reference and to analyze them later
-		idAndTime := append(prefix, itob(now.Unix())...)
-		seqAndScores := append(append(key[8:], itob(int64(scoreUpdate))...), itob(int64(p.Score))...)
+		idAndTime := append(append([]byte{}, prefix...), itob(now.Unix())...)
+		seqAndScores := append(append(append([]byte{}, key[8:]...), itob(int64(scoreUpdate))...), itob(int64(p.Score))...)
 		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScores); err != nil {
 			return err
 		}

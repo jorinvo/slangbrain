@@ -28,7 +28,7 @@ func (b Bot) handleLinks(u user.User, links []string) {
 		if userErr == "" {
 			userErr = u.Msg.Menu
 		}
-		b.send(u.ID, userErr, u.Rpl.MenuMode, fmt.Errorf("handle links: %v", err))
+		b.send(u.ID, userErr, u.Rpl.MenuMode, err)
 		return
 	}
 
