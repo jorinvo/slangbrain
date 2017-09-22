@@ -105,7 +105,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 			return err
 		}
 
-		fmt.Printf("phrase: %s; new score: %v; update: %v; next study: %v\n", p.Phrase, p.Score, scoreUpdate, time.Unix(btoi(next), 0).Sub(now))
+		fmt.Printf("phrase: %s; prev score: %v; new score: %v; update: %v; next study: %v\n", p.Phrase, prevScore, p.Score, scoreUpdate, time.Unix(btoi(next), 0).Sub(now))
 
 		// Save study for reference and to analyze them later
 		idAndTime := append(append([]byte{}, prefix...), itob(now.Unix())...)

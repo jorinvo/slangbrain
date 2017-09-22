@@ -1,3 +1,4 @@
+// Reset zeroscore for each user to the count of all phrases which are currently being studied and have a score of 0.
 package main
 
 import (
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	bucketPhrases     = []byte("phrases")
-	bucketScoretotals = []byte("scoretotals")
+	bucketPhrases    = []byte("phrases")
+	bucketStudytimes = []byte("studytimes")
+	bucketZeroscores = []byte("zeroscores")
 )
 
 type phrase struct {
@@ -31,31 +33,31 @@ func main() {
 		fatal(db.Close())
 	}()
 
+	scores := map[int64]int64{}
+
 	fatal(db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists(bucketScoretotals)
-		if err != nil {
-			return err
-		}
+		bz := tx.Bucket(bucketZeroscores)
+		bp := tx.Bucket(bucketPhrases)
 
-		totals := map[int64]int{}
+		err = tx.Bucket(bucketStudytimes).ForEach(func(k, _ []byte) error {
+			prefix := k[:8]
 
-		// Sum scores per user
-		err = tx.Bucket(bucketPhrases).ForEach(func(k, v []byte) error {
 			var p phrase
-			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&p); err != nil {
+			if err := gob.NewDecoder(bytes.NewReader(bp.Get(k))).Decode(&p); err != nil {
 				return err
 			}
-			totals[btoi(k)] += p.Score
+
+			// Update zeroscore
+			if p.Score == 0 {
+				scores[btoi(prefix)]++
+			}
+
 			return nil
 		})
-		if err != nil {
-			return err
-		}
 
-		// Write scoretotals to bucket
-		for k, v := range totals {
-			fmt.Printf("id: %d; score: %6d\n", k, v)
-			if err := b.Put(itob(k), itob(int64(v))); err != nil {
+		for k, v := range scores {
+			fmt.Printf("\nid: %d; score: %d\n", k, v)
+			if err := bz.Put(itob(k), itob(v)); err != nil {
 				return err
 			}
 		}
