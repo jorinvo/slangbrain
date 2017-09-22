@@ -122,17 +122,21 @@ func noMatchNorDefault(val, expect, defaultVal string) bool {
 func send(t *testing.T, handler http.Handler, message string) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", appURL, strings.NewReader(message))
+
 	// Add signature header for authentication
 	mac := hmac.New(sha1.New, []byte(secret))
 	mac.Write([]byte(message))
 	req.Header.Set("X-Hub-Signature", "sha1="+hex.EncodeToString(mac.Sum(nil)))
+
 	handler.ServeHTTP(w, req)
 	body, err := ioutil.ReadAll(w.Result().Body)
 	fatal(t, w.Result().Body.Close())
 	fatal(t, err)
+
 	if w.Result().StatusCode != http.StatusOK {
 		t.Errorf("expected status to be OK; got %v", w.Result().StatusCode)
 	}
+
 	if strings.TrimSpace(string(body)) != `{"status":"ok"}` {
 		t.Errorf(`expected response to be {"status":"ok"}; got %s`, body)
 	}

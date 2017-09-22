@@ -18,24 +18,30 @@ func (store Store) UserStats(id int64) (Stats, error) {
 		prefix := itob(id)
 		now := time.Now()
 
-		if v := b.Get(prefix); v != nil {
-			stattime := time.Unix(btoi(v), 0)
-
-			if now.Sub(stattime) < statInterval {
-				return ErrNotReady
-			}
-
-			score, rank, err := scoreAndRank(tx, prefix)
-			if err != nil {
+		v := b.Get(prefix)
+		if v == nil {
+			if err := b.Put(prefix, itob(now.Unix())); err != nil {
 				return err
 			}
+			return ErrNotReady
+		}
 
-			stats = Stats{
-				Added:   countAdds(tx, prefix, now),
-				Studied: countStudies(tx, prefix, now),
-				Score:   score,
-				Rank:    rank,
-			}
+		stattime := time.Unix(btoi(v), 0)
+
+		if now.Sub(stattime) < statInterval {
+			return ErrNotReady
+		}
+
+		score, rank, err := scoreAndRank(tx, prefix)
+		if err != nil {
+			return err
+		}
+
+		stats = Stats{
+			Added:   countAdds(tx, prefix, now),
+			Studied: countStudies(tx, prefix, now),
+			Score:   score,
+			Rank:    rank,
 		}
 
 		return b.Put(prefix, itob(now.Unix()))

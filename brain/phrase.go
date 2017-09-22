@@ -64,7 +64,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Ti
 			return err
 		}
 
-		fmt.Printf("prev zeroscore: %d, new phrases: %d, newly scheduled: %d\n", zeroscore, btoi(bn.Get(prefix)), scheduled)
+		fmt.Printf("prev zeroscore: %d, new phrases: %d, newly scheduled: %d\n", zeroscore, len(bn.Get(prefix))/8, scheduled)
 
 		if err := bz.Put(prefix, itob(zeroscore+int64(scheduled))); err != nil {
 			return err

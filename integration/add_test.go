@@ -54,7 +54,7 @@ func TestAdd(t *testing.T) {
 		},
 		{
 			name:   "ask to subscribe",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Congrats, you finished all your studies for now!\nCome back in 2 hours.\n\nWould you like me to send you a message when there are phrases ready for studying?","quick_replies":[{"content_type":"text","title":"👌 sounds good","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"no thanks","payload":"PAYLOAD_NOSUBSCRIPTION"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Congrats, you finished all your studies for now!\nCome back in an hour.\n\nWould you like me to send you a message when there are phrases ready for studying?","quick_replies":[{"content_type":"text","title":"👌 sounds good","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"no thanks","payload":"PAYLOAD_NOSUBSCRIPTION"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_NOSUBSCRIPTION"),
 		},
 		{
@@ -76,6 +76,10 @@ func TestAdd(t *testing.T) {
 		tc := tt[state]
 		checkCase(t, w, r, tc)
 		msg <- tc.send
+		state++
+		if state == len(tt) {
+			close(msg)
+		}
 	}))
 	defer ts.Close()
 
@@ -93,10 +97,6 @@ func TestAdd(t *testing.T) {
 	for s := range msg {
 		if s != "" {
 			go send(t, bot, s)
-		}
-		state++
-		if state >= len(tt) {
-			close(msg)
 		}
 	}
 }

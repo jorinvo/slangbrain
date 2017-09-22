@@ -55,7 +55,7 @@ func TestFeedback(t *testing.T) {
 		},
 		{
 			name:   "help",
-			expect: `{"recipient":{"id":"123"},"message":{"attachment":{"type":"template","payload":{"template_type":"button","text":"Wie kann ich dir weiterhelfen?","buttons":[{"type":"postback","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"type":"postback","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"}]}},"quick_replies":[{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"attachment":{"type":"template","payload":{"template_type":"button","text":"Wie kann ich dir weiterhelfen?","buttons":[{"type":"web_url","title":"slangbrain.com","url":"https://slangbrain.com/de/blog/","webview_share_button":"hide"}]}},"quick_replies":[{"content_type":"text","title":"zurück","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"✔ Benachrichtigung","payload":"PAYLOAD_SUBSCRIBE"},{"content_type":"text","title":"Feedback geben","payload":"PAYLOAD_FEEDBACK"},{"content_type":"text","title":"Vokabeln importieren","payload":"PAYLOAD_IMPORTHELP"},{"content_type":"text","title":"API Token","payload":"PAYLOAD_GETTOKEN"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_FEEDBACK"),
 		},
 		{
@@ -81,10 +81,20 @@ func TestFeedback(t *testing.T) {
 		tc := tt[state]
 		checkCase(t, w, r, tc)
 		msg <- tc.send
+		state++
+		if state == len(tt) {
+			close(msg)
+		}
 	}))
 	defer ts.Close()
 
-	feedback := make(chan messenger.Feedback, 1)
+	feedback := make(chan messenger.Feedback)
+	go func() {
+		if f := <-feedback; f.ChatID != 123 || f.Username != "Max" || f.Message != "Ich mag dich." {
+			t.Errorf("unexpected feedback: %v", f)
+		}
+	}()
+
 	bot, err := messenger.New(
 		store,
 		token,
@@ -101,12 +111,5 @@ func TestFeedback(t *testing.T) {
 		if s != "" {
 			go send(t, bot, s)
 		}
-		state++
-		if state >= len(tt) {
-			close(msg)
-		}
-	}
-	if f := <-feedback; f.ChatID != 123 || f.Username != "Max" || f.Message != "Ich mag dich." {
-		t.Errorf("unexpected feedback: %v", f)
 	}
 }

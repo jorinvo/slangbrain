@@ -36,7 +36,7 @@ func TestProfileCache(t *testing.T) {
 		},
 		{
 			name:   "welcome 1",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"Hello Martin!\n\nWhenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.\n\nYou begin by adding phrases and later Slangbrain will test your memories in a natural schedule."}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"Hello Martin!\n\nWhenever you pick up a new phrase, just add it to your Slangbrain and remember it forever.\n\nYou save phrases from your everyday life in Slangbrain and Slangbrain will test your memories in a natural schedule."}}`,
 		},
 		{
 			name:   "welcome 2",
