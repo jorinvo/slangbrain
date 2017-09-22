@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // GenerateToken creates and returns the token for a user.

@@ -8,10 +8,10 @@
   revision = "97ae7fbaf81620fe97840685304a78a306a39c64"
 
 [[projects]]
-  name = "github.com/boltdb/bolt"
+  name = "github.com/coreos/bbolt"
   packages = ["."]
-  revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
-  version = "v1.3.1"
+  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/coreos/go-systemd"
@@ -35,11 +35,11 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "062cd7e4e68206d8bab9b18396626e855c992658"
+  revision = "429f518978ab01db8bb6f44b66785088e7fba58b"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b65b9e166c7d48c6a605229ee0aa2cb1b70a6c784a3028785117e2523e71d0b7"
+  inputs-digest = "5f8857af74e6f389959d03c797e9ce64f61d4010f472b1952ff998fd029a8eac"
   solver-name = "gps-cdcl"
   solver-version = 1

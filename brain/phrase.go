@@ -7,7 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // AddPhrase stores a new phrase.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // GetStats returns the Stats object for a user

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // GetStudy returns the current study the user needs to do.

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // IsDuplicate checks whether a given payload has been sent twice in a row.

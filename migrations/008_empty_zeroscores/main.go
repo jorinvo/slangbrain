@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 var (

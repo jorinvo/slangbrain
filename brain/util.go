@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 func itob(v int64) []byte {

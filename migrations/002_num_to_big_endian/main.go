@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // Update storage of all integers to be stored as big endian instead of varint.

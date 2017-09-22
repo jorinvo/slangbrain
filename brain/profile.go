@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 	"github.com/jorinvo/slangbrain/common"
 )
 

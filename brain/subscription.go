@@ -3,7 +3,7 @@ package brain
 import (
 	"fmt"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // IsSubscribed checks if a user has notifications enabled.

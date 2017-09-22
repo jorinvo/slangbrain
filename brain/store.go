@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // Store provides functions to interact with the underlying database.

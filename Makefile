@@ -92,7 +92,7 @@ migrate:
 
 
 # Update vendored dependencies using dep
-update-deps: test
+update-deps:
 	go get -u github.com/golang/dep
 	dep ensure -update
 

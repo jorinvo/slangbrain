@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 const statmsg = "```" + `
