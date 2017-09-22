@@ -9,6 +9,8 @@ const (
 	studyTimeDiffusion = 0.2
 	// Maximum number of new studies at a time
 	maxNewStudies = 20
+	// Delay scheduled new phrases are placed at
+	newStudyDelay = 24 * time.Hour
 	// Minimum number of studies needed to be due before notifying user
 	dueMinCount = 10
 	// Time user has to be inactive before being notified

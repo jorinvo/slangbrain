@@ -167,7 +167,7 @@ func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
 		zeroscore = 0
 	}
 
-	scheduled, err := scheduleNewPhrases(tx, prefix, time.Now().Add(studyIntervals[0]), int(zeroscore))
+	scheduled, err := scheduleNewPhrases(tx, prefix, time.Now().Add(newStudyDelay), int(zeroscore))
 	if err != nil {
 		return err
 	}
@@ -192,14 +192,13 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, studyTime time.Time, schedul
 	next := itob(studyTime.Unix())
 	var i, o int
 
-	// Schedule as many as allowed to schedule and available from new phrases
+	// Schedule as many as allowed to schedule and as available from new phrases
 	for i < toSchedule {
 		o = i * 8
 		if o >= len(v) {
 			break
 		}
 		i++
-
 		// Save study time
 		phraseID := append(append([]byte{}, prefix...), v[o:o+8]...)
 		if err := bs.Put(phraseID, next); err != nil {
