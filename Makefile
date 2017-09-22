@@ -41,6 +41,12 @@ run:
 
 # Run integration tests
 test:
+	go test ./integration
+
+
+
+# Run tests verbose and output coverage
+test-cover:
 	@go test -v \
 		-coverpkg ./api,./brain,./common,./fbot,./messenger,./payload,./slack,./translate,./user \
 		./integration
@@ -48,7 +54,7 @@ test:
 
 
 # Build, and deploy latest version of Slangbrain to the live server
-deploy:
+deploy: test
 	GOOS=linux go build -a -ldflags "-s -w -X main.version=$(version)" -o dist/slangbrain
 	scp dist/slangbrain $(prod):/tmp/slangbrain
 	@echo "switch to new binary and reload service"
