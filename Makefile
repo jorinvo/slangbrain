@@ -63,10 +63,11 @@ deploy: test
 
 
 # Deploy slangbrain-stat binary
-deploy-stat:
+deploy-stat: test
 	GOOS=linux go build -a -ldflags "-s -w" -o dist/$(stat_bin) ./cmd/$(stat_bin)/main.go
 	scp dist/$(stat_bin) $(stat):/tmp/$(stat_bin)
-	ssh -t $(stat) "sh -c 'sudo mv $(stat_path) /tmp/$(stat_bin)-$(shell date +%s) && sudo mv /tmp/$(stat_bin) $(stat_path)'"
+	@echo "switch to new binary"
+	@ssh -t $(stat) "sh -c 'sudo mv $(stat_path) /tmp/$(stat_bin)-$(shell date +%s) && sudo mv /tmp/$(stat_bin) $(stat_path)'"
 
 
 
@@ -91,7 +92,7 @@ migrate:
 
 
 # Update vendored dependencies using dep
-update-deps:
+update-deps: test
 	go get -u github.com/golang/dep
 	dep ensure -update
 

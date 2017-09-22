@@ -1,8 +1,10 @@
 package brain
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -17,6 +19,7 @@ format:         total (avg)
 phrases:     %8d (%d)
 scoretotal:  %8d (%d)
 studies:     %8d (%d)
+due studies: %8d (%d)
 imports:     %8d (%d)
 notifies:    %8d (%d)
 zeroscore:   %8d (%d)
@@ -42,6 +45,19 @@ func (store Store) WriteStat(w io.Writer) error {
 
 		studiesTotal := tx.Bucket(bucketStudies).Stats().KeyN
 		studiesAvg := studiesTotal / users
+
+		now := itob(time.Now().Unix())
+		dueStudiesTotal, err := sum(tx.Bucket(bucketStudytimes), func(v []byte) int {
+			if bytes.Compare(v, now) < 1 {
+				return 1
+			} else {
+				return 0
+			}
+		})
+		if err != nil {
+			return err
+		}
+		dueStudiesAvg := dueStudiesTotal / users
 
 		importsTotal, err := sum(tx.Bucket(bucketImports), simplesum)
 		if err != nil {
@@ -81,6 +97,7 @@ func (store Store) WriteStat(w io.Writer) error {
 			phrasesTotal, phrasesAvg,
 			scoretotal, scoretotalAvg,
 			studiesTotal, studiesAvg,
+			dueStudiesTotal, dueStudiesAvg,
 			importsTotal, importsAvg,
 			notifiesTotal, notifiesAvg,
 			zeroscore, zeroscoreAvg,
