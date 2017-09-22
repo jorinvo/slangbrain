@@ -1,25 +1,27 @@
-PROD := fbot.slangbrain.com
-PROD_DB := $(PROD):/etc/slangbrain/slangbrain.db
-PROD_BIN := /usr/local/bin/slangbrain
-DEV := tunnel.slangbrain.com
+prod := fbot.slangbrain.com
+prod_path := /usr/local/bin/slangbrain
+dev := tunnel.slangbrain.com
 
-STAT := stat.slangbrain.com
-STAT_BIN := slangbrain-stat
-STAT_FILE := /usr/local/bin/$(STAT_BIN)
+stat := stat.slangbrain.com
+stat_bin := slangbrain-stat
+stat_path := /usr/local/bin/$(stat_bin)
 
-VERSION := $(shell go version | cut -d' ' -f3)_commit_$(shell git log --format="%H" -n 1)
+version := $(shell go version | cut -d' ' -f3)_commit_$(shell git log --format="%H" -n 1)
 
-MIGRATION := $(shell ls -1 migrations | tail -n1)
-MIGRATION_FILE := ./migrations/$(MIGRATION)/main.go
-NUM := $(shell echo "$(MIGRATION)" | cut -d_ -f1)
-BEFORE_DB := backups/$(NUM)-before.db
-AFTER_DB := backups/$(NUM)-after.db
+MIGRATION ?= $(shell ls -1 migrations | tail -n1)
+migration_file := ./migrations/$(MIGRATION)/main.go
 
-FB_TOKEN := EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD
-FB_SECRET := 414a6cdf4c8da5bbb281960cfcfe3eeb
-VERIFY_TOKEN := SmhklHbrVi4MInnC8Fih58TBTIc$$jeXTadn%bChS
+# Credentials for local development
+fb_token := EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD
+fb_secret := 414a6cdf4c8da5bbb281960cfcfe3eeb
+verify_token := SmhklHbrVi4MInnC8Fih58TBTIc$$jeXTadn%bChS
+slack_hook := https://hooks.slack.com/services/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
 
-SLACK_HOOK := https://hooks.slack.com/services/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
+
+
+# Print slangbrain info
+info:
+	go run main.go -help
 
 
 
@@ -28,14 +30,12 @@ run:
 	@go run main.go \
 		-db 'dev.db' \
 		-http 8080 \
-		-domain $(DEV) \
-		-verify $(VERIFY_TOKEN) \
-		-token $(FB_TOKEN) \
-		-secret $(FB_SECRET) \
-		-slackhook $(SLACK_HOOK) \
-		$@
-
-.PHONY: run
+		-domain $(dev) \
+		-verify $(verify_token) \
+		-token $(fb_token) \
+		-secret $(fb_secret) \
+		-slackhook $(slack_hook) \
+		-nosetup
 
 
 
@@ -45,55 +45,50 @@ test:
 		-coverpkg ./api,./brain,./common,./fbot,./messenger,./payload,./slack,./translate,./user \
 		./integration
 
-.PHONY: test
-
 
 
 # Build, and deploy latest version of Slangbrain to the live server
 deploy:
-	GOOS=linux go build -a -ldflags "-s -w -X main.version=$(VERSION)" -o dist/slangbrain
-	scp dist/slangbrain $(PROD):/tmp/slangbrain
-	@echo "switch to new binary and restart service"
-	@ssh -t $(PROD) "sh -c 'sudo mv $(PROD_BIN) /tmp/slangbrain-$(shell date +%s)' && sudo mv /tmp/slangbrain $(PROD_BIN) && sudo systemctl reload slangbrain.service && sudo journalctl -fu slangbrain"
+	GOOS=linux go build -a -ldflags "-s -w -X main.version=$(version)" -o dist/slangbrain
+	scp dist/slangbrain $(prod):/tmp/slangbrain
+	@echo "switch to new binary and reload service"
+	-@ssh -t $(prod) "sh -c 'sudo mv $(prod_path) /tmp/slangbrain-$(shell date +%s)' && sudo mv /tmp/slangbrain $(prod_path) && sudo systemctl reload slangbrain.service && sudo journalctl -fu slangbrain"
 
-.PHONY: deploy
 
 
 # Deploy slangbrain-stat binary
 deploy-stat:
-	GOOS=linux go build -a -ldflags "-s -w" -o dist/$(STAT_BIN) ./cmd/$(STAT_BIN)/main.go
-	ssh $(STAT) mv $(STAT_FILE) /tmp/$(STAT_BIN)-$(shell date +%s)
-	scp dist/$(STAT_BIN) $(STAT):$(STAT_FILE)
+	GOOS=linux go build -a -ldflags "-s -w" -o dist/$(stat_bin) ./cmd/$(stat_bin)/main.go
+	scp dist/$(stat_bin) $(stat):/tmp/$(stat_bin)
+	ssh -t $(stat) "sh -c 'sudo mv $(stat_path) /tmp/$(stat_bin)-$(shell date +%s) && sudo mv /tmp/$(stat_bin) $(stat_path)'"
 
-.PHONY: deploy-stat
+
+
+# Trigger backup job
+backup:
+	ssh -t $(stat) "sh -c 'sudo systemctl kill -s ALRM slangbrain-backup'"
 
 
 
 # Apply most recent migration on production server
+# Make sure to `make backup` upfront.
+# You can run old migrations like using `MIGRATION=006_bucket_scoretotals make migrate`.
+# Migrations take a path to a database file as first and only arg.
 migrate:
-	@mkdir -p backups
+	@echo "using migration $(MIGRATION)"
+	GOOS=linux go build -a -ldflags "-s -w" -o dist/$(MIGRATION) $(migration_file)
+	scp dist/$(MIGRATION) $(prod):/tmp/
 
-	errcheck $(MIGRATION_FILE)
-
-	ssh -t $(PROD) sudo systemctl stop slangbrain
-
-	scp $(PROD_DB) $(BEFORE_DB)
-	cp $(BEFORE_DB) $(AFTER_DB)
-
-	go run $(MIGRATION_FILE) $(AFTER_DB)
-	@sleep 2
-
-	scp $(AFTER_DB) $(PROD_DB)
-	deploy
-
-.PHONY: migrate
+	@echo "activate migration and reload service"
+	-@ssh -t $(prod) "sh -c 'sudo chown slangbrain:root /tmp/$(MIGRATION) && sudo mv /tmp/$(MIGRATION) /etc/slangbrain/migrations/ && sudo systemctl reload slangbrain && sudo journalctl -fu slangbrain'"
 
 
 
-# Rollback data to before the last migration
-rollback:
-	ssh -t $(PROD) sudo systemctl stop slangbrain
-	scp backups/$(shell echo "$(MIGRATION)" | cut -d_ -f1)-before.db $(PROD_DB)
-	ssh -t $(PROD) "sh -c 'sudo systemctl restart slangbrain && sudo journalctl -fu slangbrain'"
+# Update vendored dependencies using dep
+update-deps:
+	go get -u github.com/golang/dep
+	dep ensure -update
 
-.PHONY: rollback
+
+
+.PHONY: run test deploy deploy-stat backup migrate update-deps
