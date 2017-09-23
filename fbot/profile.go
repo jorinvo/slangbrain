@@ -12,7 +12,7 @@ import (
 
 // URL to fetch the profile from;
 // is relative to the API URL.
-const profileURL = "%s/%d?fields=first_name,locale,timezone&access_token=%s"
+const profileURL = "%s/%d?fields=first_name,locale,timezone&access_token=%s&appsecret_proof=%s"
 
 // profile has all public user information we need;
 // needs to be in sync with the URL above.
@@ -31,7 +31,7 @@ func (p profile) Timezone() int  { return p.data.Timezone }
 
 // GetProfile fetches a user profile for an ID.
 func (c Client) GetProfile(id int64) (common.Profile, error) {
-	url := fmt.Sprintf(profileURL, c.api, id, c.token)
+	url := fmt.Sprintf(profileURL, c.api, id, c.token, c.secretProof)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("get %#v: %v", url, err)

@@ -115,16 +115,19 @@ func (b Bot) startStudy(u user.User) (int64, string, []fbot.Reply, error) {
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
 	}
+
 	// No studies ready
 	if study.Total == 0 {
 		// Go to menu mode
 		if err = b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 			return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
 		}
+
 		// There are no studies yet
 		if study.Next == 0 {
 			return u.ID, u.Msg.StudyEmpty, u.Rpl.StudyEmpty, nil
 		}
+
 		// Display time until next study is ready
 		msg := fmt.Sprintf(u.Msg.StudyDone, formatDuration(u.Msg, study.Next))
 		isSubscribed, err := b.store.IsSubscribed(u.ID)
@@ -134,9 +137,11 @@ func (b Bot) startStudy(u user.User) (int64, string, []fbot.Reply, error) {
 		if isSubscribed || err != nil {
 			return u.ID, msg, u.Rpl.MenuMode, nil
 		}
+
 		// Ask to subscribe to notifications
 		return u.ID, msg + "\n\n" + u.Msg.AskToSubscribe, u.Rpl.Subscribe, nil
 	}
+
 	// Send study to user
 	return u.ID, fmt.Sprintf(u.Msg.StudyQuestion, study.Total, study.Explanation), u.Rpl.Show, nil
 }

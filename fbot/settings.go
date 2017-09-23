@@ -9,7 +9,7 @@ import (
 
 // URL to send settings to;
 // is relative to the API URL.
-const settingsURL = "%s/me/messenger_profile?access_token=%s"
+const settingsURL = "%s/me/messenger_profile?access_token=%s&appsecret_proof=%s"
 
 // Greeting is a localized message describing the bot.
 type Greeting struct {
@@ -40,7 +40,7 @@ func (c Client) postSetting(data interface{}) error {
 		return fmt.Errorf("json of %#v: %v", data, err)
 	}
 
-	url := fmt.Sprintf(settingsURL, c.api, c.token)
+	url := fmt.Sprintf(settingsURL, c.api, c.token, c.secretProof)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(encoded))
 	if err != nil {
 		return fmt.Errorf("post \"%s\" to %#v: %v", encoded, url, err)

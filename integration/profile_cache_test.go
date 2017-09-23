@@ -31,7 +31,7 @@ func TestProfileCache(t *testing.T) {
 		{
 			name:     "get profile 1",
 			method:   "GET",
-			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
+			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token&appsecret_proof=e5565c0a91022866f93ae581ad8e3bddca01e06c067b5816f0373fc76df3d1f0",
 			response: `{ "first_name": "Martin" }`,
 		},
 		{

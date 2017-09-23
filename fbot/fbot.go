@@ -4,6 +4,9 @@
 package fbot
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,24 +16,32 @@ const defaultAPI = "https://graph.facebook.com/v2.6"
 
 // Client can be used to communicate with a Messenger bot.
 type Client struct {
-	token string
-	api   string
+	token       string
+	secretProof string
+	api         string
 }
 
 // API can be passed to New for sending requests to a different URL.
 // Must not contain trailing slash.
 func API(url string) func(*Client) {
 	return func(c *Client) {
-		c.api = url
+		if url != "" {
+			c.api = url
+		}
 	}
 }
 
 // New rerturns a new client with credentials set up.
 // Optionally pass API to overwrite the default API URL.
-func New(token string, options ...func(*Client)) Client {
+func New(token, secret string, options ...func(*Client)) Client {
+	// Generate secret proof. See https://developers.facebook.com/docs/graph-api/securing-requests/#appsecret_proof
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(token))
+
 	c := Client{
-		token: token,
-		api:   defaultAPI,
+		token:       token,
+		secretProof: hex.EncodeToString(mac.Sum(nil)),
+		api:         defaultAPI,
 	}
 	for _, option := range options {
 		option(&c)

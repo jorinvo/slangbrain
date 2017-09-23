@@ -20,20 +20,20 @@ func TestWelcome(t *testing.T) {
 	tt := []testCase{
 		{
 			name:     "greeting",
-			url:      "/me/messenger_profile?access_token=some-test-token",
+			url:      "/me/messenger_profile?access_token=some-test-token&appsecret_proof=e5565c0a91022866f93ae581ad8e3bddca01e06c067b5816f0373fc76df3d1f0",
 			expect:   `{"greeting":[{"locale":"default","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"de_DE","text":"Hi {{user_first_name}}! Mit Slangbrain kannst du Sprache lernen wie sie dir im Alltag begegnet statt ein Schulbuch auswendig zu lernen."},{"locale":"en_GB","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."},{"locale":"en_US","text":"Hi {{user_first_name}}! Slangbrain helps you with our language studies.\nMaster the language you encounter daily instead of limiting yourself to a textbook."}]}`,
 			response: `{"result":"success"}`,
 		},
 		{
 			name:     "get started button",
-			url:      "/me/messenger_profile?access_token=some-test-token",
+			url:      "/me/messenger_profile?access_token=some-test-token&appsecret_proof=e5565c0a91022866f93ae581ad8e3bddca01e06c067b5816f0373fc76df3d1f0",
 			expect:   `{"get_started":{"payload":"PAYLOAD_GETSTARTED"}}`,
 			response: `{"result":"success"}`,
 		},
 		{
 			name:     "get profile",
 			method:   "GET",
-			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token",
+			url:      "/123?fields=first_name,locale,timezone&access_token=some-test-token&appsecret_proof=e5565c0a91022866f93ae581ad8e3bddca01e06c067b5816f0373fc76df3d1f0",
 			response: `{ "first_name": "Martin" }`,
 		},
 		{

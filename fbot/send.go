@@ -9,7 +9,7 @@ import (
 
 // URL to send messages to;
 // is relative to the API URL.
-const sendMessageURL = "%s/me/messages?access_token=%s"
+const sendMessageURL = "%s/me/messages?access_token=%s&appsecret_proof=%s"
 
 // Send a text message with a set of quick reply buttons to a user.
 func (c Client) Send(id int64, message string, replies []Reply) error {
@@ -44,7 +44,7 @@ func (c Client) send(id int64, message interface{}) error {
 		return fmt.Errorf("json of %#v: %v", m, err)
 	}
 
-	url := fmt.Sprintf(sendMessageURL, c.api, c.token)
+	url := fmt.Sprintf(sendMessageURL, c.api, c.token, c.secretProof)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("post \"%s\" to %#v: %v", m, url, err)

@@ -20,7 +20,7 @@ const (
 	token         = "some-test-token"
 	secret        = "some-test-secret"
 	defaultMethod = "POST"
-	defaultURI    = "/me/messages?access_token=some-test-token"
+	defaultURI    = "/me/messages?access_token=some-test-token&appsecret_proof=e5565c0a91022866f93ae581ad8e3bddca01e06c067b5816f0373fc76df3d1f0"
 )
 
 const formatMessage = `

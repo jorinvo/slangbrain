@@ -147,11 +147,7 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 	if b.do == nil {
 		b.do = http.DefaultClient.Do
 	}
-	if b.furl == "" {
-		b.client = fbot.New(token)
-	} else {
-		b.client = fbot.New(token, fbot.API(b.furl))
-	}
+	b.client = fbot.New(token, secret, fbot.API(b.furl))
 	b.Handler = b.client.Webhook(b.HandleEvent, secret, b.verifyToken)
 	if b.feedback == nil {
 		feedback := make(chan Feedback)

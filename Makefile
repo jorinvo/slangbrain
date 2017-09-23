@@ -19,15 +19,15 @@ slack_hook := https://hooks.slack.com/services/T3P3HR1M2/B5QCLGTM5/u9PbtNQUW0cNp
 
 
 
-# Print slangbrain info
-info:
-	go run main.go -help
+# Run dev server locally and make it available publicly via ssh tunnel
+run:
+	-@$(MAKE) -j tunnel server
 
 
 
 # Run dev server locally
-run:
-	@go run main.go \
+server:
+	-@go run main.go \
 		-db 'dev.db' \
 		-http 8080 \
 		-domain $(dev) \
@@ -36,6 +36,12 @@ run:
 		-secret $(fb_secret) \
 		-slackhook $(slack_hook) \
 		-nosetup
+
+
+
+# Start a tunnel do the dev server
+tunnel:
+	-@ssh $(dev) -NR 8080:localhost:8080
 
 
 
@@ -88,6 +94,12 @@ migrate:
 
 	@echo "activate migration and reload service"
 	-@ssh -t $(prod) "sh -c 'sudo chown slangbrain:root /tmp/$(MIGRATION) && sudo mv /tmp/$(MIGRATION) /etc/slangbrain/migrations/ && sudo systemctl reload slangbrain && sudo journalctl -fu slangbrain'"
+
+
+
+# Show logs of production server
+logs:
+	-ssh -t $(prod) sudo journalctl -fu slangbrain
 
 
 
