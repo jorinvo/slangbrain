@@ -43,6 +43,8 @@ type Msg struct {
 	ImportErrCols,
 	WeeklyStats,
 	APIToken,
+	Phrase,
+	Phrases,
 	AnHour,
 	Hours,
 	AMinute,

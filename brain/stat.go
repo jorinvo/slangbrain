@@ -50,9 +50,8 @@ func (store Store) WriteStat(w io.Writer) error {
 		dueStudiesTotal, err := sum(tx.Bucket(bucketStudytimes), func(v []byte) int {
 			if bytes.Compare(v, now) < 1 {
 				return 1
-			} else {
-				return 0
 			}
+			return 0
 		})
 		if err != nil {
 			return err

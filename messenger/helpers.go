@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,7 +37,13 @@ func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) 
 
 	s, err := b.store.UserStats(u.ID)
 	if err == nil {
-		msg := fmt.Sprintf(u.Msg.WeeklyStats, s.Added, s.Studied, s.Score, s.Rank)
+		phrases := strconv.Itoa(s.Added) + " "
+		if s.Added == 1 {
+			phrases += u.Msg.Phrase
+		} else {
+			phrases += u.Msg.Phrases
+		}
+		msg := fmt.Sprintf(u.Msg.WeeklyStats, phrases, s.Studied, s.Score, s.Rank)
 		b.send(u.ID, msg, nil, nil)
 	} else if err != brain.ErrNotReady {
 		b.err.Println("failed to get user stats for %d: %v", u.ID, err)

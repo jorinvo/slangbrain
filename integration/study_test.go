@@ -39,7 +39,7 @@ func TestStudy(t *testing.T) {
 		},
 		{
 			name:   "review 2",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"5. Do you remember how to say this?\n\nexplanation2\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"5. Do you know how to say this?\n\nexplanation2\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
 			send:   fmt.Sprintf(formatMessage, "2", "wrong"),
 		},
 		{
@@ -48,7 +48,7 @@ func TestStudy(t *testing.T) {
 		},
 		{
 			name:   "review 3",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"4. Do you remember how to say this?\n\nexplanation3\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"4. Do you know how to say this?\n\nexplanation3\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_SHOWSTUDY"),
 		},
 		{
@@ -58,7 +58,7 @@ func TestStudy(t *testing.T) {
 		},
 		{
 			name:   "review 4",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"3. Do you remember how to say this?\n\nexplanation4\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"3. Do you know how to say this?\n\nexplanation4\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
 			send:   fmt.Sprintf(formatMessage, "3", "\\n\\nphrase4\\n\\n"),
 		},
 		{
@@ -67,7 +67,7 @@ func TestStudy(t *testing.T) {
 		},
 		{
 			name:   "review 5",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"2. Do you remember how to say this?\n\nexplanation5\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"2. Do you know how to say this?\n\nexplanation5\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_SHOWSTUDY"),
 		},
 		{
@@ -77,7 +77,7 @@ func TestStudy(t *testing.T) {
 		},
 		{
 			name:   "review 6",
-			expect: `{"recipient":{"id":"123"},"message":{"text":"1. Do you remember how to say this?\n\nexplanation6\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
+			expect: `{"recipient":{"id":"123"},"message":{"text":"1. Do you know how to say this?\n\nexplanation6\n\nUse the buttons or type the phrase.","quick_replies":[{"content_type":"text","title":"done studying","payload":"PAYLOAD_STARTMENU"},{"content_type":"text","title":"👉 show phrase","payload":"PAYLOAD_SHOWSTUDY"}]}}`,
 			send:   fmt.Sprintf(formatPayload, "PAYLOAD_SHOWSTUDY"),
 		},
 		{

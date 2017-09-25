@@ -8,8 +8,8 @@ import (
 	bolt "github.com/coreos/bbolt"
 )
 
-// GetStats returns the Stats object for a user
-// if GetStats hasn't been called for a time of at least statInterval.
+// UserStats returns the Stats object for a user.
+// If UserStats  hasn't been called for a time of at least statInterval.
 // Otherwise returns ErrNotReady.
 func (store Store) UserStats(id int64) (Stats, error) {
 	var stats Stats

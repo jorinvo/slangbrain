@@ -38,7 +38,7 @@ Come back in %s.`,
 %s`,
 		StudyEmpty: `You have added no phrases yet.
 Click the button below and get started.`,
-		StudyQuestion: `%d. Do you remember how to say this?
+		StudyQuestion: `%d. Do you know how to say this?
 
 %s
 
@@ -76,12 +76,14 @@ A valid file could look like this:`,
 		ImportErrParse: `The file '%s' is not formatted correctly. Please check the file and try it again. Parsing the file failed with the error:
 '%v'`,
 		ImportErrCols: "Expecting CSV files to have at least 2 columns, but file '%s' has %d. The first one should contain the phrase, the second an explanation.",
-		WeeklyStats:   "This week you added %d phrases and studied %d. Your total score is %d now and you are #%d of all Slangbrain users.",
+		WeeklyStats:   "This week you added %s and studied %d. Your total score is %d now and you are #%d of all Slangbrain users.",
 		APIToken: `Here is your API token:
 
 %s
 
 Keep it secret!`,
+		Phrase:  "phrase",
+		Phrases: "phrases",
 		AnHour:  "an hour",
 		Hours:   "hours",
 		AMinute: "a minute",

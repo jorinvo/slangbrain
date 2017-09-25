@@ -72,12 +72,14 @@ Eine CSV Datei kann z.B. so aussehen:`,
 		ImportErrParse: `Die Datei '%s' is nicht richtig formatiert. Bitte überprüfe die Datei und versuche es noch einmal. Folgender Fehler ist aufgetreten:
 '%v'`,
 		ImportErrCols: "Die CSV Dateien muss mindestens 2 Spalten haben, aber die Datei '%s' hat %d Spalten. Die erste Spalte ist für Vokabeln und die zweite für deren Erklärungen.",
-		WeeklyStats:   "Diese Woche hast du %d Vokabeln hinzugefügt und %d Vokabeln wiederholt. Du hast jetzt insgesammt %d Punkte und bist auf Platz %d von allen Slangbrain Nutzern.",
+		WeeklyStats:   "Diese Woche hast du %s hinzugefügt und %d wiederholt. Du hast jetzt insgesamt %d Punkte und bist auf Platz %d von allen Slangbrain Nutzern.",
 		APIToken: `Hier ist dein API Token:
 
 %s
 
 Pass' gut darauf auf!`,
+		Phrase:  "Vokabel",
+		Phrases: "Vokabeln",
 		AnHour:  "einer Stunde",
 		Hours:   "Stunden",
 		AMinute: "einer Minute",

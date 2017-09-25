@@ -14,7 +14,7 @@ migration_file := ./migrations/$(MIGRATION)/main.go
 # Credentials for local development
 fb_token := EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD
 fb_secret := 414a6cdf4c8da5bbb281960cfcfe3eeb
-verify_token := SmhklHbrVi4MInnC8Fih58TBTIc$$jeXTadn%bChS
+verify_token := SmhklHbrVi4MInnC8Fih58TBTIc3jeXTadn1bChS
 slack_hook := https://hooks.slack.com/services/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
 
 
@@ -39,8 +39,9 @@ server:
 
 
 
-# Start a tunnel do the dev server
+# Start a tunnel to the dev server
 tunnel:
+	@echo "tunneling port 8080 to $(dev)"
 	-@ssh $(dev) -NR 8080:localhost:8080
 
 
@@ -59,8 +60,14 @@ test-cover:
 
 
 
+# Lint code
+lint:
+	golint ./... | grep -v vendor
+
+
+
 # Build, and deploy latest version of Slangbrain to the live server
-deploy: test
+deploy: lint test
 	GOOS=linux go build -a -ldflags "-s -w -X main.version=$(version)" -o dist/slangbrain
 	scp dist/slangbrain $(prod):/tmp/slangbrain
 	@echo "switch to new binary and reload service"
@@ -69,7 +76,7 @@ deploy: test
 
 
 # Deploy slangbrain-stat binary
-deploy-stat: test
+deploy-stat: lint test
 	GOOS=linux go build -a -ldflags "-s -w" -o dist/$(stat_bin) ./cmd/$(stat_bin)/main.go
 	scp dist/$(stat_bin) $(stat):/tmp/$(stat_bin)
 	@echo "switch to new binary"
