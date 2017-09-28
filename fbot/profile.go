@@ -17,12 +17,11 @@ const profileURL = "%s/%d?fields=first_name,locale,timezone&access_token=%s&apps
 // profile has all public user information we need;
 // needs to be in sync with the URL above.
 type profile struct {
-	data profileData
-}
-type profileData struct {
-	Name     string `json:"first_name"`
-	Locale   string `json:"locale"`
-	Timezone int    `json:"timezone"`
+	data struct {
+		Name     string `json:"first_name"`
+		Locale   string `json:"locale"`
+		Timezone int    `json:"timezone"`
+	}
 }
 
 func (p profile) Name() string   { return p.data.Name }
@@ -45,10 +44,10 @@ func (c Client) GetProfile(id int64) (common.Profile, error) {
 		return nil, fmt.Errorf("read body: %v", err)
 	}
 
-	var p profileData
-	if err = json.Unmarshal(content, &p); err != nil {
-		return profile{p}, fmt.Errorf("parse json from \"%s\": %v", content, err)
+	var p profile
+	if err = json.Unmarshal(content, &p.data); err != nil {
+		return p, fmt.Errorf("parse json from \"%s\": %v", content, err)
 	}
 
-	return profile{p}, checkError(bytes.NewReader(content))
+	return p, checkError(bytes.NewReader(content))
 }

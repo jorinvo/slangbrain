@@ -63,22 +63,19 @@ type Reply struct {
 
 // Helper to check for errors in reply
 func checkError(r io.Reader) error {
-	var qr queryResponse
+	var qr struct {
+		Error *struct {
+			Message   string `json:"message"`
+			Type      string `json:"type"`
+			Code      int    `json:"code"`
+			FBTraceID string `json:"fbtrace_id"`
+		} `json:"error"`
+		Result string `json:"result"`
+	}
+
 	err := json.NewDecoder(r).Decode(&qr)
 	if qr.Error != nil {
 		err = fmt.Errorf("Facebook error : %s", qr.Error.Message)
 	}
 	return err
-}
-
-type queryResponse struct {
-	Error  *queryError `json:"error"`
-	Result string      `json:"result"`
-}
-
-type queryError struct {
-	Message   string `json:"message"`
-	Type      string `json:"type"`
-	Code      int    `json:"code"`
-	FBTraceID string `json:"fbtrace_id"`
 }

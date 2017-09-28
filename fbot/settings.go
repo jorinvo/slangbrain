@@ -24,13 +24,17 @@ type Greeting struct {
 // SetGreetings sets the text displayed in the bot description.
 // Include "default" locale as fallback for missing locales.
 func (c Client) SetGreetings(g []Greeting) error {
-	return c.postSetting(greetingSettings{Greeting: g})
+	return c.postSetting(struct {
+		Greeting []Greeting `json:"greeting,omitempty"`
+	}{Greeting: g})
 }
 
 // SetGetStartedPayload displays a "Get Started" button for new users.
 // When a users pushes the button, a postback with the given payload is triggered.
 func (c Client) SetGetStartedPayload(p string) error {
-	return c.postSetting(getStartedSettings{GetStarted: getStartedPayload{p}})
+	return c.postSetting(struct {
+		GetStarted getStartedPayload `json:"get_started,omitempty"`
+	}{GetStarted: getStartedPayload{p}})
 }
 
 // Helper to send settings to the settings endpoint.
@@ -50,14 +54,6 @@ func (c Client) postSetting(data interface{}) error {
 	}()
 
 	return checkError(resp.Body)
-}
-
-type greetingSettings struct {
-	Greeting []Greeting `json:"greeting,omitempty"`
-}
-
-type getStartedSettings struct {
-	GetStarted getStartedPayload `json:"get_started,omitempty"`
 }
 
 type getStartedPayload struct {

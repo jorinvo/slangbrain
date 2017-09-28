@@ -13,7 +13,10 @@ const sendMessageURL = "%s/me/messages?access_token=%s&appsecret_proof=%s"
 
 // Send a text message with a set of quick reply buttons to a user.
 func (c Client) Send(id int64, message string, replies []Reply) error {
-	return c.send(id, textMessage{
+	return c.send(id, struct {
+		Text         string       `json:"text"`
+		QuickReplies []quickReply `json:"quick_replies,omitempty"`
+	}{
 		Text:         message,
 		QuickReplies: parseReplies(replies),
 	})
@@ -21,7 +24,10 @@ func (c Client) Send(id int64, message string, replies []Reply) error {
 
 // SendWithButtons sends a message with a set of buttons and quick replies to a user.
 func (c Client) SendWithButtons(id int64, message string, replies []Reply, buttons []Button) error {
-	return c.send(id, buttonTemplate{
+	return c.send(id, struct {
+		Attachment   buttonAttachment `json:"attachment"`
+		QuickReplies []quickReply     `json:"quick_replies,omitempty"`
+	}{
 		Attachment: buttonAttachment{
 			Type: "template",
 			Payload: buttonPayload{
@@ -35,7 +41,10 @@ func (c Client) SendWithButtons(id int64, message string, replies []Reply, butto
 }
 
 func (c Client) send(id int64, message interface{}) error {
-	m := sendMessage{
+	m := struct {
+		Recipient recipient   `json:"recipient"`
+		Message   interface{} `json:"message"`
+	}{
 		Recipient: recipient{ID: id},
 		Message:   message,
 	}
@@ -101,11 +110,6 @@ func LinkButton(text, url string) Button {
 	}
 }
 
-type buttonTemplate struct {
-	Attachment   buttonAttachment `json:"attachment"`
-	QuickReplies []quickReply     `json:"quick_replies,omitempty"`
-}
-
 type buttonAttachment struct {
 	Type    string        `json:"type"`
 	Payload buttonPayload `json:"payload"`
@@ -124,16 +128,6 @@ type button struct {
 	URL         string `json:"url,omitempty"`
 	ShareButton string `json:"webview_share_button,omitempty"`
 	Extensions  bool   `json:"messenger_extensions,omitempty"`
-}
-
-type sendMessage struct {
-	Recipient recipient   `json:"recipient"`
-	Message   interface{} `json:"message"`
-}
-
-type textMessage struct {
-	Text         string       `json:"text"`
-	QuickReplies []quickReply `json:"quick_replies,omitempty"`
 }
 
 type recipient struct {

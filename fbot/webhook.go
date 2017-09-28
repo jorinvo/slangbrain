@@ -221,41 +221,39 @@ func msToTime(ms int64) time.Time {
 }
 
 type receive struct {
-	Entry []entry `json:"entry"`
-}
-
-type entry struct {
-	Messaging []messageInfo `json:"messaging"`
+	Entry []struct {
+		Messaging []messageInfo `json:"messaging"`
+	} `json:"entry"`
 }
 
 type messageInfo struct {
-	Sender    sender    `json:"sender"`
-	Timestamp int64     `json:"timestamp"`
-	Message   *message  `json:"message"`
-	Postback  *postback `json:"postback"`
-	Read      *read     `json:"read"`
-	Referral  *referral `json:"referral"`
-}
-
-type sender struct {
-	ID int64 `json:"id,string"`
-}
-
-type message struct {
-	IsEcho      bool         `json:"is_echo,omitempty"`
-	Text        string       `json:"text"`
-	QuickReply  *quickReply  `json:"quick_reply,omitempty"`
-	MID         string       `json:"mid,omitempty"`
-	Attachments []attachment `json:"attachments,omitempty"`
-}
-
-type postback struct {
-	Payload  string    `json:"payload"`
+	Sender struct {
+		ID int64 `json:"id,string"`
+	} `json:"sender"`
+	Timestamp int64 `json:"timestamp"`
+	Message   *struct {
+		IsEcho      bool        `json:"is_echo,omitempty"`
+		Text        string      `json:"text"`
+		QuickReply  *quickReply `json:"quick_reply,omitempty"`
+		MID         string      `json:"mid,omitempty"`
+		Attachments []struct {
+			Type    string `json:"type,omitempty"`
+			Payload struct {
+				Sticker int64  `json:"sticker_id,omitempty"`
+				URL     string `json:"url,omitempty"`
+			} `json:"payload,omitempty"`
+			// used by fallback
+			URL string `json:"url,omitempty"`
+		} `json:"attachments,omitempty"`
+	} `json:"message"`
+	Postback *struct {
+		Payload  string    `json:"payload"`
+		Referral *referral `json:"referral"`
+	} `json:"postback"`
+	Read *struct {
+		Watermark int64 `json:"watermark"`
+	} `json:"read"`
 	Referral *referral `json:"referral"`
-}
-
-type read struct {
-	Watermark int64 `json:"watermark"`
 }
 
 // For now Source and Type are ignored.
@@ -265,16 +263,4 @@ type referral struct {
 	Ref    string `json:"ref"`
 	Source string `json:"source"`
 	Type   string `json:"type"`
-}
-
-type attachment struct {
-	Type    string            `json:"type,omitempty"`
-	Payload attachmentPayload `json:"payload,omitempty"`
-	// used by fallback
-	URL string `json:"url,omitempty"`
-}
-
-type attachmentPayload struct {
-	Sticker int64  `json:"sticker_id,omitempty"`
-	URL     string `json:"url,omitempty"`
 }
