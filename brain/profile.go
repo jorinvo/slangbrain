@@ -8,10 +8,9 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/jorinvo/slangbrain/brain/bucket"
-	"github.com/jorinvo/slangbrain/common"
 )
 
-// Wrap data as common.Profile.
+// Wrap data as Profile.
 type profile struct {
 	data profileData
 }
@@ -29,7 +28,7 @@ func (p profile) Timezone() int  { return p.data.Timezone }
 
 // GetProfile fetches a cached profile.
 // Returns ErrNotFound if none found or cache is older than profileMaxCacheTime.
-func (store Store) GetProfile(id int64) (common.Profile, error) {
+func (store Store) GetProfile(id int64) (Profile, error) {
 	var p profileData
 	err := store.db.View(func(tx *bolt.Tx) error {
 		v := tx.Bucket(bucket.Profiles).Get(itob(id))
@@ -53,7 +52,7 @@ func (store Store) GetProfile(id int64) (common.Profile, error) {
 
 // SetProfile caches a profile.
 // Pass the caching time for easier testing.
-func (store Store) SetProfile(id int64, p common.Profile, cachedAt time.Time) error {
+func (store Store) SetProfile(id int64, p Profile, cachedAt time.Time) error {
 	data := profileData{
 		Name:      p.Name(),
 		Locale:    p.Locale(),

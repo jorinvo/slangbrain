@@ -66,7 +66,7 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	u := scope.Get(id, view.store, view.err, view.content, nil)
+	u := scope.Get(id, view.store, view.content, view.err, nil)
 	data := struct {
 		Phrases []brain.IDPhrase
 		Label   translate.Web

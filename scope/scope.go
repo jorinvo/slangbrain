@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/common"
 	"github.com/jorinvo/slangbrain/translate"
 )
 
@@ -15,7 +14,7 @@ import (
 // A profile and content in the correct language are loaded.
 type User struct {
 	ID int64
-	common.Profile
+	brain.Profile
 	translate.Content
 }
 
@@ -23,7 +22,7 @@ type User struct {
 // Logs errors.
 // Check fields of profile before using them.
 // It is not guaranteed that they are successfully loaded.
-func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f func(int64) (common.Profile, error)) User {
+func Get(id int64, s brain.Store, t translate.Translator, l *log.Logger, f func() (brain.Profile, error)) User {
 	p, err := getProfile(id, s, l, f)
 	if err != nil {
 		l.Printf("failed to get profile: %v\n", err)
@@ -36,7 +35,7 @@ func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f func(
 }
 
 // Get profile from cache or fetch and update cache.
-func getProfile(id int64, s brain.Store, l *log.Logger, f func(int64) (common.Profile, error)) (common.Profile, error) {
+func getProfile(id int64, s brain.Store, l *log.Logger, f func() (brain.Profile, error)) (brain.Profile, error) {
 	// Try cache
 	p, err := s.GetProfile(id)
 	if err == nil {
@@ -52,7 +51,7 @@ func getProfile(id int64, s brain.Store, l *log.Logger, f func(int64) (common.Pr
 	}
 
 	// Not in cache, fetch from Facebook
-	p, err = f(id)
+	p, err = f()
 	if err != nil {
 		return p, fmt.Errorf("failed to fetch profile for %d: %v", id, err)
 	}

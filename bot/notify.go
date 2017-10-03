@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/scope"
 )
 
 // Start a timer to notify the given chat.
@@ -29,7 +28,7 @@ func (b bot) scheduleNotify(id int64) {
 		// Don't care if timer is active or not
 		_ = timer.Stop()
 	}
-	u := scope.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	u := b.getUser(id)
 	d, count, err := b.store.GetNotifyTime(id, u.Timezone())
 	if err != nil {
 		b.err.Println(err)
@@ -46,7 +45,7 @@ func (b bot) scheduleNotify(id int64) {
 }
 
 func (b bot) notify(id int64, count int) {
-	u := scope.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	u := b.getUser(id)
 	msg := fmt.Sprintf(u.Msg.StudyNotification, u.Name(), count)
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {
 		b.err.Printf("failed to activate menu mode while notifying %d: %v", u.ID, err)

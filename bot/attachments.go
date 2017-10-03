@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/scope"
+	"qvl.io/fbot"
 )
 
 // Handle the upload of CSV files to import phrases.

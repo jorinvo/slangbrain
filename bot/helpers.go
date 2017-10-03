@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/scope"
 	"github.com/jorinvo/slangbrain/translate"
+	"qvl.io/fbot"
 )
 
 // Everything that is not in the unicode character classes

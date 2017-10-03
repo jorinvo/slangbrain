@@ -3,7 +3,7 @@ package translate
 import (
 	"strings"
 
-	"github.com/jorinvo/slangbrain/fbot"
+	"qvl.io/fbot"
 )
 
 // Btn contains all button sets that can be sent to a user.

@@ -65,3 +65,12 @@ type Stats struct {
 	// Rank is the rank by score of a user compared to all other users.
 	Rank int
 }
+
+// Profile abstracts a user profile.
+// It is only used for reading information.
+// Can be read from remote or from cache.
+type Profile interface {
+	Name() string
+	Locale() string
+	Timezone() int
+}

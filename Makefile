@@ -55,7 +55,7 @@ test:
 # Run tests verbose and output coverage
 test-cover:
 	@go test -v \
-		-coverpkg ./api,./brain,./common,./fbot,./messenger,./payload,./slack,./translate,./user \
+		-coverpkg ./api,./bot,./brain,./payload,./scope,./slack,./translate,./webview \
 		./integration
 
 

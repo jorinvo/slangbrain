@@ -1,8 +1,8 @@
 package translate
 
 import (
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
+	"qvl.io/fbot"
 )
 
 // Rpl contains all reply sets that can be sent to a user.

@@ -11,10 +11,9 @@ import (
 	"time"
 
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
-	"github.com/jorinvo/slangbrain/scope"
 	"github.com/jorinvo/slangbrain/translate"
+	"qvl.io/fbot"
 )
 
 // Channel to send unhandled user messages and attachments to
@@ -116,7 +115,7 @@ func New(c Config) (http.Handler, func(id int64, msg string) error, error) {
 		content:      translator,
 		do:           doer,
 		feedback:     feedback,
-		client:       fbot.New(c.Token, c.Secret, fbot.API(c.FacebookURL)),
+		client:       fbot.New(fbot.Config{Token: c.Token, Secret: c.Secret, API: c.FacebookURL}),
 		notifyTimers: notifyTimers,
 		messageDelay: c.MessageDelay,
 	}
@@ -161,7 +160,7 @@ func (b bot) SendMessage(id int64, msg string) error {
 	if err := b.client.Send(id, msg, nil); err != nil {
 		return err
 	}
-	u := scope.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	u := b.getUser(id)
 	b.send(b.messageStartMenu(u))
 	return nil
 }
@@ -181,7 +180,7 @@ func (b bot) handleEvent(e fbot.Event) {
 		return
 	}
 
-	u := scope.Get(e.ChatID, b.store, b.err, b.content, b.client.GetProfile)
+	u := b.getUser(e.ChatID)
 
 	if e.Type == fbot.EventReferral {
 		ref, err := url.QueryUnescape(e.Ref)
