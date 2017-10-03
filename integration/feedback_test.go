@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jorinvo/slangbrain/messenger"
+	"github.com/jorinvo/slangbrain/bot"
 )
 
 func TestFeedback(t *testing.T) {
@@ -88,28 +88,28 @@ func TestFeedback(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	feedback := make(chan messenger.Feedback)
+	feedback := make(chan bot.Feedback)
 	go func() {
 		if f := <-feedback; f.ChatID != 123 || f.Username != "Max" || f.Message != "Ich mag dich." {
 			t.Errorf("unexpected feedback: %v", f)
 		}
 	}()
 
-	bot, err := messenger.New(
+	b, err := bot.New(
 		store,
 		token,
 		secret,
-		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		messenger.FAPI(ts.URL),
-		messenger.GetFeedback(feedback),
+		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
+		bot.FAPI(ts.URL),
+		bot.GetFeedback(feedback),
 	)
 	fatal(t, err)
 
-	go send(t, bot, fmt.Sprintf(formatMessage, "1", "hi"))
+	go send(t, b, fmt.Sprintf(formatMessage, "1", "hi"))
 
 	for s := range msg {
 		if s != "" {
-			go send(t, bot, s)
+			go send(t, b, s)
 		}
 	}
 }

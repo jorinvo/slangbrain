@@ -8,14 +8,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jorinvo/slangbrain/messenger"
+	"github.com/jorinvo/slangbrain/bot"
 )
 
 func TestWelcome(t *testing.T) {
 	store, cleanup := initDB(t)
 	defer cleanup()
 
-	var bot messenger.Bot
+	var b bot.Bot
 
 	tt := []testCase{
 		{
@@ -64,17 +64,17 @@ func TestWelcome(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	bot, err := messenger.New(
+	b, err := bot.New(
 		store,
 		token,
 		secret,
-		messenger.Setup,
-		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		messenger.FAPI(ts.URL),
+		bot.Setup,
+		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
+		bot.FAPI(ts.URL),
 	)
 	fatal(t, err)
 
-	send(t, bot, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
+	send(t, b, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
 
 	if state != len(tt) {
 		t.Errorf("expected state to be %d; got %d", len(tt), state)

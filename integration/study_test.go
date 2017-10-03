@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jorinvo/slangbrain/bot"
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/messenger"
 )
 
 func TestStudy(t *testing.T) {
@@ -106,20 +106,20 @@ func TestStudy(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	bot, err := messenger.New(
+	b, err := bot.New(
 		store,
 		token,
 		secret,
-		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		messenger.FAPI(ts.URL),
+		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
+		bot.FAPI(ts.URL),
 	)
 	fatal(t, err)
 
-	go send(t, bot, fmt.Sprintf(formatMessage, "1", `phrase1`))
+	go send(t, b, fmt.Sprintf(formatMessage, "1", `phrase1`))
 
 	for s := range msg {
 		if s != "" {
-			go send(t, bot, s)
+			go send(t, b, s)
 		}
 	}
 }

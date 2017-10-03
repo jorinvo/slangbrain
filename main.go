@@ -16,9 +16,9 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/coreos/go-systemd/activation"
 	"github.com/jorinvo/slangbrain/api"
+	"github.com/jorinvo/slangbrain/bot"
+	"github.com/jorinvo/slangbrain/bot/webview"
 	"github.com/jorinvo/slangbrain/brain"
-	"github.com/jorinvo/slangbrain/messenger"
-	"github.com/jorinvo/slangbrain/messenger/webview"
 	"github.com/jorinvo/slangbrain/slack"
 	"github.com/jorinvo/slangbrain/translate"
 	"golang.org/x/crypto/acme/autocert"
@@ -135,27 +135,27 @@ func main() {
 	signal.Notify(shutdownSignals, os.Interrupt)
 
 	// Start Facebook webhook server
-	feedback := make(chan messenger.Feedback)
-	opts := []func(*messenger.Bot){
-		messenger.Verify(*verifyToken),
-		messenger.LogInfo(infoLogger),
-		messenger.LogErr(errorLogger),
-		messenger.GetFeedback(feedback),
-		messenger.Notify,
-		messenger.MessageDelay(2 * time.Second),
-		messenger.Translate(translator),
+	feedback := make(chan bot.Feedback)
+	opts := []func(*bot.Bot){
+		bot.Verify(*verifyToken),
+		bot.LogInfo(infoLogger),
+		bot.LogErr(errorLogger),
+		bot.GetFeedback(feedback),
+		bot.Notify,
+		bot.MessageDelay(2 * time.Second),
+		bot.Translate(translator),
 	}
 	if !*noSetup {
-		opts = append(opts, messenger.Setup)
+		opts = append(opts, bot.Setup)
 	}
-	webhookHandler, err := messenger.New(
+	webhookHandler, err := bot.New(
 		store,
 		*token,
 		*secret,
 		opts...,
 	)
 	if err != nil {
-		errorLogger.Fatalln("failed to start messenger:", err)
+		errorLogger.Fatalln("failed to start bot:", err)
 	}
 
 	slackHandler := slack.New(

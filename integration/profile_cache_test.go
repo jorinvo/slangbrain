@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jorinvo/slangbrain/messenger"
+	"github.com/jorinvo/slangbrain/bot"
 )
 
 type profile struct{}
@@ -25,7 +25,7 @@ func TestProfileCache(t *testing.T) {
 	// Set profile once, but it will be refetched becausee this one is expired already.
 	fatal(t, store.SetProfile(123, profile{}, time.Now().Add(-60*24*time.Hour)))
 
-	var bot messenger.Bot
+	var b bot.Bot
 
 	tt := []testCase{
 		{
@@ -62,16 +62,16 @@ func TestProfileCache(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	bot, err := messenger.New(
+	b, err := bot.New(
 		store,
 		token,
 		secret,
-		messenger.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		messenger.FAPI(ts.URL),
+		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
+		bot.FAPI(ts.URL),
 	)
 	fatal(t, err)
 
-	send(t, bot, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
+	send(t, b, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
 
 	if state != len(tt) {
 		t.Errorf("expected state to be %d; got %d", len(tt), state)
