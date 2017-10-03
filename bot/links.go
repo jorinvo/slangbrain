@@ -13,7 +13,7 @@ import (
 )
 
 // Wrapper around extractPhrases that queues found phrases and sends an appropriate answer to the user.
-func (b Bot) handleLinks(u scope.User, links []string) {
+func (b bot) handleLinks(u scope.User, links []string) {
 	// Go back to menu mode in any case
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 		b.err.Println(err)
@@ -62,7 +62,7 @@ func (b Bot) handleLinks(u scope.User, links []string) {
 // and a possible application error that needs to be handled.
 //
 // It is possible to have user error but no application error and also the other way around.
-func (b Bot) extractPhrases(u scope.User, links []string) ([]brain.Phrase, string, string, error) {
+func (b bot) extractPhrases(u scope.User, links []string) ([]brain.Phrase, string, string, error) {
 	// Collect files from links
 	var files []struct{ Name, URL, Ext string }
 	for _, link := range links {

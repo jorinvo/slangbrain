@@ -29,9 +29,9 @@ type Feedback struct {
 	Channel  string
 }
 
-// Bot is a messenger bot handling webhook events and notifications.
-// Use New to setup and use register Bot as a http.Handler.
-type Bot struct {
+// bot is a messenger bot handling webhook events and notifications.
+// Use New to setup. Use Bot as a http.Handler.
+type bot struct {
 	store        brain.Store
 	content      translate.Translator
 	err          *log.Logger
@@ -41,126 +41,88 @@ type Bot struct {
 	feedback     chan<- Feedback
 	notifyTimers map[int64]*time.Timer
 	messageDelay time.Duration
-	// Fields below are only used for initialization
-	http.Handler
-	setup         bool
-	verifyToken   string
-	furl          string
-	hasTranslator bool
+	furl         string
 }
 
-// Setup sends greetings and the getting started message to Facebook.
-func Setup(b *Bot) {
-	b.setup = true
-}
-
-// LogInfo is an option to set the info logger of the bot.
-func LogInfo(l *log.Logger) func(*Bot) {
-	return func(b *Bot) {
-		b.info = l
-	}
-}
-
-// LogErr is an option to set the error logger of the bot.
-func LogErr(l *log.Logger) func(*Bot) {
-	return func(b *Bot) {
-		b.err = l
-	}
-}
-
-// Verify is an option to enable verification of the webhook.
-func Verify(token string) func(*Bot) {
-	return func(b *Bot) {
-		b.verifyToken = token
-	}
-}
-
-// GetFeedback sets up user feedback to be sent to the given channel.
-func GetFeedback(f chan<- Feedback) func(*Bot) {
-	return func(b *Bot) {
-		b.feedback = f
-	}
-}
-
-// Notify enables sending notifications when studies are ready.
-func Notify(b *Bot) {
-	b.notifyTimers = map[int64]*time.Timer{}
-}
-
-// FAPI overwrites the default URL of the Facebook API.
-// This is used for testing.
-func FAPI(url string) func(*Bot) {
-	return func(b *Bot) {
-		b.furl = url
-	}
-}
-
-// MessageDelay sets a time for which to wait between sending messages when sending multiple in a row.
-func MessageDelay(t time.Duration) func(*Bot) {
-	return func(b *Bot) {
-		b.messageDelay = t
-	}
-}
-
-// Translate sets the translator service to be used.
-func Translate(t translate.Translator) func(*Bot) {
-	return func(b *Bot) {
-		b.hasTranslator = true
-		b.content = t
-	}
-}
-
-// HTTPDo sets the function to use for HTTP requests.
-// http.Client.Do can be used. If not specified http.DefaultClient is used.
-func HTTPDo(do func(req *http.Request) (*http.Response, error)) func(*Bot) {
-	return func(b *Bot) {
-		b.do = do
-	}
+// Config to pass to new for creating a Bot.
+type Config struct {
+	Store        brain.Store          // Required.
+	Token        string               // Required.
+	Secret       string               // Required.
+	VerifyToken  string               // Required.
+	Logger       *log.Logger          // Optional. Logs are discared outerwise.
+	ErrLogger    *log.Logger          // Optional. Errors are ignored outerwise.
+	Feedback     chan<- Feedback      // Optional. Messages for admins are sent to this channel.
+	Notify       bool                 // Enables sending notifications when studies are ready.
+	Translator   translate.Translator // Optional. Set the translator service to enable linking.
+	FacebookURL  string               // Optional. Overwrite the default URL of the Facebook API.
+	MessageDelay time.Duration        // Optional. Time to wait between sending messages when sending multiple in a row.
+	Setup        bool
+	Doer         func(req *http.Request) (*http.Response, error) // Optional. Pass http.Client.Do. Default is http.DefaultClient.
 }
 
 // New creates a Bot.
-// It can be used as a HTTP handler for the webhook.
-// A store, a Facebook API token and a Facebook app secret are required.
-// The options Setup, LogInfo, LogErr, Notify, Verify, GetFeedback, FURL, MessageDelay, Translate, HTTPDo can be used.
-func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, error) {
-	b := Bot{
-		store: store,
+// It can be used as an HTTP handler for the webhook.
+func New(c Config) (http.Handler, func(id int64, msg string) error, error) {
+	logs := c.Logger
+	if logs == nil {
+		logs = log.New(ioutil.Discard, "", 0)
 	}
-	for _, option := range options {
-		option(&b)
-	}
-	if b.info == nil {
-		b.info = log.New(ioutil.Discard, "", 0)
-	}
-	if b.err == nil {
-		b.err = log.New(ioutil.Discard, "", 0)
-	}
-	if token == "" {
-		b.err.Println("created Bot with empty token; cannot make API request")
-	}
-	if secret == "" {
-		b.err.Println("created Bot with empty secret; cannot verify webhook requests")
-	}
-	if b.hasTranslator == false {
-		b.info.Println("created Bot without Translator; disabled manager link")
-		b.content = translate.New("")
-	}
-	if b.do == nil {
-		b.do = http.DefaultClient.Do
-	}
-	b.client = fbot.New(token, secret, fbot.API(b.furl))
-	b.Handler = b.client.Webhook(b.HandleEvent, secret, b.verifyToken)
-	if b.feedback == nil {
-		feedback := make(chan Feedback)
-		b.feedback = feedback
-		go func() {
-			for f := range feedback {
-				b.err.Printf("[id=%d, name=%s, channel=%s] got unhandled feedback: %s", f.ChatID, f.Username, f.Channel, f.Message)
-			}
-		}()
+	errs := c.ErrLogger
+	if errs == nil {
+		errs = log.New(ioutil.Discard, "", 0)
 	}
 
-	if b.setup {
+	if c.Token == "" {
+		errs.Println("created Bot with empty token; cannot make API request")
+	}
+
+	if c.Secret == "" {
+		errs.Println("created Bot with empty secret; cannot verify webhook requests")
+	}
+
+	translator := c.Translator
+	if len(translator.Langs()) == 0 {
+		logs.Println("created Bot without Translator; disabled manager link")
+		translator = translate.New("")
+	}
+
+	doer := c.Doer
+	if doer == nil {
+		doer = http.DefaultClient.Do
+	}
+
+	feedback := c.Feedback
+	if feedback == nil {
+		f := make(chan Feedback)
+		go func() {
+			for f := range f {
+				errs.Printf("[id=%d, name=%s, channel=%s] got unhandled feedback: %s", f.ChatID, f.Username, f.Channel, f.Message)
+			}
+		}()
+		feedback = f
+	}
+
+	// Init map because scheduleNotify will check if it is initialized.
+	var notifyTimers map[int64]*time.Timer
+	if c.Notify {
+		notifyTimers = map[int64]*time.Timer{}
+	}
+
+	b := bot{
+		store:        c.Store,
+		info:         logs,
+		err:          errs,
+		content:      translator,
+		do:           doer,
+		feedback:     feedback,
+		client:       fbot.New(c.Token, c.Secret, fbot.API(c.FacebookURL)),
+		notifyTimers: notifyTimers,
+		messageDelay: c.MessageDelay,
+	}
+	h := b.client.Webhook(b.handleEvent, c.Secret, c.VerifyToken)
+
+	if c.Setup {
 		greetings := []fbot.Greeting{
 			{
 				Locale: "default",
@@ -175,27 +137,27 @@ func New(store brain.Store, token, secret string, options ...func(*Bot)) (Bot, e
 			greetings = append(greetings, g)
 		}
 		if err := b.client.SetGreetings(greetings); err != nil {
-			return b, fmt.Errorf("failed to set greeting: %v", err)
+			return h, nil, fmt.Errorf("failed to set greeting: %v", err)
 		}
-		b.info.Println("Greeting set")
+		logs.Println("Greeting set")
 		if err := b.client.SetGetStartedPayload(payload.GetStarted); err != nil {
-			return b, fmt.Errorf("failed to enable Get Started button: %v", err)
+			return h, nil, fmt.Errorf("failed to enable Get Started button: %v", err)
 		}
-		b.info.Printf("Get Started button activated")
+		logs.Printf("Get Started button activated")
 	}
 
-	if b.notifyTimers != nil {
-		b.info.Println("Notifications enabled")
+	if c.Notify {
+		logs.Println("Notifications enabled")
 		if err := b.store.EachActiveChat(b.scheduleNotify); err != nil {
-			return b, err
+			return h, nil, err
 		}
 	}
 
-	return b, nil
+	return h, b.SendMessage, nil
 }
 
 // SendMessage sends a message to a specific user.
-func (b Bot) SendMessage(id int64, msg string) error {
+func (b bot) SendMessage(id int64, msg string) error {
 	if err := b.client.Send(id, msg, nil); err != nil {
 		return err
 	}
@@ -204,8 +166,8 @@ func (b Bot) SendMessage(id int64, msg string) error {
 	return nil
 }
 
-// HandleEvent handles a Messenger event.
-func (b Bot) HandleEvent(e fbot.Event) {
+// handleEvent handles a Messenger event.
+func (b bot) handleEvent(e fbot.Event) {
 	if e.Type == fbot.EventError {
 		b.err.Println("webhook error:", e.Text)
 		return

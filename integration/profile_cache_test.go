@@ -25,7 +25,7 @@ func TestProfileCache(t *testing.T) {
 	// Set profile once, but it will be refetched becausee this one is expired already.
 	fatal(t, store.SetProfile(123, profile{}, time.Now().Add(-60*24*time.Hour)))
 
-	var b bot.Bot
+	var b http.Handler
 
 	tt := []testCase{
 		{
@@ -62,13 +62,13 @@ func TestProfileCache(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	b, err := bot.New(
-		store,
-		token,
-		secret,
-		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		bot.FAPI(ts.URL),
-	)
+	b, _, err := bot.New(bot.Config{
+		Store:       store,
+		Token:       token,
+		Secret:      secret,
+		ErrLogger:   log.New(os.Stderr, "", log.LstdFlags|log.Llongfile),
+		FacebookURL: ts.URL,
+	})
 	fatal(t, err)
 
 	send(t, b, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))

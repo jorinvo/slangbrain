@@ -136,24 +136,19 @@ func main() {
 
 	// Start Facebook webhook server
 	feedback := make(chan bot.Feedback)
-	opts := []func(*bot.Bot){
-		bot.Verify(*verifyToken),
-		bot.LogInfo(infoLogger),
-		bot.LogErr(errorLogger),
-		bot.GetFeedback(feedback),
-		bot.Notify,
-		bot.MessageDelay(2 * time.Second),
-		bot.Translate(translator),
-	}
-	if !*noSetup {
-		opts = append(opts, bot.Setup)
-	}
-	webhookHandler, err := bot.New(
-		store,
-		*token,
-		*secret,
-		opts...,
-	)
+	webhookHandler, sendMessage, err := bot.New(bot.Config{
+		Store:        store,
+		Token:        *token,
+		Secret:       *secret,
+		VerifyToken:  *verifyToken,
+		Logger:       infoLogger,
+		ErrLogger:    errorLogger,
+		Feedback:     feedback,
+		Notify:       true,
+		MessageDelay: 2 * time.Second,
+		Translator:   translator,
+		Setup:        !*noSetup,
+	})
 	if err != nil {
 		errorLogger.Fatalln("failed to start bot:", err)
 	}
@@ -161,7 +156,7 @@ func main() {
 	slackHandler := slack.New(
 		store,
 		*slackHook,
-		slack.Reply(*slackToken, webhookHandler.SendMessage),
+		slack.Reply(*slackToken, sendMessage),
 		slack.LogErr(errorLogger),
 	)
 	go func() {

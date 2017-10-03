@@ -9,7 +9,7 @@ import (
 	"github.com/jorinvo/slangbrain/scope"
 )
 
-func (b Bot) handlePayload(u scope.User, p, referral string) {
+func (b bot) handlePayload(u scope.User, p, referral string) {
 	isDuplicate, err := b.store.IsDuplicate(u.ID, p)
 	if err != nil {
 		b.err.Println(err)

@@ -10,7 +10,7 @@ import (
 
 // Handle the upload of CSV files to import phrases.
 // Other attachments are handled only by notifying the admin to look into them manually.
-func (b Bot) handleAttachments(u scope.User, attachments []fbot.Attachment) {
+func (b bot) handleAttachments(u scope.User, attachments []fbot.Attachment) {
 	var links []string
 	for _, a := range attachments {
 		// Support sharing CSV files to Slangbrain:

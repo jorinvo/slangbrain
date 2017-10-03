@@ -106,13 +106,13 @@ func TestStudy(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	b, err := bot.New(
-		store,
-		token,
-		secret,
-		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		bot.FAPI(ts.URL),
-	)
+	b, _, err := bot.New(bot.Config{
+		Store:       store,
+		Token:       token,
+		Secret:      secret,
+		ErrLogger:   log.New(os.Stderr, "", log.LstdFlags|log.Llongfile),
+		FacebookURL: ts.URL,
+	})
 	fatal(t, err)
 
 	go send(t, b, fmt.Sprintf(formatMessage, "1", `phrase1`))

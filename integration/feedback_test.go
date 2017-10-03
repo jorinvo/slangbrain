@@ -95,14 +95,14 @@ func TestFeedback(t *testing.T) {
 		}
 	}()
 
-	b, err := bot.New(
-		store,
-		token,
-		secret,
-		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		bot.FAPI(ts.URL),
-		bot.GetFeedback(feedback),
-	)
+	b, _, err := bot.New(bot.Config{
+		Store:       store,
+		Token:       token,
+		Secret:      secret,
+		ErrLogger:   log.New(os.Stderr, "", log.LstdFlags|log.Llongfile),
+		FacebookURL: ts.URL,
+		Feedback:    feedback,
+	})
 	fatal(t, err)
 
 	go send(t, b, fmt.Sprintf(formatMessage, "1", "hi"))

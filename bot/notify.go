@@ -11,7 +11,7 @@ import (
 // Start a timer to notify the given chat.
 // Only works when chat has notifications enabled
 // and has added some phrases already.
-func (b Bot) scheduleNotify(id int64) {
+func (b bot) scheduleNotify(id int64) {
 	if b.notifyTimers == nil {
 		return
 	}
@@ -45,7 +45,7 @@ func (b Bot) scheduleNotify(id int64) {
 	})
 }
 
-func (b Bot) notify(id int64, count int) {
+func (b bot) notify(id int64, count int) {
 	u := scope.Get(id, b.store, b.err, b.content, b.client.GetProfile)
 	msg := fmt.Sprintf(u.Msg.StudyNotification, u.Name(), count)
 	if err := b.store.SetMode(id, brain.ModeMenu); err != nil {

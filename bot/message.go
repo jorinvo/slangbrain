@@ -9,7 +9,7 @@ import (
 	"github.com/jorinvo/slangbrain/scope"
 )
 
-func (b Bot) handleMessage(u scope.User, msg string) {
+func (b bot) handleMessage(u scope.User, msg string) {
 	// If message contains links, handle them instead of whatever would be next
 	if links := getLinks(msg); links != nil {
 		b.handleLinks(u, links)

@@ -30,7 +30,7 @@ var matchURL = regexp.MustCompile(`https?://\S+\.\S+`)
 // Change to menu mode.
 // Also sends stats to user if they are ready.
 // Return values can be passed directly to b.send().
-func (b Bot) messageStartMenu(u scope.User) (int64, string, []fbot.Reply, error) {
+func (b bot) messageStartMenu(u scope.User) (int64, string, []fbot.Reply, error) {
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
@@ -53,7 +53,7 @@ func (b Bot) messageStartMenu(u scope.User) (int64, string, []fbot.Reply, error)
 }
 
 // Send both welcome messages after each other.
-func (b Bot) messageWelcome(u scope.User, referral string) {
+func (b bot) messageWelcome(u scope.User, referral string) {
 	if err := b.store.Register(u.ID); err != nil {
 		b.err.Printf("failed to register user %d: %v", u.ID, err)
 	}
@@ -75,7 +75,7 @@ func (b Bot) messageWelcome(u scope.User, referral string) {
 
 // Start studying with referral phrases.
 // Returns true of started successfully.
-func (b Bot) startWithReferral(u scope.User, referral string) bool {
+func (b bot) startWithReferral(u scope.User, referral string) bool {
 	if referral == "" {
 		return false
 	}
@@ -117,7 +117,7 @@ func (b Bot) startWithReferral(u scope.User, referral string) bool {
 
 // Change to study mode and find correct message.
 // Return values can be passed directly to b.send().
-func (b Bot) startStudy(u scope.User) (int64, string, []fbot.Reply, error) {
+func (b bot) startStudy(u scope.User) (int64, string, []fbot.Reply, error) {
 	study, err := b.store.GetStudy(u.ID)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
@@ -155,7 +155,7 @@ func (b Bot) startStudy(u scope.User) (int64, string, []fbot.Reply, error) {
 
 // Score current study and continue with next one.
 // Return values can be passed directly to b.send().
-func (b Bot) scoreAndStudy(u scope.User, score int) (int64, string, []fbot.Reply, error) {
+func (b bot) scoreAndStudy(u scope.User, score int) (int64, string, []fbot.Reply, error) {
 	err := b.store.ScoreStudy(u.ID, score)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
@@ -164,7 +164,7 @@ func (b Bot) scoreAndStudy(u scope.User, score int) (int64, string, []fbot.Reply
 }
 
 // Send replies and log errors.
-func (b Bot) send(id int64, reply string, buttons []fbot.Reply, err error) {
+func (b bot) send(id int64, reply string, buttons []fbot.Reply, err error) {
 	if err != nil {
 		b.err.Println(err)
 	}

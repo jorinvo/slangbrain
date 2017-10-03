@@ -15,7 +15,7 @@ func TestWelcome(t *testing.T) {
 	store, cleanup := initDB(t)
 	defer cleanup()
 
-	var b bot.Bot
+	var b http.Handler
 
 	tt := []testCase{
 		{
@@ -64,14 +64,14 @@ func TestWelcome(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	b, err := bot.New(
-		store,
-		token,
-		secret,
-		bot.Setup,
-		bot.LogErr(log.New(os.Stderr, "", log.LstdFlags|log.Llongfile)),
-		bot.FAPI(ts.URL),
-	)
+	b, _, err := bot.New(bot.Config{
+		Store:       store,
+		Token:       token,
+		Secret:      secret,
+		ErrLogger:   log.New(os.Stderr, "", log.LstdFlags|log.Llongfile),
+		FacebookURL: ts.URL,
+		Setup:       true,
+	})
 	fatal(t, err)
 
 	send(t, b, fmt.Sprintf(formatPayload, "PAYLOAD_GETSTARTED"))
