@@ -5,6 +5,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // IsDuplicate checks whether a given payload has been sent twice in a row.
@@ -15,7 +16,7 @@ func (store Store) IsDuplicate(id int64, payload string) (bool, error) {
 	isDuplicate := false
 
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketPrevPayloads)
+		b := tx.Bucket(bucket.PrevPayloads)
 
 		// Check if previous payload was the same and if it was in so recent that it is a duplicate
 		if v := b.Get(key); v != nil {

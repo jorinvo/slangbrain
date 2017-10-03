@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 	"github.com/jorinvo/slangbrain/common"
 )
 
@@ -31,7 +32,7 @@ func (p profile) Timezone() int  { return p.data.Timezone }
 func (store Store) GetProfile(id int64) (common.Profile, error) {
 	var p profileData
 	err := store.db.View(func(tx *bolt.Tx) error {
-		v := tx.Bucket(bucketProfiles).Get(itob(id))
+		v := tx.Bucket(bucket.Profiles).Get(itob(id))
 		if v == nil {
 			return ErrNotFound
 		}
@@ -64,7 +65,7 @@ func (store Store) SetProfile(id int64, p common.Profile, cachedAt time.Time) er
 		if err := gob.NewEncoder(&buf).Encode(data); err != nil {
 			return err
 		}
-		return tx.Bucket(bucketProfiles).Put(itob(id), buf.Bytes())
+		return tx.Bucket(bucket.Profiles).Put(itob(id), buf.Bytes())
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set profile for id %d: %v: %v", id, data, err)

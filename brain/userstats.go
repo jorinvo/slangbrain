@@ -6,6 +6,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // UserStats returns the Stats object for a user.
@@ -14,7 +15,7 @@ import (
 func (store Store) UserStats(id int64) (Stats, error) {
 	var stats Stats
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketStattimes)
+		b := tx.Bucket(bucket.Stattimes)
 		prefix := itob(id)
 		now := time.Now()
 
@@ -59,7 +60,7 @@ func (store Store) UserStats(id int64) (Stats, error) {
 func countAdds(tx *bolt.Tx, prefix []byte, now time.Time) int {
 	count := 0
 	limit := now.Add(-statInterval).Unix()
-	c := tx.Bucket(bucketPhraseAddTimes).Cursor()
+	c := tx.Bucket(bucket.PhraseAddTimes).Cursor()
 
 	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 		if btoi(v) > limit {
@@ -73,7 +74,7 @@ func countAdds(tx *bolt.Tx, prefix []byte, now time.Time) int {
 func countStudies(tx *bolt.Tx, prefix []byte, now time.Time) int {
 	count := 0
 	limit := now.Add(-statInterval).Unix()
-	c := tx.Bucket(bucketStudies).Cursor()
+	c := tx.Bucket(bucket.Studies).Cursor()
 
 	for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
 		if btoi(k[8:]) > limit {
@@ -85,7 +86,7 @@ func countStudies(tx *bolt.Tx, prefix []byte, now time.Time) int {
 }
 
 func scoreAndRank(tx *bolt.Tx, prefix []byte) (int, int, error) {
-	b := tx.Bucket(bucketScoretotals)
+	b := tx.Bucket(bucket.Scoretotals)
 
 	score := 0
 	if v := b.Get(prefix); v != nil {

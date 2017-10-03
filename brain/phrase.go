@@ -8,6 +8,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // AddPhrase stores a new phrase.
@@ -23,8 +24,8 @@ func (store Store) AddPhrase(id int64, phrase, explanation string, createdAt tim
 // Abstract adding to reuse it for import.
 func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Time) func(*bolt.Tx) error {
 	return func(tx *bolt.Tx) error {
-		bp := tx.Bucket(bucketPhrases)
-		bz := tx.Bucket(bucketZeroscores)
+		bp := tx.Bucket(bucket.Phrases)
+		bz := tx.Bucket(bucket.Zeroscores)
 
 		// Ensure score is zero
 		p.Score = 0
@@ -49,7 +50,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Ti
 		}
 
 		// Queue as new phrase
-		bn := tx.Bucket(bucketNewPhrases)
+		bn := tx.Bucket(bucket.NewPhrases)
 		if err := bn.Put(prefix, append(bn.Get(prefix), phraseID...)); err != nil {
 			return err
 		}
@@ -71,7 +72,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Ti
 		}
 
 		// Save time phrase has been added
-		return tx.Bucket(bucketPhraseAddTimes).Put(key, itob(createdAt.Unix()))
+		return tx.Bucket(bucket.PhraseAddTimes).Put(key, itob(createdAt.Unix()))
 	}
 }
 
@@ -79,7 +80,7 @@ func phraseAdder(prefix []byte, p Phrase, createdAt time.Time, studyTime time.Ti
 func (store Store) FindPhrase(id int64, fn func(Phrase) bool) (Phrase, error) {
 	var p Phrase
 	err := store.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketPhrases).Cursor()
+		c := tx.Bucket(bucket.Phrases).Cursor()
 		prefix := itob(id)
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 			var tmp Phrase
@@ -117,12 +118,12 @@ func (store Store) DeletePhrase(id int64, seq int) error {
 // to think about that all related buckets have been cleared.
 func phraseDeleter(tx *bolt.Tx, key []byte) error {
 	// Delete study time
-	if err := tx.Bucket(bucketStudytimes).Delete(key); err != nil {
+	if err := tx.Bucket(bucket.Studytimes).Delete(key); err != nil {
 		return err
 	}
 
 	// Delete add time
-	if err := tx.Bucket(bucketPhraseAddTimes).Delete(key); err != nil {
+	if err := tx.Bucket(bucket.PhraseAddTimes).Delete(key); err != nil {
 		return err
 	}
 
@@ -136,17 +137,17 @@ func phraseDeleter(tx *bolt.Tx, key []byte) error {
 			return err
 		}
 	} else {
-		if err := addCountToBucket(tx.Bucket(bucketScoretotals), key[:8], -p.Score); err != nil {
+		if err := addCountToBucket(tx.Bucket(bucket.Scoretotals), key[:8], -p.Score); err != nil {
 			return err
 		}
 	}
 
 	// Delete phrase
-	return tx.Bucket(bucketPhrases).Delete(key)
+	return tx.Bucket(bucket.Phrases).Delete(key)
 }
 
 func getPhrase(tx *bolt.Tx, key []byte) (Phrase, error) {
-	v := tx.Bucket(bucketPhrases).Get(key)
+	v := tx.Bucket(bucket.Phrases).Get(key)
 	var p Phrase
 	if v == nil {
 		return p, ErrNotFound
@@ -159,7 +160,7 @@ func getPhrase(tx *bolt.Tx, key []byte) (Phrase, error) {
 // With each update we also check if we can schedule new phrases.
 func updateZeroscore(tx *bolt.Tx, prefix []byte, scoreUpdate int) error {
 	zeroscore := int64(scoreUpdate)
-	bz := tx.Bucket(bucketZeroscores)
+	bz := tx.Bucket(bucket.Zeroscores)
 	if v := bz.Get(prefix); v != nil {
 		zeroscore += btoi(v)
 	}
@@ -186,8 +187,8 @@ func scheduleNewPhrases(tx *bolt.Tx, prefix []byte, studyTime time.Time, schedul
 		return 0, nil
 	}
 
-	bn := tx.Bucket(bucketNewPhrases)
-	bs := tx.Bucket(bucketStudytimes)
+	bn := tx.Bucket(bucket.NewPhrases)
+	bs := tx.Bucket(bucket.Studytimes)
 	v := bn.Get(prefix)
 	next := itob(studyTime.Unix())
 	var i, o int
@@ -239,8 +240,8 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 	var phrases idPhrases
 
 	err := store.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketPhrases).Cursor()
-		bt := tx.Bucket(bucketPhraseAddTimes)
+		c := tx.Bucket(bucket.Phrases).Cursor()
+		bt := tx.Bucket(bucket.PhraseAddTimes)
 		prefix := itob(id)
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
@@ -274,7 +275,7 @@ func (store Store) GetAllPhrases(id int64) ([]IDPhrase, error) {
 func (store Store) UpdatePhrase(id int64, seq int, phrase, explanation string) error {
 	key := append(itob(id), itob(int64(seq))...)
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bp := tx.Bucket(bucketPhrases)
+		bp := tx.Bucket(bucket.Phrases)
 		// Get existing phrase
 		p, err := getPhrase(tx, key)
 		if err != nil {

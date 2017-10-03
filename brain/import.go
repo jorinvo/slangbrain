@@ -32,7 +32,7 @@ func (store Store) QueueImport(id int64, phrases []Phrase) (int, error) {
 			return fmt.Errorf("gob of phrases %#v for %d: %v", phrases, id, err)
 		}
 
-		if err := tx.Bucket(bucketPendingImports).Put(prefix, buf.Bytes()); err != nil {
+		if err := tx.Bucket(bucket.PendingImports).Put(prefix, buf.Bytes()); err != nil {
 			return fmt.Errorf("put pending import %#v for %d: %v", phrases, id, err)
 		}
 		return nil
@@ -75,12 +75,12 @@ func phraseImporter(tx *bolt.Tx, prefix []byte, phrases []Phrase) (int, error) {
 		}
 	}
 
-	return len(ps), addCountToBucket(tx.Bucket(bucketImports), prefix, 1)
+	return len(ps), addCountToBucket(tx.Bucket(bucket.Imports), prefix, 1)
 }
 
 // Go through existing phrases, find duplicates and remove them from phrases
 func removeDuplicates(tx *bolt.Tx, prefix []byte, phrases []Phrase) ([]Phrase, error) {
-	c := tx.Bucket(bucketPhrases).Cursor()
+	c := tx.Bucket(bucket.Phrases).Cursor()
 
 	for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 		var e Phrase
@@ -106,7 +106,7 @@ func (store Store) ApplyImport(id int64) (int, error) {
 	var count int
 
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		bi := tx.Bucket(bucketPendingImports)
+		bi := tx.Bucket(bucket.PendingImports)
 
 		var phrases []Phrase
 		if b := bi.Get(prefix); b != nil {
@@ -135,7 +135,7 @@ func (store Store) ApplyImport(id int64) (int, error) {
 // ClearImport removes a queued import from the pending imports bucket.
 func (store Store) ClearImport(id int64) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketPendingImports).Delete(itob(id))
+		return tx.Bucket(bucket.PendingImports).Delete(itob(id))
 	})
 	if err != nil {
 		return fmt.Errorf("failed to clear import for %d: %v", id, err)

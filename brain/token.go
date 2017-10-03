@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // GenerateToken creates and returns the token for a user.
@@ -17,8 +18,8 @@ func (store Store) GenerateToken(id int64) (string, error) {
 	var token string
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		bid := itob(id)
-		bu := tx.Bucket(bucketAuthUsers)
-		bt := tx.Bucket(bucketAuthTokens)
+		bu := tx.Bucket(bucket.AuthUsers)
+		bt := tx.Bucket(bucket.AuthTokens)
 		now := time.Now()
 
 		// Lookup existing
@@ -51,7 +52,7 @@ func (store Store) GenerateToken(id int64) (string, error) {
 func (store Store) LookupToken(token string) (int64, error) {
 	var id int64
 	err := store.db.View(func(tx *bolt.Tx) error {
-		i := tx.Bucket(bucketAuthTokens).Get([]byte(token))
+		i := tx.Bucket(bucket.AuthTokens).Get([]byte(token))
 		if i == nil {
 			return ErrNotFound
 		}

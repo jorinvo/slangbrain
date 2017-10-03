@@ -6,6 +6,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // Store provides functions to interact with the underlying database.
@@ -23,16 +24,16 @@ func New(dbFile string) (Store, error) {
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		// Ensure buckets exist
-		for _, bucket := range allBuckets {
-			_, err = tx.CreateBucketIfNotExists(bucket)
+		for _, b := range bucket.All {
+			_, err = tx.CreateBucketIfNotExists(b)
 			if err != nil {
-				return fmt.Errorf("failed to create bucket '%s': %v", bucket, err)
+				return fmt.Errorf("failed to create bucket '%s': %v", b, err)
 			}
 		}
 
 		// Clear expired message IDs
 		now := time.Now().Add(-messageIDmaxAge).Unix()
-		bm := tx.Bucket(bucketMessageIDs)
+		bm := tx.Bucket(bucket.MessageIDs)
 		bm.ForEach(func(k []byte, v []byte) error {
 			if len(v) < 8 || btoi(v) < now {
 				return bm.Delete(k)
@@ -63,10 +64,10 @@ func (store *Store) Close() error {
 func (store Store) TrackNotify(id int64, t time.Time) error {
 	key := itob(id)
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		if err := tx.Bucket(bucketActivities).Put(key, itob(t.Unix())); err != nil {
+		if err := tx.Bucket(bucket.Activities).Put(key, itob(t.Unix())); err != nil {
 			return err
 		}
-		return addCountToBucket(tx.Bucket(bucketNotifies), key, 1)
+		return addCountToBucket(tx.Bucket(bucket.Notifies), key, 1)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set activity for id %d: %v: %v", id, t, err)
@@ -77,7 +78,7 @@ func (store Store) TrackNotify(id int64, t time.Time) error {
 // SetRead sets the last time the user read a message.
 func (store Store) SetRead(id int64, t time.Time) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketReads).Put(itob(id), itob(t.Unix()))
+		return tx.Bucket(bucket.Reads).Put(itob(id), itob(t.Unix()))
 	})
 	if err != nil {
 		return fmt.Errorf("failed to set read for id %d: %v: %v", id, t, err)
@@ -89,7 +90,7 @@ func (store Store) SetRead(id int64, t time.Time) error {
 // This is later on used for statistics.
 func (store Store) Register(id int64) error {
 	return store.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bucketRegisterDates).Put(itob(id), itob(time.Now().Unix()))
+		return tx.Bucket(bucket.RegisterDates).Put(itob(id), itob(time.Now().Unix()))
 	})
 }
 
@@ -100,7 +101,7 @@ func (store Store) Register(id int64) error {
 // Otherwise returns store.ErrExists.
 func (store Store) QueueMessage(messageID string) error {
 	err := store.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketMessageIDs)
+		b := tx.Bucket(bucket.MessageIDs)
 		key := []byte(messageID)
 		if b.Get(key) != nil {
 			return ErrExists

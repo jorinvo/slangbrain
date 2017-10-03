@@ -8,6 +8,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 func itob(v int64) []byte {
@@ -39,7 +40,7 @@ func (store Store) BackupTo(w http.ResponseWriter) {
 // Also returns the total number of due studies and a duration until the next phrase is due.
 // The duration is only useful if total is 0 otherwise the duration is a negative time.
 func findCurrentStudy(tx *bolt.Tx, prefix []byte, now time.Time) ([]byte, int, time.Duration) {
-	c := tx.Bucket(bucketStudytimes).Cursor()
+	c := tx.Bucket(bucket.Studytimes).Cursor()
 	uNow := now.Unix()
 	total := 0
 	var keyTime int64

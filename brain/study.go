@@ -10,6 +10,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 // GetStudy returns the current study the user needs to do.
@@ -82,7 +83,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		}
 
 		// Update scoretotal
-		if err := addCountToBucket(tx.Bucket(bucketScoretotals), prefix, p.Score-prevScore); err != nil {
+		if err := addCountToBucket(tx.Bucket(bucket.Scoretotals), prefix, p.Score-prevScore); err != nil {
 			return err
 		}
 
@@ -91,7 +92,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		if err := gob.NewEncoder(&buf).Encode(p); err != nil {
 			return err
 		}
-		if err := tx.Bucket(bucketPhrases).Put(key, buf.Bytes()); err != nil {
+		if err := tx.Bucket(bucket.Phrases).Put(key, buf.Bytes()); err != nil {
 			return err
 		}
 
@@ -101,7 +102,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 			i = len(studyIntervals) - 1
 		}
 		next := itob(now.Add(diffusion(studyIntervals[i])).Unix())
-		if err := tx.Bucket(bucketStudytimes).Put(key, next); err != nil {
+		if err := tx.Bucket(bucket.Studytimes).Put(key, next); err != nil {
 			return err
 		}
 
@@ -110,7 +111,7 @@ func (store Store) ScoreStudy(id int64, scoreUpdate int) error {
 		// Save study for reference and to analyze them later
 		idAndTime := append(append([]byte{}, prefix...), itob(now.Unix())...)
 		seqAndScores := append(append(append([]byte{}, key[8:]...), itob(int64(scoreUpdate))...), itob(int64(p.Score))...)
-		if err := tx.Bucket(bucketStudies).Put(idAndTime, seqAndScores); err != nil {
+		if err := tx.Bucket(bucket.Studies).Put(idAndTime, seqAndScores); err != nil {
 			return err
 		}
 
@@ -155,7 +156,7 @@ func (store Store) GetNotifyTime(id int64, timezone int) (time.Duration, int, er
 	var nexts sortableInts
 
 	err := store.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketStudytimes).Cursor()
+		c := tx.Bucket(bucket.Studytimes).Cursor()
 		prefix := itob(id)
 
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
@@ -207,8 +208,8 @@ func (store Store) GetNotifyTime(id int64, timezone int) (time.Duration, int, er
 // where the user has been active since the last notification has been sent.
 func (store Store) EachActiveChat(fn func(int64)) error {
 	return store.db.View(func(tx *bolt.Tx) error {
-		active := tx.Bucket(bucketActivities)
-		return tx.Bucket(bucketReads).ForEach(func(k, v []byte) error {
+		active := tx.Bucket(bucket.Activities)
+		return tx.Bucket(bucket.Reads).ForEach(func(k, v []byte) error {
 			a := active.Get(k)
 			if a == nil {
 				a = itob(0)

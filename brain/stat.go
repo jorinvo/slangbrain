@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/jorinvo/slangbrain/brain/bucket"
 )
 
 const statmsg = "```" + `
@@ -30,24 +31,24 @@ new phrases: %8d (%d)
 // The formatting is intended for markdown usage such as in Slack.
 func (store Store) WriteStat(w io.Writer) error {
 	return store.db.View(func(tx *bolt.Tx) error {
-		users := tx.Bucket(bucketRegisterDates).Stats().KeyN
-		subscriptions := tx.Bucket(bucketSubscriptions).Stats().KeyN
+		users := tx.Bucket(bucket.RegisterDates).Stats().KeyN
+		subscriptions := tx.Bucket(bucket.Subscriptions).Stats().KeyN
 		dbSize := float64(tx.Size()) / 1024.0 / 1024.0 // in mb
 
-		phrasesTotal := tx.Bucket(bucketPhrases).Stats().KeyN
+		phrasesTotal := tx.Bucket(bucket.Phrases).Stats().KeyN
 		phrasesAvg := phrasesTotal / users
 
-		scoretotal, err := sum(tx.Bucket(bucketScoretotals), simplesum)
+		scoretotal, err := sum(tx.Bucket(bucket.Scoretotals), simplesum)
 		if err != nil {
 			return err
 		}
 		scoretotalAvg := scoretotal / users
 
-		studiesTotal := tx.Bucket(bucketStudies).Stats().KeyN
+		studiesTotal := tx.Bucket(bucket.Studies).Stats().KeyN
 		studiesAvg := studiesTotal / users
 
 		now := itob(time.Now().Unix())
-		dueStudiesTotal, err := sum(tx.Bucket(bucketStudytimes), func(v []byte) int {
+		dueStudiesTotal, err := sum(tx.Bucket(bucket.Studytimes), func(v []byte) int {
 			if bytes.Compare(v, now) < 1 {
 				return 1
 			}
@@ -58,25 +59,25 @@ func (store Store) WriteStat(w io.Writer) error {
 		}
 		dueStudiesAvg := dueStudiesTotal / users
 
-		importsTotal, err := sum(tx.Bucket(bucketImports), simplesum)
+		importsTotal, err := sum(tx.Bucket(bucket.Imports), simplesum)
 		if err != nil {
 			return err
 		}
 		importsAvg := importsTotal / users
 
-		notifiesTotal, err := sum(tx.Bucket(bucketNotifies), simplesum)
+		notifiesTotal, err := sum(tx.Bucket(bucket.Notifies), simplesum)
 		if err != nil {
 			return err
 		}
 		notifiesAvg := notifiesTotal / users
 
-		zeroscore, err := sum(tx.Bucket(bucketZeroscores), simplesum)
+		zeroscore, err := sum(tx.Bucket(bucket.Zeroscores), simplesum)
 		if err != nil {
 			return err
 		}
 		zeroscoreAvg := zeroscore / users
 
-		newphrasesTotal, err := sum(tx.Bucket(bucketNewPhrases), count64)
+		newphrasesTotal, err := sum(tx.Bucket(bucket.NewPhrases), count64)
 		if err != nil {
 			return err
 		}
@@ -84,10 +85,10 @@ func (store Store) WriteStat(w io.Writer) error {
 
 		warnings := ""
 		notNewPhrases := phrasesTotal - newphrasesTotal
-		if n := tx.Bucket(bucketStudytimes).Stats().KeyN; n != notNewPhrases {
+		if n := tx.Bucket(bucket.Studytimes).Stats().KeyN; n != notNewPhrases {
 			warnings += fmt.Sprintf("\nWARNING: Number of studytimes (%d) does not match phrases - newphrases (%d).\n", n, notNewPhrases)
 		}
-		if n := tx.Bucket(bucketPhraseAddTimes).Stats().KeyN; n != phrasesTotal {
+		if n := tx.Bucket(bucket.PhraseAddTimes).Stats().KeyN; n != phrasesTotal {
 			warnings += fmt.Sprintf("\nWARNING: Number of phraseaddtimes (%d) does not match number of phrases (%d).\n", n, phrasesTotal)
 		}
 
