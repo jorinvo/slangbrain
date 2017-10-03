@@ -17,10 +17,10 @@ import (
 	"github.com/coreos/go-systemd/activation"
 	"github.com/jorinvo/slangbrain/api"
 	"github.com/jorinvo/slangbrain/bot"
-	"github.com/jorinvo/slangbrain/bot/webview"
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/slack"
 	"github.com/jorinvo/slangbrain/translate"
+	"github.com/jorinvo/slangbrain/webview"
 	"golang.org/x/crypto/acme/autocert"
 )
 
