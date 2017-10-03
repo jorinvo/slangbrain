@@ -28,3 +28,7 @@
 [[constraint]]
   name = "github.com/kyokomi/emoji"
   version = "1.5.0"
+
+[[constraint]]
+  name = "qvl.io/fbot"
+  version = "1.0.1"

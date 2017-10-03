@@ -29,17 +29,23 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
-  revision = "7d9177d70076375b9a59c8fde23d52d9c4a7ecd5"
+  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "429f518978ab01db8bb6f44b66785088e7fba58b"
+  revision = "314a259e304ff91bd6985da2a7149bbf91237993"
+
+[[projects]]
+  name = "qvl.io/fbot"
+  packages = ["."]
+  revision = "90c9af4398932225b32e84f46a01a487a940a84f"
+  version = "v1.0.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5f8857af74e6f389959d03c797e9ce64f61d4010f472b1952ff998fd029a8eac"
+  inputs-digest = "644d8e357a63a58994c7543184f0b7917990c88963609d2cc04fbeab1041060c"
   solver-name = "gps-cdcl"
   solver-version = 1

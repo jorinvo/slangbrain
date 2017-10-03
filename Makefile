@@ -112,7 +112,8 @@ logs:
 
 # Update vendored dependencies using dep
 update-deps:
-	go get -u github.com/golang/dep
+	go get github.com/golang/dep
+	dep ensure
 	dep ensure -update
 
 
