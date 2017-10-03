@@ -154,7 +154,6 @@ func main() {
 	}
 
 	slackHandler := slack.New(
-		store,
 		*slackHook,
 		slack.Reply(*slackToken, sendMessage),
 		slack.LogErr(errorLogger),

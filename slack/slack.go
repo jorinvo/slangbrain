@@ -11,13 +11,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jorinvo/slangbrain/brain"
 	"github.com/kyokomi/emoji"
 )
 
 // Slack is an HTTP handler that can be used to communicate with users via Slack.
 type Slack struct {
-	store        brain.Store
 	err          *log.Logger
 	hook         string
 	token        string
@@ -43,10 +41,9 @@ func LogErr(l *log.Logger) func(*Slack) {
 
 // New returns a new Slack which can be used as an http.Handler.
 // Optionally pass Reply or LogErr.
-func New(store brain.Store, hook string, options ...func(*Slack)) Slack {
+func New(hook string, options ...func(*Slack)) Slack {
 	a := Slack{
-		store: store,
-		hook:  hook,
+		hook: hook,
 	}
 	for _, option := range options {
 		option(&a)
