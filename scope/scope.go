@@ -1,4 +1,4 @@
-package user
+package scope
 
 import (
 	"fmt"
@@ -19,13 +19,11 @@ type User struct {
 	translate.Content
 }
 
-type fetcher func(int64) (common.Profile, error)
-
 // Get a user with profile and content loaded.
 // Logs errors.
 // Check fields of profile before using them.
 // It is not guaranteed that they are successfully loaded.
-func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f fetcher) User {
+func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f func(int64) (common.Profile, error)) User {
 	p, err := getProfile(id, s, l, f)
 	if err != nil {
 		l.Printf("failed to get profile: %v\n", err)
@@ -38,7 +36,7 @@ func Get(id int64, s brain.Store, l *log.Logger, t translate.Translator, f fetch
 }
 
 // Get profile from cache or fetch and update cache.
-func getProfile(id int64, s brain.Store, l *log.Logger, f fetcher) (common.Profile, error) {
+func getProfile(id int64, s brain.Store, l *log.Logger, f func(int64) (common.Profile, error)) (common.Profile, error) {
 	// Try cache
 	p, err := s.GetProfile(id)
 	if err == nil {

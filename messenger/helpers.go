@@ -11,8 +11,8 @@ import (
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
+	"github.com/jorinvo/slangbrain/scope"
 	"github.com/jorinvo/slangbrain/translate"
-	"github.com/jorinvo/slangbrain/user"
 )
 
 // Everything that is not in the unicode character classes
@@ -30,7 +30,7 @@ var matchURL = regexp.MustCompile(`https?://\S+\.\S+`)
 // Change to menu mode.
 // Also sends stats to user if they are ready.
 // Return values can be passed directly to b.send().
-func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) {
+func (b Bot) messageStartMenu(u scope.User) (int64, string, []fbot.Reply, error) {
 	if err := b.store.SetMode(u.ID, brain.ModeMenu); err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.MenuMode, err
 	}
@@ -53,7 +53,7 @@ func (b Bot) messageStartMenu(u user.User) (int64, string, []fbot.Reply, error) 
 }
 
 // Send both welcome messages after each other.
-func (b Bot) messageWelcome(u user.User, referral string) {
+func (b Bot) messageWelcome(u scope.User, referral string) {
 	if err := b.store.Register(u.ID); err != nil {
 		b.err.Printf("failed to register user %d: %v", u.ID, err)
 	}
@@ -75,7 +75,7 @@ func (b Bot) messageWelcome(u user.User, referral string) {
 
 // Start studying with referral phrases.
 // Returns true of started successfully.
-func (b Bot) startWithReferral(u user.User, referral string) bool {
+func (b Bot) startWithReferral(u scope.User, referral string) bool {
 	if referral == "" {
 		return false
 	}
@@ -117,7 +117,7 @@ func (b Bot) startWithReferral(u user.User, referral string) bool {
 
 // Change to study mode and find correct message.
 // Return values can be passed directly to b.send().
-func (b Bot) startStudy(u user.User) (int64, string, []fbot.Reply, error) {
+func (b Bot) startStudy(u scope.User) (int64, string, []fbot.Reply, error) {
 	study, err := b.store.GetStudy(u.ID)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err
@@ -155,7 +155,7 @@ func (b Bot) startStudy(u user.User) (int64, string, []fbot.Reply, error) {
 
 // Score current study and continue with next one.
 // Return values can be passed directly to b.send().
-func (b Bot) scoreAndStudy(u user.User, score int) (int64, string, []fbot.Reply, error) {
+func (b Bot) scoreAndStudy(u scope.User, score int) (int64, string, []fbot.Reply, error) {
 	err := b.store.ScoreStudy(u.ID, score)
 	if err != nil {
 		return u.ID, u.Msg.Error, u.Rpl.StudyMode, err

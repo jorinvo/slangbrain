@@ -5,7 +5,7 @@ import (
 
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
-	"github.com/jorinvo/slangbrain/user"
+	"github.com/jorinvo/slangbrain/scope"
 )
 
 // HandleEvent handles a Messenger event.
@@ -23,7 +23,7 @@ func (b Bot) HandleEvent(e fbot.Event) {
 		return
 	}
 
-	u := user.Get(e.ChatID, b.store, b.err, b.content, b.client.GetProfile)
+	u := scope.Get(e.ChatID, b.store, b.err, b.content, b.client.GetProfile)
 
 	if e.Type == fbot.EventReferral {
 		ref, err := url.QueryUnescape(e.Ref)

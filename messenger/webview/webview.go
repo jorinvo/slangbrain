@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/jorinvo/slangbrain/brain"
+	"github.com/jorinvo/slangbrain/scope"
 	"github.com/jorinvo/slangbrain/translate"
-	"github.com/jorinvo/slangbrain/user"
 )
 
 // Webview can be used as an http.Handler to render the manager webview.
@@ -66,7 +66,7 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	u := user.Get(id, view.store, view.err, view.content, nil)
+	u := scope.Get(id, view.store, view.err, view.content, nil)
 	data := struct {
 		Phrases []brain.IDPhrase
 		Label   translate.Web

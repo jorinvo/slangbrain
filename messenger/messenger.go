@@ -12,8 +12,8 @@ import (
 	"github.com/jorinvo/slangbrain/brain"
 	"github.com/jorinvo/slangbrain/fbot"
 	"github.com/jorinvo/slangbrain/payload"
+	"github.com/jorinvo/slangbrain/scope"
 	"github.com/jorinvo/slangbrain/translate"
-	"github.com/jorinvo/slangbrain/user"
 )
 
 // Channel to send unhandled user messages and attachments to
@@ -198,7 +198,7 @@ func (b Bot) SendMessage(id int64, msg string) error {
 	if err := b.client.Send(id, msg, nil); err != nil {
 		return err
 	}
-	u := user.Get(id, b.store, b.err, b.content, b.client.GetProfile)
+	u := scope.Get(id, b.store, b.err, b.content, b.client.GetProfile)
 	b.send(b.messageStartMenu(u))
 	return nil
 }
