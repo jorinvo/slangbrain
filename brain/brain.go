@@ -72,5 +72,5 @@ type Stats struct {
 type Profile interface {
 	Name() string
 	Locale() string
-	Timezone() int
+	Timezone() float64
 }

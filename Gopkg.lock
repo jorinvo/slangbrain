@@ -40,12 +40,12 @@
 [[projects]]
   name = "qvl.io/fbot"
   packages = ["."]
-  revision = "90c9af4398932225b32e84f46a01a487a940a84f"
-  version = "v1.0.1"
+  revision = "51a15c7cb3b738801df8bbffb6e646e18f6386ae"
+  version = "v2.0.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "644d8e357a63a58994c7543184f0b7917990c88963609d2cc04fbeab1041060c"
+  inputs-digest = "1ea279a0d2665969e50f1b38314bc72259027d0427e93f3e616e0a94a688d67b"
   solver-name = "gps-cdcl"
   solver-version = 1

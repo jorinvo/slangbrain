@@ -135,13 +135,13 @@ func diffusion(t time.Duration) time.Duration {
 // The count is 0 if the chat has no phrases yet.
 // The returned duration gets delayed if it would be in a user's night time.
 // Nighttime is calculated form the passed timezone.
-func (store Store) GetNotifyTime(id int64, timezone int) (time.Duration, int, error) {
+func (store Store) GetNotifyTime(id int64, timezone float64) (time.Duration, int, error) {
 	due := 0
 	now := time.Now()
 
 	// Delay if night
 	var delay time.Duration
-	userHour := now.Add(delay).UTC().Hour() + timezone
+	userHour := float64(now.Add(delay).UTC().Hour()) + timezone
 	if userHour > nightStart {
 		delay = time.Duration(24-userHour+nightEnd)*time.Hour + time.Duration(60-now.Minute())*time.Minute
 	} else if userHour < nightEnd {
