@@ -115,6 +115,7 @@ update-deps:
 	go get github.com/golang/dep
 	dep ensure
 	dep ensure -update
+	dep prune
 
 
 
