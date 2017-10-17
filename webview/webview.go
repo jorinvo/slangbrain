@@ -43,12 +43,10 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Allow rendering inline on web
-	allowFrom := []string{"https://www.messenger.com/", "https://www.facebook.com/"}
-	for _, s := range allowFrom {
-		if strings.HasPrefix(r.Referer(), s) {
-			w.Header().Set("X-Frame-Options", "ALLOW-FROM "+s)
-			break
-		}
+	if ref := validReferer(r.Referer()); ref == "" {
+		view.err.Printf("Denied X-Frame for unknown page '%s'\n", ref)
+	} else {
+		w.Header().Del("X-Frame-Options")
 	}
 
 	// Validate token
@@ -77,4 +75,19 @@ func (view Webview) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		view.err.Printf("failed to render template: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
+}
+
+func validReferer(ref string) string {
+	allowFrom := []string{
+		"https://www.messenger.com/",
+		"https://www.facebook.com/",
+		"https://staticxx.facebook.com/",
+	}
+
+	for _, s := range allowFrom {
+		if strings.HasPrefix(ref, s) {
+			return s
+		}
+	}
+	return ""
 }
