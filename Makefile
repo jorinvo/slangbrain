@@ -117,6 +117,11 @@ update-deps:
 	dep ensure -update
 	dep prune
 
+# Remove created artifacts and dev DB
+clean:
+	rm dev.db
+	rm dist/slangbrain dist/slangbrain-stat
 
 
-.PHONY: run test deploy deploy-stat backup migrate update-deps
+
+.PHONY: run test deploy deploy-stat backup migrate update-deps clean
