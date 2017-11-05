@@ -31,7 +31,7 @@ const (
 	statInterval = 7 * 24 * time.Hour
 )
 
-var studyIntervals = [14]time.Duration{
+var studyIntervals = [21]time.Duration{
 	time.Hour,
 	8 * time.Hour,
 	20 * time.Hour,
@@ -46,4 +46,11 @@ var studyIntervals = [14]time.Duration{
 	(8*30*24 - 2) * time.Hour,
 	(12*30*24 - 2) * time.Hour,
 	(15*30*24 - 2) * time.Hour,
+	(2*12*30*24 - 2) * time.Hour,
+	(4*12*30*24 - 2) * time.Hour,
+	(8*12*30*24 - 2) * time.Hour,
+	(16*12*30*24 - 2) * time.Hour,
+	(32*12*30*24 - 2) * time.Hour,
+	(64*12*30*24 - 2) * time.Hour,
+	(100*12*30*24 - 2) * time.Hour,
 }
