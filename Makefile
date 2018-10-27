@@ -11,13 +11,6 @@ version := $(shell go version | cut -d' ' -f3)_commit_$(shell git log --format="
 MIGRATION ?= $(shell ls -1 migrations | tail -n1)
 migration_file := ./migrations/$(MIGRATION)/main.go
 
-# Credentials for local development
-fb_token := EAAEMXBS5vNoBAB4NbuAYJp1FhDN50UNcoFRtME4phWQEGdV3ezUUkZCVS6B1Q2vQHFPc4TUZBdMTwEWjkwzfFNR2WR5cYDxjXZCZCWKUgAlZBewOGKZB1Un2gSbaBKV2L4bgn7vR5ZC83Lo7kd53WZAimctkkwRzBmzA1UYRvR0sgQZDZD
-fb_secret := 414a6cdf4c8da5bbb281960cfcfe3eeb
-verify_token := SmhklHbrVi4MInnC8Fih58TBTIc3jeXTadn1bChS
-slack_hook := https://hooks.slack.com/services/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
-
-
 
 # Run dev server locally and make it available publicly via ssh tunnel
 run:
@@ -31,10 +24,10 @@ server:
 		-db 'dev.db' \
 		-http 8080 \
 		-domain $(dev) \
-		-verify $(verify_token) \
-		-token $(fb_token) \
-		-secret $(fb_secret) \
-		-slackhook $(slack_hook) \
+		-verify $(VERIFY_TOKEN) \
+		-token $(FB_TOKEN) \
+		-secret $(FB_SECRET) \
+		-slackhook $(SLACK_HOOK) \
 		-nosetup
 
 
